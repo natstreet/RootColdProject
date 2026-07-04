@@ -1,0 +1,785 @@
+---
+title: "Gene tables"
+author: "Elena van Zalen & Ellen Dimmen Chapple"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    number_sections: true
+    toc_float: true
+    theme: lumen
+editor_options:
+  chunk_output_type: console
+---
+
+Loading the libraries.
+```{r message=FALSE, warning=FALSE}
+library(arrow)
+library(dplyr)
+library(tidyverse)
+library(gdata)
+library(UpSetR)
+library(ggplot2)
+library(viridis)
+library(gridExtra)
+library(ggthemes)
+library(formattable)
+library(DT)
+```
+
+Create the ortholog file across all species
+```{r creating orthogroup file for all species used in this analysis}
+# ortholog_groups <- read_parquet("data/orthologs.parquet")
+# 
+# #Assuming your original dataframe is called 'df'
+# ortho_full <- ortholog_groups %>%
+#  group_by(Ortholog_Group, species) %>%
+#  summarise(genes = paste(gene, collapse = ", "), .groups = 'drop') %>%
+#  complete(Ortholog_Group, species, fill = list(genes = "")) %>%
+#  pivot_wider(names_from = species, values_from = genes)
+# write.table(ortho_full, file = paste0("data/Orthogroups_20240613.tsv"),
+# sep = "\t", dec = ".", col.names = TRUE)
+```
+
+# Read in files and create lists
+
+1) File with orthologs
+2) List with the names of comparison-table files, and transcription files
+**RUN FOR CONSERVED (ALL PAIRS)**
+```{r files and stuff}
+species_list <- c("col0", "ost0", "aspen", "birch", "spruce", "pine")
+combo <- data.frame(t(combn(species_list, 2)))
+
+file_list_1 <- c()
+for (i in 1:nrow(combo)){
+  
+  s1 <- combo[i, "X1"] 
+  s2 <- combo[i, "X2"]
+  
+  file_name <- paste0("data/ComPlEx/PairwiseComparisons/comparison-"
+                      ,s1,"-",s2,"-abspearsonMR0.03-table.RData")
+  file_list_1 <- append(file_list_1, file_name, after = length(file_list_1))
+}
+
+file_list_2 <- c()
+for (i in species_list){
+  
+  expr_name <- paste0("data/expression/",i,"_root_cold_stress_expression.txt")
+  file_list_2 <- append(file_list_2, expr_name, after = length(file_list_2))
+}
+
+file_list_1
+file_list_2
+
+```
+
+3) Ortholog group file - tidy
+```{r ortholog groups, message=FALSE, warning=FALSE}
+ortholog_group_file <- read.delim("data/ComPlEx/Orthogroups_20240613.tsv", header = TRUE, sep = "\t")
+all_species <- c("col0", "ost0", "aspen", "birch", "spruce", "pine")
+
+ortho_general_filtering <- ortholog_group_file %>%
+  dplyr::rename(col0 = Arabidopsis_thaliana,
+         aspen = Populus_tremula,
+         birch = Betula_pendula,
+         spruce = Picea_abies,
+         pine = Pinus_sylvestris) %>% 
+  mutate(ost0 = col0) %>% 
+  mutate(OrthoGroup = Ortholog_Group) %>% 
+  dplyr::select(OrthoGroup, all_species)
+
+pval <- 0.1
+  
+```
+
+# Ortholog groups: at least 1 co-expressolog per pair
+
+1) Filter the comparison table to only contain significant expressologs.
+2) Arrange the gene pairs within each group an select the top one.
+3) Create a new column and name it after the species pair - this will contain one. of the ortholog pairs.
+4) The new column is left-joined to the original ortholog group column which contains all possible ortholog groups, thus creating NAs for the ortholog groups the species pair has no significant expressologs for.
+5) This is done for all pairs.
+6) We are left with a df with a column for each species pair were each row is either a gene representing an ortholog group, or NA. The cells are turned into 1's and 0's depending on the presence of a gene or not.
+```{r message=FALSE, warning=FALSE}
+# Co-expressologs
+ones_and_zeros <- data.frame(
+  OrthoGroup = ortho_general_filtering$OrthoGroup)
+
+for (x in file_list_1){
+  if (file.exists(x)){ 
+    #x <- file_list_1[1]
+    load(x)
+    
+    p_val <- comparison_table%>%
+      as.data.frame() %>% 
+      mutate_at("Max.p.val", as.numeric) %>%
+      dplyr::filter(Max.p.val < pval) %>%
+      # distinct(Species1, .keep_all = T) %>%
+      # distinct(Species2, .keep_all = T) %>%
+      group_by(OrthoGroup) %>%
+      slice(1) %>% 
+      dplyr::select(Species1, OrthoGroup, Max.p.val) %>% 
+      ungroup()
+    key_word_s1 <- sapply(strsplit(x, "-"), "[",2) 
+    #key_word_s1 <- sapply(strsplit(key_word_s1, "-"), "[",3) #first line does what it needs to do for our filename
+    key_word_s2 <- sapply(strsplit(x, "-"), "[",3)
+    #key_word_s2 <- sapply(strsplit(key_word_s2, "-"), "[",1)
+    new_col_name <-as.character(paste0(key_word_s1, "-", key_word_s2))
+    
+    # Rename one of the columns
+    colnames(p_val)[1] = new_col_name
+    p_val <- p_val %>%
+      dplyr::select(-c( Max.p.val))
+    
+    # Make a new column the same length as all the original ortholog data containing 'all possible' ortholog groups
+    new_column <- ones_and_zeros %>%
+      left_join(p_val, join_by(OrthoGroup == OrthoGroup)) %>%
+      dplyr::select(new_col_name)
+    
+    # print(paste0("Length after joining: ",nrow(new_column)))
+    ones_and_zeros <- cbind(ones_and_zeros, new_column)
+  }}
+
+rownames(ones_and_zeros) <- ones_and_zeros$OrthoGroup
+ones_and_zeros <- ones_and_zeros[,-c(1)]
+
+# Create 0 where there are NAs, and 1's where there are no "0"'s
+ones_and_zeros[is.na(ones_and_zeros)] <- 0
+ones_and_zeros[ones_and_zeros != 0] <-1
+
+ones_and_zeros <- ones_and_zeros %>%
+   mutate_if(is.character, as.integer)
+
+# Specify the order we want the output
+col_order <- c("col0-ost0", "col0-aspen", "col0-birch", "ost0-aspen", "ost0-birch", "aspen-birch", "col0-spruce", "ost0-spruce",  "aspen-spruce", "birch-spruce", "col0-pine", "ost0-pine",  "aspen-pine", "birch-pine", "spruce-pine") 
+ones_and_zeros <- ones_and_zeros[, col_order]
+# Checking to see how many rows are non-zero.  
+no_empty_rows <- ones_and_zeros %>% 
+  mutate(gene_sum = rowSums(.)) %>% 
+  dplyr::filter(gene_sum != 0)
+
+print(paste0("Number of possible ortholog groups: ", dim(ortholog_group_file)[1], " vs. Number of genes found in at least 1 species pair (non-zero): ", dim(no_empty_rows)[1]))
+# Just the densdist filter:
+# "Number of possible ortholog groups: 52439 vs. Number of genes found in at least 1 species pair (non-zero): 8766"
+# densdist(1.0) + sd(>3) + abs run, latest run 11-07-2025:
+# "Number of possible ortholog groups: 52439 vs. Number of genes found in at least 1 species pair (non-zero): 8836"
+
+```
+
+# Genes: expressed and co-expressologs
+```{r}
+# Expressed
+expr_genes <- data.frame(
+  OrthologGroup = c(),
+  Species1 = c(),
+  GeneSpecies1 = c(),
+  Species2 = c(),  
+  GeneSpecies2 = c(),
+  Species1pVal = c(), 
+  Species2pVal = c(),
+  MaxpVal = c(),
+  effectSize = c())
+
+for (x in file_list_1){
+  if(file.exists(x)){
+    load(x)
+    key_word_s1 <- sapply(strsplit(x, "-"), "[", 2) 
+    key_word_s2 <- sapply(strsplit(x, "-"), "[", 3)
+    
+    genes <- comparison_table %>%
+      as.data.frame() %>% 
+      mutate_at("Max.p.val", as.numeric) %>% 
+      mutate_at("Min.effect.size", as.numeric)
+      # distinct(Species1, .keep_all = T) %>%
+      # distinct(Species2, .keep_all = T)
+      # dplyr::filter(Max.p.val< 0.1) %>%  # only p-values under ...
+      # group_by(OrthoGroup) %>%
+      # arrange(Max.p.val) %>% 
+      # slice(1) 
+    print(paste0("Number of duplicates: ",anyDuplicated(genes$Species1), " and ",anyDuplicated(genes$Species2)))
+    
+    expr_genes <- rbind(expr_genes, data.frame(
+      OrthologGroup = genes$OrthoGroup,
+      Species1 = rep(key_word_s1, nrow(genes)),
+      GeneSpecies1 = genes$Species1,
+      Species2 = rep(key_word_s2, nrow(genes)),
+      GeneSpecies2 = genes$Species2,
+      Species1pVal = genes$Species1.p.val, 
+      Species2pVal = genes$Species2.p.val,
+      MaxpVal =  genes$Max.p.val,
+      effectSize = genes$Min.effect.size))
+  }}
+
+expr_genes <- expr_genes %>% 
+  arrange(OrthologGroup)
+```
+
+
+```{r}
+# Co-expressologs
+co_expressologs <- data.frame(
+  OrthologGroup = c(),
+  Species1 = c(),
+  GeneSpecies1 = c(),
+  Species2 = c(),  
+  GeneSpecies2 = c(),
+  MaxpVal = c(),
+  effectSize = c())
+
+# Each pairs comparison table is filtered to only contain orthologs from the 
+# no_empty_rows data frame that has only significantly co-expressed genes.
+
+for (x in file_list_1){
+  if(file.exists(x)){
+    load(x)
+    key_word_s1 <- sapply(strsplit(x, "-"), "[", 2) 
+    key_word_s2 <- sapply(strsplit(x, "-"), "[", 3)
+    
+    genes <- comparison_table %>%
+      as.data.frame() %>% 
+      mutate_at("Min.effect.size", as.numeric) %>% 
+      mutate_at("Max.p.val", as.numeric) %>% 
+      dplyr::filter(Max.p.val < pval) 
+      # distinct(Species1, .keep_all = T) %>%
+      # distinct(Species2, .keep_all = T) 
+      # 
+    print(paste0("Number of duplicates: ",anyDuplicated(genes$Species1), " and ",anyDuplicated(genes$Species2)))
+    
+    co_expressologs <- rbind(co_expressologs, data.frame(
+      OrthologGroup = genes$OrthoGroup,
+      Species1 = rep(key_word_s1, nrow(genes)),
+      GeneSpecies1 = genes$Species1,
+      Species2 = rep(key_word_s2, nrow(genes)),
+      GeneSpecies2 = genes$Species2,
+      MaxpVal =  genes$Max.p.val,
+      effectSize = genes$Min.effect.size))
+  }}
+
+co_expressologs <- co_expressologs[with(co_expressologs, (order(Species1, Species2))), ]
+```
+
+# Genes conserved in all species
+
+Isolating the ortholog groups that are conserved in the different groups (all, angiosperms and gymnosperms) by using different definitions of conserved. Filter rows by using a threshold score. 
+
+Each pairs comparison table is filtered to only contain orthologs from the strict definition of "conserved in all species" (see further up). These genes are 1) expressed, 2) significant (max.p.val < 0.01), and 3) present in all pairs.
+
+Note - some ortholog groups will have non-significant gene pairs as we have selected ortholog groups with at least one co-expressed and significant gene pair. Thus some pairs within an ortholog group may be non-significant.
+
+```{r}
+# DATAFRAME WITH SUMS - ADD SUMMARY COLUMNS
+df_with_sums <- ones_and_zeros %>% 
+  mutate(Angiosperms = rowSums(. [c(1:6)])) %>% 
+  mutate(Between = rowSums(. [c(7:14)])) %>%  
+  mutate(Gymnosperms = rowSums(. [15])) %>% 
+  mutate(Conserved = rowSums(. [1:15]))
+
+# ANGIO_STRICT - ANGIOSPERM-SPECIFIC ORTHOLOG GROUPS 4/4
+
+angios_strict <- df_with_sums %>% 
+  dplyr::filter(Between == 0) %>% 
+  dplyr::filter(Gymnosperms == 0)
+
+# 2) Now we can add the 1's and 0's.
+angios_strict$Angiosperms[angios_strict$Angiosperms < 6] <- 0 
+angios_strict$Angiosperms[angios_strict$Angiosperms == 6] <- 1 
+
+angios_strict <- angios_strict %>% 
+  dplyr::filter(Angiosperms == 1)
+
+rows_strict_angio <- rownames(angios_strict)
+
+# GYMNO_STRICT - GYMNOSPERM-SPECIFIC ORTHOLOG GROUPS 1/1
+gymnos_strict <- df_with_sums %>% 
+  dplyr::filter(Between == 0) %>%
+  dplyr::filter(Angiosperms == 0)
+
+gymnos_strict$Gymnosperms[gymnos_strict$Gymnosperms < 1] <- 0
+gymnos_strict$Gymnosperms[gymnos_strict$Gymnosperms == 1] <- 1
+
+gymnos_strict <- gymnos_strict %>%
+  dplyr::filter(Gymnosperms == 1)
+
+rows_strict_gymnos <- rownames(gymnos_strict)
+
+# CONS_STRICT - ORTHOLOG GROUPS CONSERVED FOR ALL PAIRS 15/15.
+cons_strict <- df_with_sums %>% 
+  dplyr::filter(Angiosperms == 6) %>% 
+  dplyr::filter(Gymnosperms == 1) %>% 
+  dplyr::filter(Between == 8)
+
+cons_strict$Conserved[cons_strict$Conserved < 15] <- 0 # 1->9 are changed to 0.
+cons_strict$Conserved[cons_strict$Conserved == 15] <- 1 # 9 is changed to 1.
+
+cons_strict <- cons_strict %>% 
+  dplyr::filter(Conserved == 1)
+
+rows_strict_cons <- rownames(cons_strict)
+
+cons_genes_all_species <- data.frame(
+  OrthologGroup = c(),
+  Species1 = c(),
+  GeneSpecies1 = c(),
+  Species2 = c(),
+  GeneSpecies2 = c(),
+  MaxPVal = c(),
+  effectSize = c())
+
+for (x in file_list_1){
+  if(file.exists(x)){
+    load(x)
+    
+    key_word_s1 <- sapply(strsplit(x, "-"), "[", 2) 
+    key_word_s2 <- sapply(strsplit(x, "-"), "[", 3)
+
+    conserved <- comparison_table %>%
+      as.data.frame() %>% 
+      dplyr::filter(OrthoGroup %in% rows_strict_cons)
+      # distinct(Species1, .keep_all = T) %>%
+      # distinct(Species2, .keep_all = T) 
+    
+    cons_genes_all_species <- rbind(cons_genes_all_species, data.frame(
+      OrthologGroup = conserved$OrthoGroup,
+      Species1 = rep(key_word_s1, nrow(conserved)),
+      GeneSpecies1 = conserved$Species1,
+      Species2 = rep(key_word_s2, nrow(conserved)),
+      GeneSpecies2 = conserved$Species2,
+      MaxPVal =  conserved$Max.p.val,
+      effectSize = conserved$Min.effect.size)) 
+  }
+}
+```
+
+## Aspen genes from conserved ortholog groups
+Take the df with all conserved ortholog groups and filter to only contain significant gene pairs. Then filter the ortholog group to only contain the conserved orthologs - then isolating only the aspen genes. Note! Not all aspen genes may be significant as we have filtered using ortholog groups that have at least 1 significant pair.
+```{r}
+# Only Asp genes from the strictly conserved ortholog groups
+# There are genes within the conserved ortholog groups that are not significant
+strictly_conserved_OGs <- cons_genes_all_species %>% 
+  group_by(OrthologGroup) %>% 
+  mutate_at("MaxPVal", as.numeric) %>% 
+  dplyr::filter(MaxPVal < pval) %>% 
+  ungroup()
+
+# strictly_conserved_arabidopsis <- ortho_general_filtering %>% 
+#   dplyr::filter(OrthoGroup %in% strictly_conserved_OGs$OrthologGroup) %>% 
+#   dplyr::select(OrthoGroup, c(Arabidopsis_thaliana,Arabidopsis_thaliana_ost0)) %>% 
+#   separate_rows(Asp) %>% 
+#   mutate(Asp = gsub("\\.\\d\\.p\\d$", "", Asp)) %>% 
+#   as.data.frame()
+```
+
+# Partial conservation
+Same as above, but for only partial conservation.
+```{r}
+# Angiosperms
+angio_partial <- df_with_sums %>% 
+  dplyr::filter(Between == 0) %>% 
+  dplyr::filter(Gymnosperms == 0) 
+
+# at least 2 genes conserved across any combination
+angio_partial$Angiosperms[angio_partial$Angiosperms < 2] <- 0 
+angio_partial$Angiosperms[angio_partial$Angiosperms >= 2] <- 1 
+
+angio_partial <- angio_partial %>% 
+  dplyr::filter(Angiosperms == 1)
+
+rows_partial_angio <- rownames(angio_partial)
+
+# Gymnosperms
+##### might not even be possible with only 2 gymnosperms, there can be no partial conservation #####
+# gymnos_partial_2 <- df_with_sums %>% 
+#   dplyr::filter(Angiosperms == 0) %>% 
+#   dplyr::filter(Between == 0)
+# 
+# # 2) Now we can add the 1's and 0's.
+# gymnos_partial_2$Gymnosperms[gymnos_partial_2$Gymnosperms < 2] <- 0 
+# gymnos_partial_2$Gymnosperms[gymnos_partial_2$Gymnosperms == 2] <- 1 
+# 
+# gymnos_partial_2 <- gymnos_partial_2 %>% 
+#   dplyr::filter(Gymnosperms == 1)
+# 
+# rows_partial2_gymnos <- rownames(gymnos_partial_2)
+
+# For the conserved groups we allow 1) 2/3 for clades, and 2) 2/15 for between pairs.
+conserved_partial <- df_with_sums %>% 
+  dplyr::filter(Angiosperms >= 2) %>% 
+  dplyr::filter(Gymnosperms >= 1) %>% 
+  dplyr::filter(Between >=2)
+
+conserved_partial$Conserved[conserved_partial$Conserved <= 1] <- 0 # 1->9 are changed to 0.
+conserved_partial$Conserved[conserved_partial$Conserved >= 2] <- 1 # 9 is changed to 1.
+
+conserved_partial_genes <- conserved_partial %>% 
+  dplyr::filter(Conserved == 1)
+
+rows_partial <- rownames(conserved_partial_genes)
+
+partial_genes_all_species <- data.frame(
+  OrthologGroup = c(),
+  Species1 = c(),
+  GeneSpecies1 = c(),
+  Species2 = c(),
+  GeneSpecies2 = c(),
+  MaxPVal = c())
+
+# Each pairs comparison table is filtered to only contain orthologs from the strict definition of "conserved in all species" (see further up). These genes are 1) expressed, 2) significant (max.p.val < 0.05), and 3) present in all pairs.
+for (x in file_list_1){
+  if(file.exists(x)){
+    load(x)
+    
+    key_word_s1 <- sapply(strsplit(x, "-"), "[",3) 
+    key_word_s2 <- sapply(strsplit(x, "-"), "[",4)
+
+    partial <- comparison_table %>% 
+      as.data.frame() %>% 
+      dplyr::filter(OrthoGroup %in% rows_partial)  
+      # distinct(Species1, .keep_all = T) %>%
+      # distinct(Species2, .keep_all = T) 
+      
+    partial_genes_all_species <- rbind(partial_genes_all_species, data.frame(
+      OrthologGroup = partial$OrthoGroup,
+      Species1 = rep(key_word_s1, nrow(partial)),
+      GeneSpecies1 = partial$Species1,
+      Species2 = rep(key_word_s2, nrow(partial)),
+      GeneSpecies2 = partial$Species2,
+      MaxPVal =  partial$Max.p.val)) 
+  }
+}
+```
+
+## Aspen genes from partial ortholog groups
+```{r}
+partial_OGs <- partial_genes_all_species  %>% 
+  group_by(OrthologGroup) %>% 
+  mutate_at("MaxPVal", as.numeric) %>% 
+  dplyr::filter(MaxPVal < pval) %>% 
+  ungroup()
+
+# partial_aspen <- ortho_general_filtering %>%                     # not sure if this step is needed for us
+#   dplyr::filter(OrthoGroup %in% partial_3_OGs$OrthologGroup) %>% 
+#   dplyr::select(OrthoGroup, Asp) %>% 
+#   separate_rows(Asp) %>% 
+#   mutate(Asp = gsub("\\.\\d\\.p\\d$", "", Asp)) %>% 
+#   as.data.frame()
+```
+
+# Genes conserved in gymnosperms
+```{r }
+gymno_list <- c("spruce", "pine")
+
+combo_gymno <- data.frame(t(combn(gymno_list, 2))) 
+
+# List of file names.
+file_list_gymno<- c()
+for (i in 1:nrow(combo_gymno)){
+
+  s1 <- combo_gymno[i, "X1"]
+  s2 <- combo_gymno[i, "X2"]
+
+  file_name <- paste0("data/ComPlEx/PairwiseComparisons/comparison-",
+                      s1,"-",s2,"-abspearsonMR0.03-table.RData")
+  file_list_gymno <- append(file_list_gymno, file_name, after = length(file_list_gymno))
+}
+conserved_genes_gymno <- gymnos_strict %>%
+  dplyr::filter(Conserved == 1)
+rows_strict <- rownames(conserved_genes_gymno)
+```
+
+
+```{r}
+cons_genes_gymnosperms <- data.frame(
+  OrthologGroup = c(),
+  Species1 = c(),
+  GeneSpecies1 = c(),
+  Species2 = c(),
+  GeneSpecies2 = c(),
+  Species1pVal = c(),
+  Species2pval = c(),
+  MaxpVal = c())
+
+for (x in file_list_gymno){
+  if(file.exists(x)){
+    load(x)
+
+    key_word_s1 <- sapply(strsplit(x, "-"), "[", 2)
+    #key_word_s1 <- sapply(strsplit(key_word_s1, "-"), "[",3)
+    key_word_s2 <- sapply(strsplit(x, "-"), "[", 3)
+    #key_word_s2 <- sapply(strsplit(key_word_s2, "-"), "[",1)
+
+    conserved <- comparison_table %>%
+      as.data.frame() %>%
+      dplyr::filter(OrthoGroup %in% rows_strict_gymnos) %>%
+      mutate_at("Max.p.val", as.numeric)
+      # distinct(Species1, .keep_all = T) %>%
+      # distinct(Species2, .keep_all = T)
+
+    cons_genes_gymnosperms <- rbind(cons_genes_gymnosperms, data.frame(
+      OrthologGroup = conserved$OrthoGroup,
+      Species1 = rep(key_word_s1, nrow(conserved)),
+      GeneSpecies1 = conserved$Species1,
+      Species2 = rep(key_word_s2, nrow(conserved)),
+      GeneSpecies2 = conserved$Species2,
+      Species1pVal = conserved$Species1.p.val,
+      Species2pval = conserved$Species2.p.val,
+      MaxpVal =  conserved$Max.p.val))
+  }
+}
+```
+
+
+```{r}
+# Only Asp genes from the strictly conserved ortholog groups
+# strict_gymnos <- cons_genes_gymnosperms$OrthologGroup
+# strictly_gymnos_aspen <- ortho_general_filtering %>% 
+#   dplyr::filter(OrthoGroup %in% strict_gymnos) %>% 
+#   dplyr::select(Asp) %>% 
+#   separate_rows(Asp) %>% 
+#   mutate(Asp = gsub("\\.\\d\\.p\\d$", "", Asp))
+```
+
+# Genes conserved in angiosperms
+```{r }
+angio_list <- c("col0", "ost0", "aspen", "birch")
+
+combo_angio <- data.frame(t(combn(angio_list, 2)))
+
+# List of file names.
+file_list_angio <- c()
+for (i in 1:nrow(combo_angio)){
+  
+  s1 <- combo_angio[i, "X1"]
+  s2 <- combo_angio[i, "X2"]
+  
+  file_name <- paste0("data/ComPlEx/PairwiseComparisons/comparison-"
+                      ,s1,"-",s2,"-abspearsonMR0.03-table.RData")
+  file_list_angio<- append(file_list_angio, file_name, after = length(file_list_angio))
+}
+
+conserved_genes_angio <- angios_strict %>%
+  dplyr::filter(Conserved == 6)
+rows_strict <- rownames(conserved_genes_angio)
+```
+
+
+```{r}
+cons_genes_angiosperms <- data.frame(
+  OrthologGroup = c(),
+  Species1 = c(),
+  GeneSpecies1 = c(),
+  Species2 = c(),
+  GeneSpecies2 = c(),
+  MaxPVal = c())
+
+for (x in file_list_angio){
+  if(file.exists(x)){
+    load(x)
+    
+    key_word_s1 <- sapply(strsplit(x, "-"), "[", 2) 
+    key_word_s2 <- sapply(strsplit(x, "-"), "[", 3)
+
+    conserved <- comparison_table %>% 
+      as.data.frame() %>% 
+      dplyr::filter(OrthoGroup %in% rows_strict_angio) %>% 
+      mutate_at("Max.p.val", as.numeric)  
+      # distinct(Species1, .keep_all = T) %>%
+      # distinct(Species2, .keep_all = T) 
+    
+    cons_genes_angiosperms <- rbind(cons_genes_angiosperms, data.frame(
+      OrthologGroup = conserved$OrthoGroup,
+      Species1 = rep(key_word_s1, nrow(conserved)),
+      GeneSpecies1 = conserved$Species1,
+      Species2 = rep(key_word_s2, nrow(conserved)),
+      GeneSpecies2 = conserved$Species2,
+      MaxPVal =  conserved$Max.p.val)) 
+  }
+}
+```
+
+```{r }
+ara_list <- c("col0", "ost0")
+
+combo_ara <- data.frame(t(combn(ara_list, 2)))
+
+# List of file names.
+file_list_ara <- c()
+for (i in 1:nrow(combo_ara)){
+  
+  s1 <- combo_ara[i, "X1"]
+  s2 <- combo_ara[i, "X2"]
+  
+  file_name <- paste0("data/ComPlEx/PairwiseComparisons/comparison-",s1,"-",s2,"-abspearsonMR0.03-table.RData")
+  file_list_angio<- append(file_list_ara, file_name, after = length(file_list_ara))
+}
+
+conserved_genes_ara <- ara_strict %>%
+  dplyr::filter(Conserved == 1)
+rows_strict <- rownames(conserved_genes_ara)
+```
+
+# Partial conservation - Angiosperms
+```{r}
+partial_genes_angiosperms <- data.frame(
+  OrthologGroup = c(),
+  Species1 = c(),
+  GeneSpecies1 = c(),
+  Species2 = c(),
+  GeneSpecies2 = c(),
+  MaxPVal = c())
+
+for (x in file_list_1){
+  if(file.exists(x)){
+    load(x)
+    
+    key_word_s1 <- sapply(strsplit(x, "-"), "[",3) 
+    key_word_s2 <- sapply(strsplit(x, "-"), "[",4)
+    
+    partial <- comparison_table %>% 
+      as.data.frame() %>% 
+      dplyr::filter(OrthoGroup %in% rows_partial_angio)  
+      # distinct(Species1, .keep_all = T) %>%
+      # distinct(Species2, .keep_all = T) 
+    
+    partial_genes_angiosperms <- rbind(partial_genes_angiosperms, data.frame(
+      OrthologGroup = partial$OrthoGroup,
+      Species1 = rep(key_word_s1, nrow(partial)),
+      GeneSpecies1 = partial$Species1,
+      Species2 = rep(key_word_s2, nrow(partial)),
+      GeneSpecies2 = partial$Species2,
+      MaxPVal =  partial$Max.p.val)) 
+  }
+}
+```
+
+# Partial conservation - Gymnosperms --- 
+We only have 2 gymnosperms, there is no partial conversion.
+That would be species specifc between pine and spruce
+```{r}
+# partial3_genes_gymnosperms <- data.frame(
+#   OrthologGroup = c(),
+#   Species1 = c(),
+#   GeneSpecies1 = c(),
+#   Species2 = c(),
+#   GeneSpecies2 = c(),
+#   MaxPVal = c())
+# 
+# # Each pairs comparison table is filtered to only contain orthologs from the strict definition of "conserved in all species" (see further up). These genes are 1) expressed, 2) significant (max.p.val < 0.05), and 3) present in all pairs.
+# 
+# for (x in file_list_1){
+#   if(file.exists(x)){
+#     load(x)
+#     
+#     key_word_s1 <- sapply(strsplit(x, "-"), "[",3) 
+#     key_word_s2 <- sapply(strsplit(x, "-"), "[",4)
+#     
+#     partial_3 <- comparison_table %>% 
+#       as.data.frame() %>% 
+#       dplyr::filter(OrthoGroup %in% rows_partial3_gymnos) 
+#       # distinct(Species1, .keep_all = T) %>%
+#       # distinct(Species2, .keep_all = T) 
+#     
+#     partial3_genes_gymnosperms <- rbind(partial3_genes_gymnosperms, data.frame(
+#       OrthologGroup = partial_3$OrthoGroup,
+#       Species1 = rep(key_word_s1, nrow(partial_3)),
+#       GeneSpecies1 = partial_3$Species1,
+#       Species2 = rep(key_word_s2, nrow(partial_3)),
+#       GeneSpecies2 = partial_3$Species2,
+#       MaxPVal =  partial_3$Max.p.val)) 
+#   }
+# }
+```
+
+```{r}
+# Only Asp genes from the strictly conserved ortholog groups
+strict_angios <- cons_genes_angiosperms  %>% 
+  group_by(OrthologGroup) %>% 
+  mutate_at("MaxPVal", as.numeric) %>% 
+  dplyr::filter(MaxPVal < pval) %>% 
+  ungroup()
+
+# strictly_angios_aspen <- ortho_general_filtering %>% 
+#   dplyr::filter(OrthoGroup %in% strict_angios$OrthologGroup) %>% 
+#   dplyr::select(OrthoGroup, Asp) %>% 
+#   separate_rows(Asp) %>% 
+#   mutate(Asp = gsub("\\.\\d\\.p\\d$", "", Asp))
+```
+
+# Saving files
+
+Should change to "save" so that the files are stored as R-data and not txt-files.
+
+**Overview:**
+
+*expr_genes* - All genes that are expressed with, with no filtering for significance.
+
+*co_expressologs* - All genes that are expressed, but also filtered for p-value.
+
+*cons_genes_all_species* - All genes from orthogroups in which all pairs have at least one co-expressolog. Not all genes within this orthogroup are significant.
+
+*cons_genes_angiosperms* - All genes from ortholog groups with at least one co-expressolog for all pairs of angiosperms. Not all genes are significant.
+
+*cons_genes_gymnosperms* - All genes from ortholog groups with at least one co-expressolog for all pairs of gymnosperms. Not all genes are significant.
+
+*strictly_conserved_aspen* - Aspen genes for the ortholog groups that are strictly conserved in all species pairs.
+
+*strictly_gymnos_aspen* - Aspen genes for the ortholog groups that are strictly conserved in gymnosperm pairs.
+
+*strictly_angios_aspen* - Aspen genes for the ortholog groups that are strictly conserved in angiosperm pairs.
+
+*partial4_genes_all_species* - All genes from ortholog groups that are partial 4 conserved (2/4 for clade pairs, 2/6 for between pairs). Not all genes are significant.
+
+*partial_aspen* - Aspen genes for the ortholog groups that are partial 4 conserved in all species pairs.
+
+*partial_genes_angiosperms* - All ortholog groups that contain at co-expressed and significant expressologs in at least 2/4 pairs of only the angiosperms. Not all genes are significant.
+
+*partial4_genes_gymnosperms* - All ortholog groups that contain at co-expressed and significant expressologs in at least 2/4 pairs of only the gymnosperms. Not all genes are significant.
+
+```{r eval=FALSE}
+# Use r-data
+#write.table(co_expressologs, "Data/DATA/textFiles/co_expressologs.txt", row.names=FALSE)
+save(co_expressologs, file = "data/ComPlEx/co_expressologs.RData")
+
+#write.table(expr_genes, "Data/DATA/textFiles/all_expressed_genes.txt", row.names=FALSE)
+save(expr_genes, file = "data/ComPlEx/all_expressed_genes.RData")
+
+#write.table(cons_genes_all_species, "Data/DATA/textFiles/cons_genes_all_species.txt", row.names=FALSE)
+save(cons_genes_all_species, file = "data/ComPlEx/conserved_genes_all_species.RData")
+
+#write.table(cons_genes_angiosperms, "Data/DATA/textFiles/cons_genes_angiosperms.txt", row.names=FALSE)
+save(cons_genes_angiosperms, file = "data/ComPlEx/conserved_genes_angiosperms.RData")
+
+#write.table(cons_genes_gymnosperms, "Data/DATA/textFiles/cons_genes_gymnosperms.txt", row.names=FALSE)
+save(cons_genes_gymnosperms, file = "data/ComPlEx/conserved_genes_gymnosperms.RData")
+#write.table(strictly_conserved_aspen, "Data/DATA/textFiles/cons_genes_aspen.txt", row.names=FALSE)
+#write.table(strictly_gymnos_aspen, "Data/DATA/textFiles/gymnosperms_genes_aspen.txt", row.names=FALSE)
+#write.table(strictly_angios_aspen, "Data/DATA/textFiles/angiosperms_genes_aspen.txt", row.names=FALSE)
+
+#write.table(partial_3_aspen, "Data/DATA/textFiles/partial_3_genes_aspen.txt", row.names=FALSE)
+
+#write.table(partial4_genes_all_species, "Data/DATA/textFiles/partial_genes_all_species.txt", row.names=FALSE)
+save(partial_genes_all_species, file = "data/ComPlEx/partial_genes_all_species.RData")
+
+#write.table(partial4genes_angiosperms, "Data/DATA/textFiles/partial3_genes_angiosperms.txt", row.names=FALSE)
+save(partial_genes_angiosperms, file = "data/ComPlEx/partial_genes_angiosperms.RData")
+
+#write.table(partial3_genes_gymnosperms, "Data/DATA/textFiles/partial3_genes_gymnosperms.txt", row.names=FALSE)
+
+```
+
+**Creating file for easy search**
+
+```{r eval=FALSE}
+vect <- strictly_conserved_aspen$Asp
+vectStr=paste(as.character(vect), sep="' '", collapse=",")
+sink("outfile.txt")
+cat(vectStr)
+cat("\n")
+sink()
+```
+
+
+```{r}
+q <-read.delim("Data/DATA/textFiles/all_expressed_genes.txt", sep =" ")
+
+```

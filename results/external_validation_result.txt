@@ -1,0 +1,8 @@
+Independent validation of the conserved-core CLUSTER structure (STRING v12, A. thaliana co-expression channel, score>=400)
+Conserved-core Arabidopsis genes mapped with cluster + STRING: 79
+Co-expression edges among core genes: 692
+Observed WITHIN-cluster edges: 692
+Null (cluster labels randomised): mean=203.5 sd=22.8, max=378 (N=5000)
+Fold-enrichment: 3.4x ; empirical P < 0.001
+Interpretation: genes within the same clique cluster are far more co-expressed in independent Arabidopsis
+data than between clusters, confirming the clusters are coherent co-regulated modules (Torgeir's suggested test).

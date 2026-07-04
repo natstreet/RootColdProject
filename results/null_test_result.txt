@@ -1,0 +1,7 @@
+Conservation permutation test (column-shuffle, testable universe = 6799 OGs present in all 6 species)
+Permutations: 5000
+Null all-15 conserved: mean=0.0000, sd=0.0000, max=0
+Observed conserved core: 116 cliques (118 all-pairwise co-expressolog orthogroups)
+Empirical P < 0.001 (no permutation produced any all-15 orthogroup); fold-enrichment ~1e11
+Note: label-permutation null (randomises co-expressolog calls preserving per-comparison counts);
+not degree-preserving network rewiring (per-species MR networks are ~5.6 GB).

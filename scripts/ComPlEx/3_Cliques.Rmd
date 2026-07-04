@@ -1,0 +1,478 @@
+---
+title: "Identifying various forms of conserved genes using cliques (master file)"
+author: "Elena van Zalen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    number_sections: true
+    toc_float: true
+    theme: spacelab
+editor_options:
+  chunk_output_type: console
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(igraph)
+```
+
+**JUMP TO STEP 3 FOR IDENTIFICATION OF VARIOUS CLIQUES**
+
+**Step 1: remove orthogroups with no cliques**
+PRODUCES: CONS_OGS_RED which contains all orthogroups with at least one clique (3-6 members)
+```{r eval=FALSE, include=FALSE}
+load("data/ComPlEx/all_expressed_genes.RData") 
+expressologs <- expr_genes %>%
+  rename(MaxpVal = Max.p.Val) %>% 
+  filter(MaxpVal < 0.9)
+
+load("data/ComPlEx/ones_and_zeros_all.RData")
+
+# Add summary columns and remove all orthogroups that no expressed gene pairs.
+df_with_sums <- ones_and_zeros_all %>% 
+  mutate(Angiosperms = rowSums(. [1:6])) %>% 
+  mutate(Cross = rowSums(. [7:14]))%>%  
+  mutate(Gymnosperms = rowSums(. [15])) %>% 
+  mutate(Conserved = rowSums(. [1:15])) %>% 
+  filter(Conserved > 0)
+
+cons_ogs <- df_with_sums%>% 
+  filter(rownames(df_with_sums) %in% expressologs$OrthoGroup) %>% 
+  rownames()
+
+# Loop over all orthogroups from above and count the number of max cliques that contain at least three members.
+
+numb_of_cliques_per_og <- c()
+
+for (g in cons_ogs) {
+  print(g)
+  # g <- "OG0001993"
+  
+  expressologs_g <- expressologs %>% 
+    filter(OrthoGroup == g) 
+  
+  expressologs_g <- expressologs_g %>% 
+    mutate(UGeneSpecies1 = paste0(expressologs_g$Species1, "-", expressologs_g$GeneSpecies1),
+           UGeneSpecies2 = paste0(expressologs_g$Species2, "-", expressologs_g$GeneSpecies2))
+  
+  nodes <- data.frame(name = unique(c(expressologs_g$UGeneSpecies1, expressologs_g$UGeneSpecies2)))
+  
+  edges <- data.frame(from = expressologs_g$UGeneSpecies1, 
+                      to = expressologs_g$UGeneSpecies2)
+  
+  net <- graph_from_data_frame(edges, directed = FALSE, vertices = nodes)
+  
+  # largest_clique <- largest_weighted_cliques(net)
+  largest_clique <- max_cliques(net, min = 3)
+
+  numb_of_cliques_per_og <- rbind(numb_of_cliques_per_og, data.frame(Orthogroup = g,
+                                                                     numbCliques = length(largest_clique),
+                                                                     minSize = min(lengths(largest_clique)),
+                                                                     maxSize = max(lengths(largest_clique))))
+  }
+
+# 2) Remove orthogroups with no cliques (min clique size = 3). The loop simply goes through all orthogroups and counts the number of cliques that contain at least three members. We therefore need to remove all orthogroups with zero cliques.
+numb_of_cliques_per_og <- numb_of_cliques_per_og %>% 
+  arrange(desc(numbCliques)) %>% 
+  filter(numbCliques > 0) 
+
+paste0("Number of orthologs with at least one clique (3 to 6 members): ", length(unique(numb_of_cliques_per_og$Orthogroup)))
+
+# 3) Vectorise and save! 
+cons_og_red <- numb_of_cliques_per_og$Orthogroup
+save(cons_og_red, file = "data/ComPlEx/conserved_orthogroups_reduced.RData")
+save(numb_of_cliques_per_og, file = "data/ComPlEx/number_of_cliques_per_OG.RData")
+
+```
+
+**Step 2: The clique code**
+PRODUCES: clique_genes_prefiltered (if saved) and clique_genes_filterable. The latter is the final file which can be used for identifying all clique types.
+```{r eval=FALSE, include=FALSE}
+# load("Data/Data/number_of_cliques_per_OG.RData") # consider dropping OG0000001
+#load("data/ComPlEx/conserved_orthogroups_reduced.RData") # orthogroups that contain at least one clique (size 3-6)
+expressologs_from_max_cliques <- list()
+max_numb_of_cliques <- 5500
+
+for (g in cons_og_red) {
+  print(g)
+  
+  # g <- "OG0000001"
+  expressologs_g <- expressologs %>% 
+    filter(OrthologGroup == g) 
+  
+  expressologs_g <- expressologs_g %>% 
+    mutate(UGeneSpecies1 = paste0(expressologs_g$Species1, "-", expressologs_g$GeneSpecies1),
+           UGeneSpecies2 = paste0(expressologs_g$Species2, "-", expressologs_g$GeneSpecies2))
+  
+  nodes <- data.frame(name = unique(c(expressologs_g$UGeneSpecies1, expressologs_g$UGeneSpecies2)))
+  
+  edges <- data.frame(from = expressologs_g$UGeneSpecies1, 
+                      to = expressologs_g$UGeneSpecies2)
+  
+  net <- graph_from_data_frame(edges, directed = FALSE, vertices = nodes)
+  
+  largest_clique <- max_cliques(net, min = 3)
+
+  if(length(largest_clique) > max_numb_of_cliques){
+    largest_clique_red <- largest_clique[1:max_numb_of_cliques]
+  } else{largest_clique_red <- largest_clique}
+  
+  for(c in 1:length(largest_clique_red)){
+    c <- 1
+    if (c %% 500 == 0) {
+      cat(c, "\n")
+    }
+    
+    clique <- largest_clique[[c]]
+    clique_name <- attr(clique, "names")
+    
+    clique_species <- str_split_fixed(clique_name, "-", n = 2)[,1]
+    clique_genes <-  str_split_fixed(clique_name, "-", n = 2)[,2]
+    
+    expressologs_in_clique <- expressologs_g %>%
+      filter(UGeneSpecies1 %in% clique_name & UGeneSpecies2 %in% clique_name) %>%
+      select(c(1:5, 8)) %>% 
+      mutate(cliqueID = paste0(g,"_" ,c))
+    
+    expressologs_from_max_cliques <- append(expressologs_from_max_cliques, list(expressologs_in_clique))
+  }}
+
+clique_genes_unlisted <- plyr::ldply(expressologs_from_max_cliques)
+
+clique_genes_unlisted_prefilter <- clique_genes_unlisted %>% 
+  group_by(cliqueID) %>% 
+  mutate(MaxpValNegLog10 = -log10(MaxpVal)) %>% 
+  mutate(NegLog10CliqueSum = sum(MaxpValNegLog10)) %>% 
+  ungroup()
+
+# ------------- SAVING POINT -----------------
+# As the code above does take some time to run - it may be a good idea to save progress here.
+save(clique_genes_unlisted_prefilter, file = "data/ComPlEx/clique_genes_prefiltered.RData")
+# load("data/ComPlEx/clique_genes_prefiltered.RData")
+
+weighted_max_cliques <- clique_genes_unlisted_prefilter %>% 
+  mutate(species_pair = paste0(Species1, Species2))
+
+speciesPairs <- tibble(SpeciesPair = weighted_max_cliques %>% distinct(species_pair) %>% pull(species_pair),
+                       SpeciesPairClade = c("Cross", "Cross", "Angio", "Angio", "Angio", "Cross", "Cross", "Cross",
+                       "Cross", "Gymno", "Gymno", "Gymno", "Cross", "Cross", "Cross"))
+
+
+weighted_max_cliques <-  left_join(weighted_max_cliques , speciesPairs, by = join_by("species_pair" == "SpeciesPair" ))
+
+weighted_max_cliques_filterable <- weighted_max_cliques%>% 
+  mutate(Clade = paste0(SpeciesPairClade, "-sum" ))%>% 
+  group_by(cliqueID)%>% 
+  mutate(OriginalCliqueSize = n())%>%  
+  mutate(OriginalCliqueSize = factor(OriginalCliqueSize))%>% 
+  ungroup() %>% 
+  pivot_wider(names_from = SpeciesPairClade, values_from = SpeciesPairClade)%>%
+  pivot_wider(names_from = Clade, values_from = MaxpValNegLog10)
+
+weighted_max_cliques_filterable <- replace_na(weighted_max_cliques_filterable, list(`Angio-sum` = 0, `Gymno-sum` = 0, `Cross-sum` =0))
+
+weighted_max_cliques_filterable <- weighted_max_cliques_filterable %>% 
+  group_by(cliqueID) %>% 
+  mutate(AngioSum = sum(`Angio-sum`)) %>% 
+  mutate(GymnoSum = sum(`Gymno-sum`)) %>% 
+  mutate(CrossSum = sum(`Cross-sum`))
+
+weighted_max_cliques_filterable$Angio[is.na(weighted_max_cliques_filterable$Angio)] <- 0
+weighted_max_cliques_filterable$Angio[weighted_max_cliques_filterable$Angio != 0] <-1
+weighted_max_cliques_filterable$Gymno[is.na(weighted_max_cliques_filterable$Gymno)] <-0
+weighted_max_cliques_filterable$Gymno[weighted_max_cliques_filterable$Gymno != 0] <-1
+weighted_max_cliques_filterable$Cross[is.na(weighted_max_cliques_filterable$Cross)] <-0
+weighted_max_cliques_filterable$Cross[weighted_max_cliques_filterable$Cross != 0] <-1
+
+weighted_max_cliques_filterable <- weighted_max_cliques_filterable %>% 
+  ungroup() %>% 
+   mutate_at(c("Angio", "Gymno", "Cross"), as.numeric) %>% 
+    mutate(UGeneSpecies1 = paste0(weighted_max_cliques_filterable$Species1, "-", weighted_max_cliques_filterable$GeneSpecies1),
+           UGeneSpecies2 = paste0(weighted_max_cliques_filterable$Species2, "-", weighted_max_cliques_filterable$GeneSpecies2), .before = species_pair)
+
+# ------------- SAVING POINT -----------------
+# At this point the data set is ready to be used for identification of cliques.
+save(weighted_max_cliques_filterable, file = "data/ComPlEx/cliques/clique_genes_filterable_coex005.RData")
+
+```
+
+**Step 3: identifying cliques**
+Note that the two previous steps can be skipped if already run (and hopefully saved).
+```{r}
+# deposit ships this object as an .RDS; load() its .RData equivalent when regenerating
+weighted_max_cliques_filterable <- readRDS("data/ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS")
+load("data/ComPlEx/ones_and_zeros_all.RData")
+
+```
+
+
+
+```{r}
+# --------------- DECISIONS ---------------
+SELECTION_METHOD <- "SUM" # options: "SUM" = clique sum OR "PVAL" = p-value
+TYPE_OF_GENE_SET <- "e" # options: "c" = conserved, "d" = differentiated, "e" = enhanced OR "u" = unique
+
+# --------------- PARAMETERS ---------------
+P_VAL <- 0.1 # P_VAL < x
+C_SUM <- 15 # C_SUM >= x
+CROSSED_PAIRS_PERMITTED <- 3 # CROSSED_PAIRS_PERMITTED <= x
+C_SUM_CLADES <- 3 # C_SUM_CLADES >= x
+C_SUM_CROSS <- 6 # C_SUM_CROSS <= x
+C_SUM_TARGET_CLADE <- 3 # C_SUM_TARGET_CLADES >= x
+C_SUM_NON_TARGET_CLADE <- 3 # C_SUM_MON_TARGET_CLADES < x
+
+# NB! When identifying enhanced genes - an additional parameter has been added (04.09.24) removing orthogroups that only have 3-membered cliques. This is to reduce the possibility of overlapping with unique genes.
+
+
+```
+
+**Which parameters?**
+
+Conserved
+- p-value: P_VAL
+- clique sum: C_SUM
+
+Differentiated
+- p-value: P_VAL + CROSSED_PAIRS_PERMITTED
+- clique sum: C_SUM_CLADES + C_SUM_CROSS
+
+Enhanced
+- p-value: P_VAL
+- clique sum: C_SUM_TARGET_CLADE + C_SUM_NON_TARGET_CLADE + C_SUM_CROSS
+
+Unique
+- p-value: P_VAL
+- clique sum: C_SUM_TARGET_CLADE
+
+
+```{r}
+# ----------------CONSERVED GENES------------------------
+
+if(TYPE_OF_GENE_SET == "c"){
+  print(TYPE_OF_GENE_SET)
+
+  if(SELECTION_METHOD == "PVAL"){
+    print(SELECTION_METHOD)
+
+    conserved_genes <- weighted_max_cliques_filterable %>%
+      filter(MaxpVal < P_VAL) %>%
+      group_by(cliqueID) %>%
+      mutate(cliqueSize = n()) %>%
+      filter(cliqueSize == 15)
+
+    print(length(unique(conserved_genes$OrthologGroup)))
+    file_name <- paste0("data/ComPlEx/conserved_genes_", SELECTION_METHOD, "_", P_VAL, ".RData")
+  }
+
+  if(SELECTION_METHOD == "SUM"){
+    print(SELECTION_METHOD)
+    conserved_genes <- weighted_max_cliques_filterable %>%
+      group_by(cliqueID) %>%
+      filter(NegLog10CliqueSum >= C_SUM) %>%
+      mutate(cliqueSize = n()) %>%
+      filter(cliqueSize == 15)
+
+    print(length(unique(conserved_genes$OrthologGroup)))
+    file_name <- paste0("data/ComPlEx/conserved_genes_", SELECTION_METHOD, "_", C_SUM, ".RData")
+  }}
+
+# ------------------DIFFERENTIATED GENES----------------------
+
+if(TYPE_OF_GENE_SET == "d"){
+  print(TYPE_OF_GENE_SET)
+
+  if(SELECTION_METHOD == "PVAL"){
+    print(SELECTION_METHOD)
+
+
+    conserved_genes <- weighted_max_cliques_filterable %>%
+      filter(MaxpVal < P_VAL) %>%
+      group_by(cliqueID) %>%
+      filter(sum(Angio) == 3 & sum(Gymno) == 3 & sum(Cross) <= CROSSED_PAIRS_PERMITTED) %>%
+      filter(OriginalCliqueSize == 15)
+
+
+    print(length(unique(conserved_genes$OrthologGroup)))
+    file_name <- paste0("data/ComPlEx/differentiated_genes_", SELECTION_METHOD, "_", P_VAL,"_XPAIRS_",CROSSED_PAIRS_PERMITTED ,".RData")
+  }
+
+  if(SELECTION_METHOD == "SUM"){
+    print(SELECTION_METHOD)
+
+    conserved_genes <- weighted_max_cliques_filterable %>%
+      group_by(cliqueID) %>%
+      filter(AngioSum >= C_SUM_CLADES & GymnoSum >= C_SUM_CLADES & CrossSum < C_SUM_CROSS) %>%
+      mutate(cliqueSize = n()) %>%
+      filter(cliqueSize == 15)
+
+    print(length(unique(conserved_genes$OrthologGroup)))
+    file_name <- paste0("data/ComPlEx/differentiated_genes_", SELECTION_METHOD, "_C-X_", C_SUM_CLADES,"-",C_SUM_CROSS, ".RData")
+  }}
+
+# -----------------ENHANCED GENES-----------------------
+
+if(TYPE_OF_GENE_SET == "e"){
+  print(TYPE_OF_GENE_SET)
+
+  if(SELECTION_METHOD == "PVAL"){
+    print(SELECTION_METHOD)
+
+
+    conserved_genes_angio <- weighted_max_cliques_filterable %>%
+      filter(MaxpVal < P_VAL) %>%
+      filter(!(OriginalCliqueSize == 3)) %>%  # Only orthogroups with cliques larger than 3.
+      group_by(cliqueID) %>%
+      filter(sum(Angio) == 3) %>%
+      filter(sum(Gymno) == 0 & sum(Cross) == 0)
+
+    print(length(unique(conserved_genes_angio$OrthologGroup)))
+
+    conserved_genes_gymno <- weighted_max_cliques_filterable %>%
+      filter(MaxpVal < P_VAL) %>%
+      filter(!(OriginalCliqueSize == 3)) %>% # Only orthogroups with cliques larger than 3.
+      group_by(cliqueID) %>%
+      filter(sum(Gymno) == 3) %>%
+      filter(sum(Angio) == 0 & sum(Cross) == 0)
+
+    print(length(unique(conserved_genes_gymno$OrthologGroup)))
+
+
+    file_name_angio <- paste0("data/ComPlEx/enhanced_angiosperm_genes_", SELECTION_METHOD, "_", P_VAL, ".RData")
+    file_name_gymno <- paste0("data/ComPlEx/enhanced_gymnosperm_genes_", SELECTION_METHOD, "_", P_VAL, ".RData")
+
+  }
+
+  if(SELECTION_METHOD == "SUM"){
+    print(SELECTION_METHOD)
+
+    conserved_genes_angio <- weighted_max_cliques_filterable %>%
+      filter(AngioSum >= C_SUM_TARGET_CLADE) %>%
+      filter(GymnoSum < C_SUM_NON_TARGET_CLADE & CrossSum < C_SUM_CROSS) %>%
+      group_by(cliqueID) %>%
+      filter(sum(Angio) == 3) %>%
+      mutate(cliqueSize = n()) %>%
+      filter(cliqueSize > 3) # Removes orthogroups with only 3-membered cliques.
+
+    print(length(unique(conserved_genes_angio$OrthologGroup)))
+
+    conserved_genes_gymno <- weighted_max_cliques_filterable %>%
+      filter(GymnoSum >= C_SUM_TARGET_CLADE) %>%
+      filter(AngioSum < C_SUM_NON_TARGET_CLADE & CrossSum < C_SUM_CROSS) %>%
+      group_by(cliqueID) %>%
+      filter(sum(Gymno) == 3) %>%
+      mutate(cliqueSize = n()) %>%
+      filter(cliqueSize > 3) # Removes orthogroups with only 3-membered cliques.
+
+    print(length(unique(conserved_genes_gymno$OrthologGroup)))
+    file_name_angio <- paste0("data/ComPlEx/enhanced_angiosperm_genes_", SELECTION_METHOD, "_T-NT-X_", C_SUM_TARGET_CLADE,"-",C_SUM_NON_TARGET_CLADE, "-", C_SUM_CROSS,".RData")
+    file_name_gymno <- paste0("data/ComPlEx/enhanced_gymnosperm_genes_", SELECTION_METHOD, "_T-NT-X_", C_SUM_TARGET_CLADE,"-",C_SUM_NON_TARGET_CLADE, "-", C_SUM_CROSS, ".RData")
+  }
+
+}
+
+# ------------------UNIQUE GENES----------------------
+if(TYPE_OF_GENE_SET == "u"){
+  print(TYPE_OF_GENE_SET)
+
+  if(SELECTION_METHOD == "PVAL"){
+    print(SELECTION_METHOD)
+
+    angio_unique_ogs <- ones_and_zeros_all %>%
+      mutate(Angiosperms = rowSums(. [1:3])) %>%
+      mutate(Cross = rowSums(. [4:12]))%>%
+      mutate(Gymnosperms = rowSums(. [13:15])) %>%
+      mutate(Conserved = rowSums(. [1:15])) %>%
+      filter(Angiosperms == 3 & Gymnosperms == 0 & Cross == 0)
+
+    angio_unique_ogs_vctr <- rownames(angio_unique_ogs)
+
+    conserved_genes_angio <- weighted_max_cliques_filterable %>%
+      filter(OrthologGroup %in% angio_unique_ogs_vctr) %>%
+      filter(MaxpVal < P_VAL) %>%
+      group_by(cliqueID) %>%
+      filter(sum(Angio) == 3)
+
+
+    print(length(unique(conserved_genes_angio$OrthologGroup)))
+
+
+    gymno_unique_ogs <- ones_and_zeros_all %>%
+      mutate(Angiosperms = rowSums(. [1:3])) %>%
+      mutate(Cross = rowSums(. [4:12]))%>%
+      mutate(Gymnosperms = rowSums(. [13:15])) %>%
+      mutate(Conserved = rowSums(. [1:15])) %>%
+      filter(Angiosperms == 0 & Gymnosperms == 3 & Cross == 0)
+
+    gymno_unique_ogs_vctr <- rownames(gymno_unique_ogs)
+
+
+    conserved_genes_gymno <- weighted_max_cliques_filterable %>%
+      filter(OrthologGroup %in% gymno_unique_ogs_vctr) %>%
+      filter(MaxpVal < P_VAL) %>%
+      group_by(cliqueID) %>%
+      filter(sum(Gymno) == 3)
+    print(length(unique(conserved_genes_gymno$OrthologGroup)))
+
+
+    file_name_angio <- paste0("data/ComPlEx/unique_angiosperm_genes_", SELECTION_METHOD, "_", P_VAL, ".RData")
+    file_name_gymno <- paste0("data/ComPlEx/unique_gymnosperm_genes_", SELECTION_METHOD, "_", P_VAL, ".RData")
+
+  }
+
+  if(SELECTION_METHOD == "SUM"){
+    print(SELECTION_METHOD)
+
+    angio_unique_ogs <- ones_and_zeros_all %>%
+      mutate(Angiosperms = rowSums(. [1:3])) %>%
+      mutate(Cross = rowSums(. [4:12]))%>%
+      mutate(Gymnosperms = rowSums(. [13:15])) %>%
+      mutate(Conserved = rowSums(. [1:15])) %>%
+      filter(Angiosperms == 3 & Gymnosperms == 0 & Cross == 0)
+
+    angio_unique_ogs_vctr <- rownames(angio_unique_ogs)
+
+
+    conserved_genes_angio <- weighted_max_cliques_filterable %>%
+      filter(OrthologGroup %in% angio_unique_ogs_vctr) %>%
+      filter(AngioSum >= C_SUM_TARGET_CLADE)
+
+    print(length(unique(conserved_genes_angio$OrthologGroup)))
+
+
+    gymno_unique_ogs <- ones_and_zeros_all %>%
+      mutate(Angiosperms = rowSums(. [1:3])) %>%
+      mutate(Cross = rowSums(. [4:12]))%>%
+      mutate(Gymnosperms = rowSums(. [13:15])) %>%
+      mutate(Conserved = rowSums(. [1:15])) %>%
+      filter(Angiosperms == 0 & Gymnosperms == 3 & Cross == 0)
+
+    gymno_unique_ogs_vctr <- rownames(gymno_unique_ogs)
+
+
+    conserved_genes_gymno <- weighted_max_cliques_filterable %>%
+      filter(OrthologGroup %in% gymno_unique_ogs_vctr) %>%
+      filter(GymnoSum >= C_SUM_TARGET_CLADE)
+
+    print(length(unique(conserved_genes_gymno$OrthologGroup)))
+
+    file_name_angio <- paste0("data/ComPlEx/unique_angiosperm_genes_", SELECTION_METHOD,"_T_", C_SUM_TARGET_CLADE ,".RData")
+    file_name_gymno <- paste0("data/ComPlEx/unique_gymnosperm_genes_", SELECTION_METHOD, "_T_", C_SUM_TARGET_CLADE ,".RData")
+  }
+
+}
+
+
+```
+
+
+SAVE
+
+```{r}
+
+# save(conserved_genes, file = file_name)
+# save(conserved_genes_angio, file = file_name_angio)
+# save(conserved_genes_gymno, file = file_name_gymno)
+
+```

@@ -1,0 +1,526 @@
+---
+title: "Comparative heatmaps of samples (master files)"
+author: "Elena van Zalen & Ellen Dimmen Chapple"
+date: "2024-09-20"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    number_sections: true
+    toc_float: true
+    theme: paper
+editor_options:
+  chunk_output_type: console
+---
+
+# Libraries and lists
+```{r Packages, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(ComplexHeatmap)
+library(tibble)
+library(cowplot)
+# library(gplots)
+library(gdata)
+library(circlize)
+# library(ape)
+library(ggtree)
+library(gridExtra)
+# library(ggsci)
+library(paletteer)
+# library(viridis)
+library(forcats)
+library(ggpubr)
+library(ggridges)
+
+# Run version of ComPlEx
+VER <- "" # first run: "" second run: "-V2"
+
+```
+
+```{r name list}
+all_species <- c("col0", "ost0", "aspen", "birch", "spruce", "pine") 
+combo <- data.frame(t(combn(all_species, 2)))
+
+```
+
+NB !! Change path and name of transcription files once new ones are ready - here manually imputed files were used for heatmaps.
+```{r file names}
+# List of file names.
+file_list_1 <- c()
+for (i in 1:nrow(combo)){
+  
+  s1 <- combo[i, "X1"]
+  s2 <- combo[i, "X2"]
+  
+  file_name <- paste0("data/ComPlEx/PairwiseComparisons/comparison-",s1,"-",s2,"-abspearsonMR0.03-table.RData")
+  file_list_1 <- append(file_list_1, file_name, after = length(file_list_1))
+  }
+
+file_list_2 <- c()
+for (i in all_species){
+  expr_name <- paste0("data/expression/",i,"_root_cold_stress_expression.txt")
+  file_list_2 <- append(file_list_2, expr_name, after = length(file_list_2))
+}
+
+```
+
+# Heatmaps
+## Correlation matrices
+```{r corr matrix}
+pval <- 0.1
+
+for (x in file_list_1) {
+  if (file.exists(x)) {
+    # Load the data from file_list_1
+    load(x)
+
+    # Extract co-expressologs and filter by p-value
+    co_expressologs <- comparison_table %>%
+      select(Species1, Species2, OrthoGroup, Max.p.val) %>%
+      mutate_at("Max.p.val", as.numeric) %>%
+      filter(Max.p.val < pval) %>%
+      ungroup() %>%
+      arrange(Max.p.val) %>%
+      distinct(Species1, .keep_all = TRUE) %>%
+      distinct(Species2, .keep_all = TRUE)
+
+    # Extract key words for species 1 and species 2 from the file name
+    key_word_s1 <- sapply(strsplit(x, "-"), "[", 3)
+    key_word_s2 <- sapply(strsplit(x, "-"), "[", 4)
+
+    # SPECIES 1: Find corresponding file in file_list_2 for species 1
+    for (i in file_list_2) {
+      if (grepl(key_word_s1, i)) {
+        expr_data <- read.delim(i) # Read expression file
+
+        # Extract expression data for species 1
+        s1_expression <- co_expressologs %>%
+          left_join(expr_data, join_by(Species1 == Genes)) %>%
+          select(-c("Species2", "Max.p.val", "OrthoGroup")) %>%
+          as_tibble() %>%
+          column_to_rownames(var = "Species1") %>%
+          select(contains("1."))
+
+        s1_expression[is.na(s1_expression)] <- 0
+      }
+    }
+
+    # SPECIES 2: Find corresponding file in file_list_2 for species 2
+    for (i in file_list_2) {
+      if (grepl(key_word_s2, i)) {
+        expr_data <- read.delim(i) # Read expression file
+
+        # Extract expression data for species 2
+        s2_expression <- co_expressologs %>%
+          left_join(expr_data, join_by(Species2 == Genes)) %>%
+          select(-c("Species1", "Max.p.val", "OrthoGroup")) %>%
+          as_tibble() %>%
+          column_to_rownames(var = "Species2") %>%
+          select(contains("1."))
+
+        s2_expression[is.na(s2_expression)] <- 0
+      }
+    }
+
+    # Skip correlation if both species are the same (no point in comparing identical species)
+    if (key_word_s1 == key_word_s2) {
+      next
+    }
+
+    # Correlation matrix calculation
+    if (ncol(s1_expression) > 0 && ncol(s2_expression) > 0) {
+      corr_matrix <- round(cor(s1_expression, s2_expression, method = "pearson"), 4)
+
+      # Save the correlation matrix with a unique name
+      new_name <- as.character(paste0("corr_", key_word_s1, "-", key_word_s2))
+      mv("corr_matrix", new_name)
+    } else {
+      warning(paste("No expression data for comparison between", key_word_s1, "and", key_word_s2))
+    }
+  }
+}
+
+########################################################################################################################
+for (x in file_list_1) {
+  if (file.exists(x)) {
+    # Load the data from file_list_1
+    load(x)
+
+    # Extract co-expressologs and filter by p-value
+    co_expressologs <- comparison_table %>%
+      select(Species1, Species2, OrthoGroup, Max.p.val) %>%
+      mutate_at("Max.p.val", as.numeric) %>%
+      filter(Max.p.val < pval) %>%
+      ungroup() %>%
+      arrange(Max.p.val) %>%
+      distinct(Species1, .keep_all = TRUE) %>%
+      distinct(Species2, .keep_all = TRUE)
+
+    # Extract key words for species 1 and species 2 from the file name
+    key_word_s1 <- sapply(strsplit(x, "-"), "[", 3)
+    key_word_s2 <- sapply(strsplit(x, "-"), "[", 4)
+
+    # Initialize combined data frames
+    s1_combined <- data.frame()
+    s2_combined <- data.frame()
+
+    # SPECIES 1: Find corresponding file in file_list_2 for species 1
+    for (i in file_list_2) {
+      if (grepl(key_word_s1, i)) {
+        expr_data <- read.delim(i)  # Read expression file
+
+        # Extract expression data for species 1
+        s1_expression <- co_expressologs %>%
+          left_join(expr_data, join_by(Species1 == Genes)) %>%
+          select(-c("Species2", "Max.p.val", "OrthoGroup")) %>%
+          as_tibble() %>%
+          column_to_rownames(var = "Species1") %>%
+          select(contains("1."))
+
+        s1_expression[is.na(s1_expression)] <- 0
+        
+        # Pivot longer and summarize
+        s1_expression_long <- s1_expression %>%
+          pivot_longer(cols = everything(), 
+                       names_to = c("Replicate", "Treatment"), 
+                       names_sep = "\\.", 
+                       values_to = "Expression")
+
+        s1_combined <- s1_expression_long %>%
+          group_by(Treatment) %>%
+          summarize(Expression = mean(Expression, na.rm = TRUE), .groups = "drop") %>%
+          mutate(Species = key_word_s1);  # Add species identifier
+      }
+    }
+
+    # SPECIES 2: Find corresponding file in file_list_2 for species 2
+    for (i in file_list_2) {
+      if (grepl(key_word_s2, i)) {
+        expr_data <- read.delim(i)  # Read expression file
+
+        # Extract expression data for species 2
+        s2_expression <- co_expressologs %>%
+          left_join(expr_data, join_by(Species2 == Genes)) %>%
+          select(-c("Species1", "Max.p.val", "OrthoGroup")) %>%
+          as_tibble() %>%
+          column_to_rownames(var = "Species2") %>%
+          select(contains("1."))
+
+        s2_expression[is.na(s2_expression)] <- 0;
+        
+        # Pivot longer and summarize
+        s2_expression_long <- s2_expression %>%
+          pivot_longer(cols = everything(), 
+                       names_to = c("Replicate", "Treatment"), 
+                       names_sep = "\\.", 
+                       values_to = "Expression")
+
+        s2_combined <- s2_expression_long %>%
+          group_by(Treatment) %>%
+          summarize(Expression = mean(Expression, na.rm = TRUE), .groups = "drop") %>%
+          mutate(Species = key_word_s2);  # Add species identifier
+      }
+    }
+
+    # Skip correlation if both species are the same (no point in comparing identical species)
+    if (key_word_s1 == key_word_s2) {
+      next
+    }
+
+    # Correlation matrix calculation
+    if (nrow(s1_combined) > 0 && nrow(s2_combined) > 0) {
+      # Check if Treatment exists in both combined data frames
+      if ("Treatment" %in% colnames(s1_combined) && "Treatment" %in% colnames(s2_combined)) {
+        # Join combined data for correlation calculation
+        combined_data <- full_join(s1_combined, s2_combined, by = "Treatment", suffix = c("_S1", "_S2"))
+
+        # Ensure there are values to correlate
+        if (nrow(combined_data) > 0 && all(c("Expression_S1", "Expression_S2") %in% colnames(combined_data))) {
+          corr_matrix <- round(cor(combined_data[, c("Expression_S1", "Expression_S2")], method = "pearson"), 4)
+
+          # Save the correlation matrix with a unique name
+          new_name <- as.character(paste0("corr_", key_word_s1, "-", key_word_s2))
+          mv("corr_matrix", new_name)
+        } else {
+          warning(paste("No valid expression data for correlation between", key_word_s1, "and", key_word_s2))
+        }
+      } else {
+        warning("Treatment column is missing in one of the combined data frames.")
+      }
+    } else {
+      warning(paste("No expression data for comparison between", key_word_s1, "and", key_word_s2))
+    }
+  }
+}
+
+########################################################################################################################
+# Transposing matrices
+to_transpose <- c("corr_ost0-birch", "corr_ost0-aspen", "corr_ost0-pine", "corr_ost0-spruce", "corr_spruce-pine", "corr_aspen-birch")
+
+for(x in to_transpose){
+  # x <- to_transpose[1]
+  
+    key_word_s1 <- sapply(strsplit(x, "-"), "[",3) 
+    #key_word_s1 <- sapply(strsplit(key_word_s1, "-"), "[",1)
+    key_word_s2 <- sapply(strsplit(x, "-"), "[",4) 
+
+    corr_t <- t(get(x))
+    new_name <- as.character(paste0("corr_",key_word_s2, "-",key_word_s1))
+    mv("corr_t", new_name) 
+    rm(list = x)
+    
+   print(x) 
+}
+
+# Self-correlation matrices
+load("data/ComPlEx/all_expressed_genes.RData")
+co_expressologs_all <- expr_genes %>% 
+  filter(Max.p.Val < 0.1)
+
+for(i in file_list_2){
+  # i <- file_list_2[2]
+  
+  species <- sapply(strsplit(i, "expression/"), "[",2)
+  species <- sapply(strsplit(species, "_root_cold_stress_expression.txt"), "[",1)
+  print(species)
+  
+  co_expressologs_one_species <- co_expressologs_all %>% 
+    filter(species %in% Species1 | species %in% Species2)
+  
+  col_1 <-co_expressologs_one_species %>% 
+    select(Species1, GeneSpecies1) %>% 
+    rename(Species = "Species1", Genes = "GeneSpecies1") %>% 
+    filter(Species == species)
+  
+  col_2 <-co_expressologs_one_species %>% 
+    select(Species2, GeneSpecies2) %>% 
+    rename(Species = "Species2", Genes = "GeneSpecies2")%>% 
+    filter(Species == species)
+  
+  if(nrow(col_1) == 0) {
+    combined_df <- col_2
+  }
+  
+  if(nrow(col_2) == 0) {
+    combined_df <- col_1
+  }
+
+  if(nrow(col_2) > 0 & nrow(col_1) > 0){
+    combined_df <- rbind(col_1, col_2)
+  }
+  
+  combined_df <- combined_df %>% 
+    distinct(Genes, .keep_all = T)
+    
+  expression <- read.delim(i) %>%
+    filter(Genes %in% combined_df$Genes) %>% 
+    select(contains("1."))
+
+  corr_matrix <- round(cor(expression[,-1], method = "pearson"), 4)
+  new_name <- as.character(paste0("corr_",species, "-",species))
+  mv("corr_matrix", new_name) # rename the heatmaps for plotting in grid.
+}
+
+# ---------------------------------  Individual heatmaps--------------------------------- 
+corr_list <- c("corr_Cher-Asp", "corr_Birch-Asp", "corr_Lodge-Asp", "corr_Nor-Asp", "corr_Scots-Asp", "corr_Cher-Birch", "corr_Nor-Birch", "corr_Nor-Cher", "corr_Scots-Birch", "corr_Scots-Cher", "corr_Scots-Nor", "corr_Lodge-Birch", "corr_Lodge-Cher", "corr_Lodge-Nor", "corr_Lodge-Scots", "corr_col0-col0", "corr_ost0-ost0", "corr_aspen-aspen", "corr_birch-birch", "corr_spruce-spruce", "corr_pine-pine")
+
+# All on same sep legend
+for(matrix in corr_list){
+
+    key_word_s1 <- sapply(strsplit(matrix, "-"), "[",3)
+    #key_word_s1 <- sapply(strsplit(key_word_s1, "-"), "[",1)
+    key_word_s2 <- sapply(strsplit(matrix, "-"), "[",4)
+
+    lowest <- min(get(matrix))
+    highest <- max(get(matrix))
+    between <- mean(get(matrix))
+    
+    # col_function_1 <- colorRamp2(c(lowest,  between, highest), c("#440154", "#316880","#fde725")) #FFB000
+    col_function_1 <- colorRamp2(c(lowest,  between, highest), c("#06282c", "#448c8a","#eeffee"))
+    # How does it work for colour blindness: https://davidmathlogic.com/colorblind/#%23E1BE6A-%2340B0A6 
+    # col_function_1 <- colorRamp2(c(lowest,  between, highest), c("#440154FF", "#35B779FF","#FDE725FF"))
+    print(matrix)
+  
+
+   hm <-  Heatmap(get(matrix),show_column_names = FALSE,
+                  show_row_names = FALSE,
+    width = ncol(get(matrix))*unit(5, "mm"),
+    height = nrow(get(matrix))*unit(5, "mm"),
+    row_order = 1:nrow(get(matrix)),
+    column_order = 1:ncol(get(matrix)), col = col_function_1, show_heatmap_legend = F)
+               #         ,heatmap_width = unit(3, "cm"),
+               # heatmap_height = unit(3, "cm")
+    
+    new_name <- as.character(paste0("hm-",key_word_s1, "-",key_word_s2))
+    mv("hm", new_name)} # rename the heatmaps for plotting in grid.
+    
+
+g1 <- grid.grabExpr(print(`hm-Birch-Asp`))
+g2 <- grid.grabExpr(print(`hm-Cher-Asp`)) #
+g3 <- grid.grabExpr(print(`hm-Cher-Birch`)) #
+g4 <- grid.grabExpr(print(`hm-Nor-Asp`)) #
+g5 <- grid.grabExpr(print(`hm-Nor-Birch`)) 
+g6 <- grid.grabExpr(print(`hm-Nor-Cher`))
+g7 <- grid.grabExpr(print(`hm-Scots-Asp`)) #
+g8 <- grid.grabExpr(print(`hm-Scots-Birch`))
+g9 <- grid.grabExpr(print(`hm-Scots-Cher`))
+g10 <- grid.grabExpr(print(`hm-Scots-Nor`))  
+g11 <- grid.grabExpr(print(`hm-Lodge-Asp`))
+g12 <- grid.grabExpr(print(`hm-Lodge-Birch`))
+g13 <- grid.grabExpr(print(`hm-Lodge-Cher`))
+g14 <- grid.grabExpr(print(`hm-Lodge-Nor`))
+g15 <- grid.grabExpr(print(`hm-Lodge-Scots`))
+# Diag
+g16 <- grid.grabExpr(print(`hm-Asp-Asp`))
+g17 <- grid.grabExpr(print(`hm-Birch-Birch`))
+g18 <- grid.grabExpr(print(`hm-Cher-Cher`))
+g19 <- grid.grabExpr(print(`hm-Nor-Nor`))
+g20 <- grid.grabExpr(print(`hm-Scots-Scots`))
+g21 <- grid.grabExpr(print(`hm-Lodge-Lodge`))
+
+plot_grid(g2)
+
+ hm <-plot_grid(g16,NULL, NULL, NULL, NULL,NULL,
+          g1, g17, NULL, NULL,NULL, NULL,
+          g2, g3, g18, NULL, NULL, NULL,
+          g4, g5, g6, g19, NULL, NULL,
+          g7, g8, g9, g10, g20, NULL,
+          g11, g12, g13, g14, g15, g21, nrow = 6, ncol = 6)
+
+hm
+  
+```
+
+## Density plots
+```{r }
+df_for_density <- c()
+for(matrix in corr_list){
+  # matrix <- corr_list[2]
+  
+  pair <- sapply(strsplit(matrix, "_"), "[",2)
+  correlation_vect <- c(get(matrix))
+  
+  df <- data.frame(
+    pair = rep(pair, length(correlation_vect)),
+    correlation_values = correlation_vect
+  )
+  
+  df_for_density <- rbind(df_for_density, df)
+  # print(paste0(pair, ": ", length(correlation_vect)))
+}
+
+angio_pairs <- data.frame(pair = c("Cher-Asp" ,  "Birch-Asp", "Cher-Birch" ))
+gymno_pairs <- data.frame(pair = c(  "Lodge-Nor" , "Lodge-Scots", "Scots-Nor"))
+self <- data.frame(pair = c(   "Scots-Scots" ,"Nor-Nor"   ,  "Lodge-Lodge", "Asp-Asp" ,    "Birch-Birch", "Cher-Cher"  ))
+
+
+palette_1 <- c("#440154","#edc0cd","#994c9c")
+# palette_1 <-  c("#06282c", "#448c8a","#eeffee")
+
+all_non_self <- df_for_density %>%
+  filter( !(pair %in% self$pair))
+
+all_non_self[all_non_self == "Lodge-Scots"] <- "P.contorta - P.sylvestris"
+all_non_self[all_non_self == "Lodge-Nor"] <- "P.contorta - P.abies"
+all_non_self[all_non_self == "Scots-Nor"] <- "P.sylvestris - P.abies"
+all_non_self[all_non_self == "Lodge-Cher"] <- "P.contorta - P.avium"
+all_non_self[all_non_self == "Lodge-Birch"] <- "P.contorta - B.pendula"
+all_non_self[all_non_self == "Scots-Cher"] <- "P.sylvestris - P.avium"
+all_non_self[all_non_self == "Scots-Birch"] <- "P.sylvestris - B.pendula"
+all_non_self[all_non_self == "Nor-Cher"] <- "P.abies - P.avium"
+all_non_self[all_non_self == "Nor-Birch"] <- "P.abies - B.pendula"
+all_non_self[all_non_self == "Scots-Asp"] <- "P.sylvestris - P.tremula"
+all_non_self[all_non_self == "Nor-Asp"] <- "P.abies - P.tremula"
+all_non_self[all_non_self == "Lodge-Asp"] <- "P.contorta - P.tremula"
+all_non_self[all_non_self == "Cher-Birch"] <- "P.avium - B.pendula"
+all_non_self[all_non_self == "Birch-Asp"] <- "B.pendula - P.tremula"
+all_non_self[all_non_self == "Cher-Asp"] <- "P.avium - P.tremula"
+
+speciesPairs <- tibble(SpeciesPair = all_non_self %>% distinct(pair) %>% pull(pair),
+                       SpeciesPairClade = c("Angiosperm", "Angiosperm", "Crossed", "Crossed", "Crossed", "Angiosperm", "Crossed", "Crossed",
+                       "Crossed", "Crossed", "Gymnosperm", "Crossed", "Crossed", "Gymnosperm", "Gymnosperm"))
+
+
+all_non_self <-  left_join(all_non_self , speciesPairs, by = join_by("pair" == "SpeciesPair" ))
+
+all_non_self <- all_non_self%>%
+  mutate(pair = fct_relevel(pair,  "P.avium - P.tremula", "B.pendula - P.tremula", "P.avium - B.pendula",  "P.contorta - P.tremula" ,  "P.abies - P.tremula",     "P.sylvestris - P.tremula",   "P.abies - B.pendula"  ,   "P.abies - P.avium","P.sylvestris - B.pendula", "P.sylvestris - P.avium"  , "P.contorta - B.pendula", "P.contorta - P.avium",  "P.sylvestris - P.abies"  ,"P.contorta - P.abies", "P.contorta - P.sylvestris"))
+
+# ridges <- ggplot(all_non_self, aes(x = correlation_values, y = pair, fill = SpeciesPairClade)) + geom_density_ridges(linewidth = 0.6, color = "grey60") +
+#   scale_fill_manual(values = palette_1) +
+#   theme_ridges() + labs(x = "Correlation", y = " ") +   
+#   guides( fill = guide_legend(title = " ") ) +
+#   theme(axis.title = element_text(size = 20), panel.grid  = element_blank(),axis.text =  element_text(size = 15), axis.title.x = element_text(hjust = 0.5, vjust = -1), legend.title = element_text(size = 10),legend.text =  element_text(size = 15),  legend.position = "top",legend.justification = "center") 
+# 
+# ridges
+
+angio_density <- all_non_self %>% 
+  filter(SpeciesPairClade == "Angiosperm") %>% 
+  group_by(pair) 
+
+gymno_density <- all_non_self %>% 
+  filter(SpeciesPairClade == "Gymnosperm") %>% 
+  group_by(pair)
+
+crossed_density <- all_non_self %>% 
+  filter(SpeciesPairClade == "Crossed") %>% 
+  group_by(pair)
+
+p1 <-ggplot(angio_density, aes(x = correlation_values, groups = pair)) + geom_density(linewidth = 2, colour = "#b30000") + labs(title = "Angiosperm pairs",x = " ", y = " ")  + theme_classic()+  ylim(0,3.4)+ xlim(0,1)+
+  theme(plot.title = element_text(hjust = 0.5, size = 25), axis.title = element_text(size = 20), axis.text =  element_text(size = 15), axis.title.x = element_text(hjust = 0.5, vjust = -1)) 
+
+
+p2 <-ggplot(gymno_density, aes(x = correlation_values, groups = pair)) + geom_density(linewidth = 2, colour =   "#fd8d3c") + labs(title = "Gymnosperm pairs",x = " ", y = " ") +  ylim(0,3.4)+ xlim(0,1) + theme_classic()+  
+  theme(plot.title = element_text(hjust = 0.5, size = 25), axis.title = element_text(size = 20), axis.text =  element_text(size = 15), axis.title.x = element_text(hjust = 0.5, vjust = -1)) 
+
+
+p3 <-ggplot(crossed_density, aes(x = correlation_values, groups = pair)) + geom_density(linewidth = 2, colour = "#fecc5c") + labs( title = "Crossed pairs",x = "Correlation", y = " ") +  ylim(0,3.4)+ xlim(0,1)+ theme_classic()+  
+  theme(plot.title = element_text(hjust = 0.5, size = 25), axis.title = element_text(size = 20), axis.text =  element_text(size = 15), axis.title.x = element_text(hjust = 0.5, vjust = -1)) 
+
+```
+
+
+```{r}
+# Plotting comparison heatmaps with phylogenetic trees
+library(patchwork)
+library(magick)
+
+hm_fig <- image_read("Figures/Article/SampleComparison/another_palette.jpeg")
+hm_gg <- image_ggplot(hm_fig)
+hm_gg
+
+
+tree_full_name <- read.tree(text ="( ((Lodgepole pine, Scots pine), (Norway spruce)), ((Cherry,  Birch),(Aspen))  );")
+tree_full_name_mirror <- read.tree(text ="( ((Aspen),(Birch, Cherry)), ((Norway spruce),(Scots pine, Lodgepole pine)));")
+
+tree_full_name_lat <- read.tree(text ="( ((P.contorta, P.sylvestris), (P.abies)), ((P.avium,  B.pendula),(P.tremula))  );")
+tree_full_name_mirror_lat <- read.tree(text ="( ((P.tremula),(B.pendula, P.avium)), ((P.abies),(P.sylvestris , P.contorta)));")
+
+# tree_short_name <- read.tree(text ="( ((LP, SP), (NS)), ((C, B),(A))  );")
+# tree_short_name_mirror <- read.tree(text ="( ((A),(B, C)), ((NS),(SP, LP)));")
+
+tree_1 <-ggtree(tree_full_name_mirror_lat, ladderize = F,size = 1,color = "grey9") + geom_tiplab(size = 5, fontface = "italic",vjust = -2, hjust = 0.5) + xlim(-10, 10) 
+tree_horo <- tree_1 + rotate() 
+tree_vert <-ggtree(tree_full_name_lat, ladderize = F, size = 1,color = "grey9") + geom_tiplab(size = 5, angle = 0, fontface = "italic", hjust = -0.1)  + xlim(-10, 10)
+
+fig_1 <- tree_vert
+fig_2 <- hm_gg
+fig_3 <- tree_horo
+
+
+layout_1 <-  c(
+
+  area(t = 1, l = 0, b = 101, r = 50), # Vertical tree (fig 1)
+  area(t = 0, l = 10, b = 100, r = 160), # HM  (fig 2)    
+  area(t = 100, l = 45, b = 125, r = 125) # Horizontal tree (fig 3)
+
+)
+
+fig_1 + fig_2 + fig_3 +  plot_layout(design = layout_1) 
+# Fig dim: 1700 x 1000
+
+
+p1/p2/p3
+
+```
