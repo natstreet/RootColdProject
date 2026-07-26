@@ -26,7 +26,7 @@ repository. Obtain it as follows:
 - **Processed data** (per-species VST expression matrices, sample metadata, DEG tables,
   transcription-factor lists, ComPlEx outputs and clique definitions, functional annotation,
   the OrthoFinder orthogroup table): SciLifeLab figshare, https://figshare.scilifelab.se/
-  (DOI assigned on publication). Download `data.tar.gz` and unpack it; it expands to a
+  (DOI:10.17044/scilifelab.32747586). Download `data.tar.gz` and unpack it; it expands to a
   `data/` directory containing `expression/`, `metadata/`, `DEGs/`, `TranscriptionFactors/`,
   `annotation/`, `orthologs/`, `ComPlEx/` and `superclusters/`.
   The `ComPlEx/` step can be re-run either from the cached per-pair orthologue
