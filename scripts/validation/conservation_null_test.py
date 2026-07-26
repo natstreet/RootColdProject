@@ -32,15 +32,6 @@ WHAT IT DOES
 4. Reports observed vs null: empirical p-value, fold-enrichment, z-score, and
    writes the null distribution + a histogram.
 
-IMPORTANT
----------
-This is a faithful *reimplementation* of the co-expressolog logic so the script
-is self-contained. If your published pipeline differs in any detail (mutual-rank
-neighbourhood definition, exact FDR handling, clique vs all-pairwise definition),
-either (a) set USE_EXTERNAL_CALLER=True and point CALLER_CMD at your own
-co-expressolog script so the null reuses your exact method, or (b) tell me the
-differences and I will align this implementation. Numbers from this script should
-reproduce your observed 118/116 before the null is trusted — verify that first.
 
 INPUT FILES (edit the CONFIG block)
 -----------------------------------
