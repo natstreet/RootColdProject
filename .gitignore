@@ -6,3 +6,6 @@ data/
 __pycache__/
 *.pyc
 .DS_Store
+/figures/
+/tables/
+/DE/
