@@ -68,3 +68,12 @@ residual is the DESeq2 version used for independent filtering/dispersion (the
 deposited lists were built with the 2025 release — record `sessionInfo()`). The
 published per-timepoint and union DEG lists are also deposited
 (`DEGs/DEGs_*.RData`, `DEGs/per_timepoint_DEG_lists/`) as the exact reference.
+
+## Deposit consistency check
+
+`scripts/DE/check_deposit_consistency.R` (run from a directory containing the unpacked deposit
+`data/`) asserts the DEG-list invariants and prints a PASS/FAIL table: every `_lfc0`/`_lfc0585`/
+`_l2fc1` list is |log2FC| ≥ 1; the per-species `_lfc0` unions equal `DEGs_*.RData`; thresholding
+`padj_*.RData` at ≤ 0.05 reproduces the `_l2fc1` lists (so `padj_*` is the lfcThreshold = 1 test,
+not the `_lfc0` DEGs); and `og_summary` all-six sums to 270. See `DEPOSIT_CHANGES.md` and
+`scripts/DE/README.md` for what each deposited DEG artefact is.
