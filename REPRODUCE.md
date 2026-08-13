@@ -24,7 +24,11 @@ Outputs are written to `figures/` or `tables/`. R package requirements: `DESeq2`
 
 ## Definitions used throughout
 
-- **DEG:** adjusted P ≤ 0.05 and |log2 fold change| ≥ 1 (a two-fold change).
+- **DEG:** adjusted P ≤ 0.05 and |log2 fold change| ≥ 1 (a two-fold change). (Deposited
+  per-timepoint lists: `..._lfc0.txt` = the standard Wald test, `results()` with
+  `lfcThreshold = 0`, then a post-hoc |log2FC| ≥ 1 filter — these are the sets used
+  throughout the paper (every gene in them has |log2FC| ≥ 1); `..._l2fc1.txt` = the
+  stricter fold-change-thresholded test (`lfcThreshold = 1`), which is not used.)
 - **GO enrichment:** topGO, **classic** Fisher's exact test, biological process,
   Benjamini–Hochberg adjustment, padj < 0.05 (Tables S1, S2 and S3 all use the
   classic algorithm).

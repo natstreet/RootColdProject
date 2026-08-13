@@ -3,10 +3,12 @@
 #
 # Reproduces Figure 2 of Aro et al. from the deposited differential-expression results.
 #
-# DEG definition (as used throughout the paper): adjusted P <= 0.05 with NO fold-change
-# filter (DESeq2 Wald test, each cold timepoint contrasted against the pooled control,
-# alpha = 0.05, lfcThreshold = 0). The per-timepoint gene lists are the `..._p0.05_lfc0.txt`
-# files; direction (up/down) is taken from the sign of the log2 fold change.
+# DEG definition (as used throughout the paper): adjusted P <= 0.05 AND |log2 fold change| >= 1
+# (a two-fold change). The `..._p0.05_lfc0.txt` per-timepoint lists used here are the DESeq2 Wald
+# test (results() with lfcThreshold = 0), each cold timepoint contrasted against the pooled
+# control, with a post-hoc |log2FC| >= 1 filter applied — i.e. every gene in these lists has
+# |log2FC| >= 1 (the "lfc0" in the filename refers to lfcThreshold = 0 in the call, NOT to the
+# absence of a fold-change filter). Direction (up/down) is the sign of the log2 fold change.
 #
 # Inputs  (unpack data.tar.gz from the figshare deposit into ./data):
 #   data/DEGs/per_timepoint_DEG_lists/<species>/DEGs_<sp>_C_vs_<tp>_p0.05_lfc0.txt

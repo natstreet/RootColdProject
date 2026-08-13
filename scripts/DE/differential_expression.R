@@ -10,10 +10,12 @@
 # direction is the sign of log2FoldChange. Per-timepoint unions give the per-species DEG totals
 # (Col-0 5689, Ost-0 7995, aspen 11729, birch 3312, spruce 6353, pine 4717).
 #
-# NOTE the deposited per-timepoint lists are named `..._lfc0.txt` for historical reasons but DO
-# carry the |log2FC| >= 1 cutoff. The gene sets reproduce to Jaccard ~0.96; a residual ~3-7% is
-# the DESeq2-version dependence of dispersion/independent-filtering (deposited built with the
-# 2025 release; record your sessionInfo() for exact reproduction).
+# NOTE on the deposited list names: `..._lfc0.txt` are the DEG sets used throughout the paper —
+# the standard Wald test (results() with lfcThreshold = 0) with a post-hoc |log2FC| >= 1 filter
+# (every gene in them has |log2FC| >= 1). `..._l2fc1.txt` instead use a fold-change-thresholded
+# null (results() with lfcThreshold = 1) and are the stricter, unused alternative. The gene sets
+# reproduce to Jaccard ~0.96; a residual ~3-7% is the DESeq2-version dependence of
+# dispersion/independent-filtering (deposited built with the 2025 release; record sessionInfo()).
 #
 # Inputs (unpack data.tar.gz from figshare into ./data; the dds objects must be added there):
 #   data/dds/dds_<species>.rda   (raw DESeqDataSet per species)
