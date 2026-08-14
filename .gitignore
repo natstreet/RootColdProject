@@ -1,4 +1,7 @@
-data/
+/data/*
+!/data/superclusters/
+/data/superclusters/*
+!/data/superclusters/membership/
 *.Rproj
 .Rhistory
 .RData

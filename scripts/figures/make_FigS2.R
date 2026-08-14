@@ -7,8 +7,9 @@
 #
 # Run from a directory containing the unpacked figshare deposit `data/`.
 # Inputs:
-#   data/superclusters/tf_membership/<species>/cluster_<n>_TFDEC_members.csv
-#       per-species transcription factors assigned to each super cluster (original numbering)
+#   data/superclusters/membership/<species>/cluster_<n>_members.csv
+#       per-species gene membership of each super cluster (original numbering); the
+#       transcription factors among them are selected via the TF family table below
 #   data/TranscriptionFactors/TF_<species>.RData   gene -> TF family (Ost-0 uses the Col-0 set)
 # Output: Figure_S2.pdf, Figure_S2.tiff
 #
@@ -33,7 +34,7 @@ fam <- lapply(names(species), famtab); names(fam) <- names(species)
 
 rows <- list()
 for (lab in names(SC)) for (sp in names(species)) {
-  f <- sprintf("data/superclusters/tf_membership/%s/cluster_%d_TFDEC_members.csv", sp, SC[[lab]])
+  f <- sprintf("data/superclusters/membership/%s/cluster_%d_members.csv", sp, SC[[lab]])
   g <- read.csv(f, stringsAsFactors = FALSE)$gene_id
   fv <- fam[[sp]][as.character(g)]; fv <- fv[!is.na(fv)]
   cls <- ifelse(fv %in% majors, fv, "Others")

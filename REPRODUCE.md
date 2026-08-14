@@ -40,15 +40,17 @@ Outputs are written to the working directory. R package requirements: `DESeq2`,
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
 | Fig. 3C | `scripts/figures/make_Fig3C.R` | `*/Orthogroups_20240613.tsv`, `superclusters/…/SC*_gene_list.csv`, `superclusters/SC_mapping.csv`, `TranscriptionFactors/` |
 | Fig. S1 (matrix) | `scripts/figures/make_FigS1.R` | `superclusters/merged_super_clusters_means.RData` |
-| Fig. S2 | `scripts/figures/make_FigS2.R` | `superclusters/tf_membership/`, `TranscriptionFactors/` |
+| Fig. S2 | `scripts/figures/make_FigS2.R` | `superclusters/membership/`, `TranscriptionFactors/` |
 | Table S1 | `scripts/GO/make_TableS1.R` | `DEGs/og_summary.RData`, `DEGs/DEGs_col0.RData`, `*/Orthogroups_20240613.tsv`, `annotation/Athal_go_ids.tsv`, `annotation/bg_col0_ATC.rda` |
 | Table S2 | `scripts/GO/make_TableS2.R` | `ComPlEx/co_expressologs.RData`, `annotation/{go_ids,bg_*}`, `DEGs/DEGs_*.RData` |
 | Table S3 | `scripts/GO/make_TableS3.R` | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
-| Table S4 | `scripts/GO/make_TableS4.R` | `superclusters/tf_membership/` |
+| Table S4 | `scripts/GO/make_TableS4.R` | `superclusters/membership/` |
 | DEGs (Fig. 1 / Fig. 2) | `scripts/DE/differential_expression.R` | `dds/dds_{col0_soil,ost0_soil,Pt_new,Bp_new,Pa,Ps}.rda` |
 
 The twelve cross-species super clusters drawn on Figure S1 are a manual grouping of the
 per-species clusters (Pearson r ≥ 0.7); their memberships are given by
 `superclusters/SC_mapping.csv` and the per-SC gene lists. Figure S2 and Table S4 draw on the
-per-species transcription-factor membership of each super cluster in
-`superclusters/tf_membership/`.
+per-species, per-ecotype gene membership of each super cluster in `superclusters/membership/`
+(the differentially expressed genes assigned to a super cluster in a species, i.e. those whose
+cold-response profile correlates with the super cluster mean at r ≥ 0.7); this membership is
+included in the repository and is also provided as Supplementary Table S4.
