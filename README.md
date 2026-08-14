@@ -20,8 +20,10 @@ permutation null, is coherent in an independent co-expression compendium (STRING
 independent data, and shows conserved promoter cis-motifs.
 
 ## Data
-The scripts read their inputs from a local `data/` directory, which is not included in this
-repository. Obtain it as follows:
+The scripts read their inputs from a local `data/` directory. Most of it is not held in this
+repository and is obtained as below; the one exception is the small per-species super cluster
+membership used by Figure S2 and Table S4, which is included directly under
+`data/superclusters/membership/`. Obtain the rest as follows:
 
 - **Processed data** (per-species VST expression matrices, sample metadata, DEG tables,
   transcription-factor lists, ComPlEx outputs and clique definitions, functional annotation,
