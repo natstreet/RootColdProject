@@ -47,13 +47,16 @@ df <- bind_rows(rows) %>% mutate(pct = ifelse(total > 0, 100 * n / total, 0))
 df$Species <- factor(df$Species, levels = unname(species))
 df$Family  <- factor(df$Family, levels = c("Others", "WRKY", "bHLH", "NAC", "MYB", "ERF"))
 
+n_lab <- unique(df[, c("SC", "Species", "total")])          # transcription factors per species/SC
 pal <- c(ERF = "#EEC200", MYB = "#3B4CB8", NAC = "#9C3A2E",
          bHLH = "#111111", WRKY = "#4A235A", Others = "#8C8C8C")
 p <- ggplot(df, aes(Species, pct, fill = Family)) +
   geom_col(width = 0.8) +
+  geom_text(data = n_lab, aes(Species, 100, label = total), inherit.aes = FALSE,
+            vjust = -0.4, size = 2.6, colour = "grey30") +
   facet_wrap(~SC, ncol = 2) +
   scale_fill_manual(values = pal, breaks = c(majors, "Others"), name = "TF family") +
-  scale_y_continuous(breaks = c(0, 25, 50, 75, 100), expand = expansion(mult = c(0, 0.02))) +
+  scale_y_continuous(breaks = c(0, 25, 50, 75, 100), expand = expansion(mult = c(0, 0.09))) +
   labs(x = NULL, y = "Percentage (%)") +
   theme_bw(base_size = 12) +
   theme(panel.grid = element_blank(), strip.text = element_text(face = "bold"),
