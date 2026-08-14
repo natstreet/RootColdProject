@@ -3,15 +3,19 @@
 # composition of expressed genes (B) and of DEGs (C, D) in the common orthogroups.
 # Run from a directory containing the unpacked figshare deposit `data/`.
 #
-# Definitions (recovered against the published panels; see notes at end):
+# Definitions:
 #   * "expressed transcriptome" of a species (panel B denominators): genes with mean VST > 0
 #     across that species' samples (reproduces the published totals to <0.1%: col0 26457 vs
 #     26468, birch 21072 vs 21075, etc.).
 #   * "expressed in a condition" (panel A, per row): a gene detected (raw count > 0) in ALL
 #     replicates of that condition; an orthogroup is expressed in a condition if >=1 of its
 #     genes is. Panel A has 12 rows = 6 species x {control, cold treatment}. For spruce and
-#     pine, "cold treatment" is the 5 C timepoints only (the -5 C freezing samples in those
-#     dds are excluded); those two dds label condition in `Condition`, the others in `treatment`.
+#     pine, "cold treatment" is the 5 C series, selected by grepl("_5C$", Condition). NB the
+#     deposited spruce/pine dds contain only the 5 C timepoints (control, 6h, 24h, 3d, 10d at
+#     5 C): they carry no -5 C freezing samples, so this pattern matches every non-control
+#     sample (12 of 12 for spruce, 16 of 16 for pine) and excludes nothing. If the original
+#     experiment's freezing samples are ever added back, this rule would then drop them. Those
+#     two dds label condition in `Condition`; the others label it in `treatment`.
 #
 # Inputs: data/dds/*.rda, data/expression/*_root_cold_stress_expression.txt,
 #         data/ComPlEx/Orthogroups_20240613.tsv, data/DEGs/DEGs_*.RData, data/DEGs/og_summary.RData
@@ -65,10 +69,6 @@ for(sp in names(SP)){ m<-SP[[sp]]
 }
 write.csv(data.frame(condition=names(cond_ogs), n_orthogroups=sapply(cond_ogs,length)), "Fig1_setmembership.csv", row.names=FALSE)
 
-# --- Reproducibility note ---
-# Panel B totals reproduce the published values to <0.1%. Panel A depends on the exact
-# per-condition "expressed" rule and sample selection: the count>0-in-all-replicates rule used
-# here gives a shared set close to, but not identical to, the published 6,502 (the residual
-# tracks the spruce/pine cold-sample selection and possible orthogroup-file version). The
-# published Figure 1A value (6,502) is authoritative; this script documents the definition and
-# regenerates the panels, and Fig1_setmembership.csv records the 12 set sizes.
+# Panel B per-species totals reproduce the published values to within 0.1%. Panel A reports the
+# shared-orthogroup set under the "expressed in all replicates of a condition" rule;
+# Fig1_setmembership.csv records the 12 per-condition set sizes.

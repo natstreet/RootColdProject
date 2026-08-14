@@ -33,9 +33,9 @@ repository. Obtain it as follows:
   and annotation tables (`ComPlEx/orthologs-*.RData`, `ComPlEx/annotation-*.RData`) or, from
   scratch, from `orthologs/orthologs.parquet` together with `annotation/gene_aliases_20140331.txt`
   and `annotation/Orthogroups_130323_predefined_tree.tsv`. The variance-stabilised
-  `expression/` matrices are the starting point for network construction; the raw per-species
-  DESeq2 objects that produced them are not deposited (regenerate from the reads and assemblies
-  below, or from the DEG tables in `DEGs/`).
+  `expression/` matrices are the starting point for network construction; the per-species
+  `DESeqDataSet` objects (`dds/`) are included and are the input to
+  `scripts/DE/differential_expression.R`.
 - **Raw sequencing reads:** ENA umbrella BioProject **PRJEB104158** (components PRJEB104117
   Arabidopsis, PRJEB104118 birch, PRJEB104119 aspen, PRJEB104120 Scots pine, PRJEB26918 Norway
   spruce roots).

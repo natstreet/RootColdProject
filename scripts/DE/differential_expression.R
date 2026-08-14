@@ -3,24 +3,18 @@
 #
 # DEG definition: adjusted P <= 0.05 AND |log2 fold change| >= 1 (a two-fold change).
 #
-# Method (per species): starting from the raw gene-level DESeqDataSet, DESeq2's negative-binomial
-# Wald test contrasts each cold timepoint (6h, 24h, 3d, 10d at 5 C) against the pooled control,
-# with the median normalised count as the independent-filter statistic (UPSCb `extract_results`
-# convention). Genes with padj <= 0.05 and |log2FoldChange| >= 1 are differentially expressed;
-# direction is the sign of log2FoldChange. Per-timepoint unions give the per-species DEG totals
-# (Col-0 5689, Ost-0 7995, aspen 11729, birch 3312, spruce 6353, pine 4717).
+# Method (per species): from the raw gene-level DESeqDataSet, DESeq2's negative-binomial Wald test
+# contrasts each cold timepoint (6h, 24h, 3d, 10d at 5 C) against the pooled control, using the
+# median normalised count as the independent-filter statistic. Genes with padj <= 0.05 and
+# |log2FoldChange| >= 1 are differentially expressed; direction is the sign of log2FoldChange. The
+# per-species DEG total is the union over timepoints (Col-0 5689, Ost-0 7995, aspen 11729,
+# birch 3312, spruce 6353, pine 4717).
 #
-# NOTE on the deposited list names: `..._lfc0.txt` are the DEG sets used throughout the paper —
-# the standard Wald test (results() with lfcThreshold = 0) with a post-hoc |log2FC| >= 1 filter
-# (every gene in them has |log2FC| >= 1). `..._l2fc1.txt` instead use a fold-change-thresholded
-# null (results() with lfcThreshold = 1) and are the stricter, unused alternative. The gene sets
-# reproduce to Jaccard ~0.96; a residual ~3-7% is the DESeq2-version dependence of
-# dispersion/independent-filtering (deposited built with the 2025 release; record sessionInfo()).
-#
-# Inputs (unpack data.tar.gz from figshare into ./data; the dds objects must be added there):
-#   data/dds/dds_<species>.rda   (raw DESeqDataSet per species)
+# Inputs (unpack data.tar.gz from figshare into ./data):
+#   data/dds/dds_<species>.rda   raw DESeqDataSet per species
 # Output:
-#   DE/<species>/DEGs_<species>_C_vs_<tp>.txt  and  DE/<species>/DEG_counts.tsv
+#   DE/<species>/DEGs_<species>_C_vs_<tp>.txt   per-timepoint DEG lists
+#   DE/<species>/DEG_counts.tsv                 up/down/total per timepoint
 #
 # Usage: Rscript scripts/DE/differential_expression.R
 
