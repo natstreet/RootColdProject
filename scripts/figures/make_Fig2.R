@@ -64,5 +64,6 @@ p <- ggplot(d, aes(tp, Count, fill = Direction)) +
         axis.text = element_text(colour = "black"))
 
 dir.create("figures", showWarnings = FALSE)
+ggsave("figures/Figure2.pdf", p, width = 12.54, height = 12.54)
 ggsave("figures/Figure2.png", p, width = 12.54, height = 12.54, dpi = 110)
-cat("Wrote figures/Figure2.png\n")
+cat("Wrote figures/Figure2.pdf and figures/Figure2.png\n")
