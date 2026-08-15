@@ -58,7 +58,7 @@ for (s in symbols) {
     cc <- cond[sub(paste0("^", pre[sp], "\\d+\\."), "", names(v))]
     df <- data.frame(TF = lab, Species = species[[sp]], Condition = cc, VST = as.numeric(v))
     rows[[paste(s, sp)]] <- df
-    if (any(mem[[sp]] %in% DEG[[sp]])) stars[[paste(s, sp)]] <- data.frame(TF = lab, Species = species[[sp]])
+    if (any(g %in% DEG[[sp]])) stars[[paste(s, sp)]] <- data.frame(TF = lab, Species = species[[sp]])
   }
 }
 d <- bind_rows(rows)
@@ -86,7 +86,8 @@ p <- ggplot(summ, aes(Condition, m, colour = Species, group = Species)) +
   facet_wrap(~TF, nrow = 2, scales = "free_y") +
   scale_colour_manual(values = pal) + scale_fill_manual(values = pal, guide = "none") +
   labs(x = "Condition", y = "Expression (VST)", colour = "Species",
-       title = "Species expression profiles of transcription factors") +
+       title = "Species expression profiles of transcription factors",
+       caption = "* differentially expressed in that species (DEG, padj < 0.05)") +
   theme_bw(base_size = 11) +
   theme(panel.grid.minor = element_blank(), strip.background = element_rect(fill = "grey92"),
         strip.text = element_text(face = "bold"), axis.text.x = element_text(angle = 45, hjust = 1))

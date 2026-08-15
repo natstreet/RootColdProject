@@ -42,13 +42,17 @@ for (lab in names(SC)) { z <- list()
   Arows[[lab]] <- data.frame(SC=lab, cond=names(condlab), m=colMeans(Z,na.rm=TRUE), s=apply(Z,2,sd,na.rm=TRUE))
 }
 A <- bind_rows(Arows); A$SC<-factor(A$SC,levels=names(SC)); A$cond<-factor(A$cond,levels=names(condlab))
+Alab <- data.frame(SC=factor(names(SC),levels=names(SC)))
 pA <- ggplot(A, aes(cond, m, group=1)) +
-  geom_ribbon(aes(ymin=m-s, ymax=m+s), fill="grey70", alpha=0.4) +
-  geom_line() + geom_point(size=1.3) +
-  facet_wrap(~SC, ncol=1, strip.position="right") +
-  scale_x_discrete(labels=condlab) +
+  geom_ribbon(aes(ymin=m-s, ymax=m+s), fill="grey75", alpha=0.5) +
+  geom_line(linewidth=0.6) + geom_point(size=1.3) +
+  geom_text(data=Alab, aes(x=1, y=Inf, label=SC), inherit.aes=FALSE,
+            hjust=0, vjust=1.4, fontface="bold", size=3) +
+  facet_wrap(~SC, ncol=1) +
+  scale_x_discrete(labels=condlab) + coord_cartesian(clip="off") +
   labs(x=NULL, y="Mean z-score", title="(A) Clustering patterns") +
   theme_bw(base_size=10) + theme(panel.grid.minor=element_blank(),
+    strip.text=element_blank(), strip.background=element_blank(),
     axis.text.x=element_text(angle=45,hjust=1))
 
 # ── panel B: composition (TFs vs remaining DEGs) per species ──────────────────
@@ -94,7 +98,10 @@ pal<-c("Arabidopsis only"="#3F936A","Coniferous only"="#786C9C","Deciduous only"
        "Arabidopsis & Coniferous"="#6CB490","Arabidopsis & Deciduous"="#E48460",
        "Coniferous & Deciduous"="#9090B4","All three groups"="#A8C048")
 pC <- ggplot(Cd, aes(x="", y=pct, fill=category)) +
-  geom_col(width=1,colour="white",linewidth=0.3) + coord_polar("y") +
+  geom_col(width=1,colour="white",linewidth=0.3) +
+  geom_text(aes(label=ifelse(pct>=4, paste0(round(pct),"%"), "")),
+            position=position_stack(vjust=0.5), colour="white", size=2.5) +
+  coord_polar("y") +
   facet_grid(SC~type, switch="y") + scale_fill_manual(values=pal,name=NULL) +
   labs(title="(C) Conservation") +
   theme_void(base_size=10) + theme(legend.position="right", plot.title=element_text(hjust=0.5),
