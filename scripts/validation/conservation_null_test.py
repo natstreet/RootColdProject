@@ -216,6 +216,7 @@ def main():
     print("========================================")
 
     pd.DataFrame({"null_core_size": null}).to_csv(f"{OUT_PREFIX}_null.csv", index=False)
+    open(f"{OUT_PREFIX}_obs.txt", "w").write(str(obs_core))   # observed core size (read by make_FigS5.py)
     plt.figure(figsize=(6, 4))
     plt.hist(null, bins=30, color="#9ecae1", edgecolor="white")
     plt.axvline(obs_core, color="#d62728", lw=2, label=f"observed = {obs_core}")

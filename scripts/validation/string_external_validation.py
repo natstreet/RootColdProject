@@ -68,6 +68,8 @@ def main():
     for i in range(N_PERM):
         p = rng.permutation(lab); null[i] = int(np.sum(p[ei] == p[ej]))
     pval = (np.sum(null >= obs) + 1) / (N_PERM + 1)
+    np.savetxt("string_null.csv", null, fmt="%d", header="null", comments="")   # for make_FigS5.py
+    open("string_obs.txt", "w").write(str(obs))
     print(f"core genes with cluster + STRING: {len(nodes)}; core-core edges: {len(eu)}")
     print(f"observed within-cluster edges: {obs}")
     print(f"null mean={null.mean():.1f} sd={null.std():.1f} max={null.max()}")

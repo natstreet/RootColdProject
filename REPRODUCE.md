@@ -38,14 +38,26 @@ Outputs are written to the working directory. R package requirements: `DESeq2`,
 |---|---|---|
 | Fig. 1 | `scripts/figures/make_Fig1.R` | `dds/`, `expression/`, `ComPlEx/Orthogroups_20240613.tsv`, `DEGs/` |
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
-| Fig. 3C | `scripts/figures/make_Fig3C.R` | `*/Orthogroups_20240613.tsv`, `superclusters/…/SC*_gene_list.csv`, `superclusters/SC_mapping.csv`, `TranscriptionFactors/` |
+| Fig. 3 | `scripts/figures/make_Fig3.R` | `superclusters/membership/`, `expression/`, `superclusters/DEGs_TFs/`, `*/Orthogroups_20240613.tsv`, `superclusters/SC_mapping.csv`, `TranscriptionFactors/` |
+| Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/co_expressologs.RData`, `ComPlEx/all_go_results_clades.RData` |
+| Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `expression/` |
+| Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS`, `expression/`, `DEGs/` |
 | Fig. S1 (matrix) | `scripts/figures/make_FigS1.R` | `superclusters/merged_super_clusters_means.RData` |
 | Fig. S2 | `scripts/figures/make_FigS2.R` | `superclusters/membership/`, `TranscriptionFactors/` |
+| Fig. S3 | `scripts/figures/make_FigS3.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
+| Fig. S4 | `scripts/figures/make_FigS4.R` | `ComPlEx/co_expressologs.RData` |
+| Fig. S5 | `scripts/figures/make_FigS5.py` | outputs of the two `scripts/validation/` analyses — **external inputs, see note** |
+| Fig. S6 | `scripts/figures/make_FigS6.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
 | Table S1 | `scripts/GO/make_TableS1.R` | `DEGs/og_summary.RData`, `DEGs/DEGs_col0.RData`, `*/Orthogroups_20240613.tsv`, `annotation/Athal_go_ids.tsv`, `annotation/bg_col0_ATC.rda` |
 | Table S2 | `scripts/GO/make_TableS2.R` | `ComPlEx/co_expressologs.RData`, `annotation/{go_ids,bg_*}`, `DEGs/DEGs_*.RData` |
 | Table S3 | `scripts/GO/make_TableS3.R` | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
 | Table S4 | `scripts/GO/make_TableS4.R` | `superclusters/membership/` |
 | DEGs (Fig. 1 / Fig. 2) | `scripts/DE/differential_expression.R` | `dds/dds_{col0_soil,ost0_soil,Pt_new,Bp_new,Pa,Ps}.rda` |
+
+Figure S5 is the one figure not regenerable from the deposit alone: its two null distributions come
+from `scripts/validation/conservation_null_test.py` (needs the per-species co-expression edge lists)
+and `scripts/validation/string_external_validation.py` (needs the STRING v12 *A. thaliana*
+co-expression download). Run those two scripts, then `make_FigS5.py` plots their outputs.
 
 The twelve cross-species super clusters drawn on Figure S1 are a manual grouping of the
 per-species clusters (Pearson r ≥ 0.7); their memberships are given by
