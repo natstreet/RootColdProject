@@ -1,7 +1,12 @@
-Conservation permutation test (column-shuffle, testable universe = 6799 OGs present in all 6 species)
-Permutations: 5000
-Null all-15 conserved: mean=0.0000, sd=0.0000, max=0
-Observed conserved core: 116 cliques (118 all-pairwise co-expressolog orthogroups)
-Empirical P < 0.001 (no permutation produced any all-15 orthogroup); fold-enrichment ~1e11
-Note: label-permutation null (randomises co-expressolog calls preserving per-comparison counts);
-not degree-preserving network rewiring (per-species MR networks are ~5.6 GB).
+Conservation permutation test (label-permutation null; co-expressologs at MaxpVal < 0.1)
+Permutations: 5000 (each randomises the co-expressolog assignments within every one of the 15
+pairwise species comparisons, preserving the number of co-expressologs per comparison; eligible
+universe = orthogroups present in all six species)
+Observed conserved core: 256 all-pairwise co-expressolog orthogroups (of which 116 form complete
+cliques with one gene per species)
+Null all-15 conserved: mean=0.000, sd=0.000, max=0 (no permutation recovered any orthogroup as a
+co-expressolog across all 15 comparisons)
+Empirical P < 0.0002 (add-one corrected, 1/5001)
+Note: the observed core is reproduced from data/ComPlEx/co_expressologs.RData; the degree-preserving
+network-rewiring variant (conservation_null_test.py, ~5.6 GB per-species MR networks) is a separate,
+more stringent test and is not required to reproduce this figure.
