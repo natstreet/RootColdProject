@@ -28,7 +28,7 @@
 # Output: Figure1.pdf, Figure1.png, and printed panel values.
 # Usage:  Rscript scripts/figures/make_Fig1.R
 
-suppressPackageStartupMessages({ library(dplyr); library(readr); library(ggplot2)
+suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(readr); library(ggplot2)
   library(UpSetR); library(cowplot); library(grid); library(png) })
 ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 
@@ -79,22 +79,35 @@ Bdf <- data.frame(Group = factor(unname(labs), levels = rev(unname(labs))),
                   Count = as.integer(Bcount), Percent = 100 * Bcount / sapply(bg, length))
 pB <- tile(Bdf, "Composition of expressed genes in common orthogroups", pal6)
 
-# ── panels c/d: DEG categories ────────────────────────────────────────────────
+# ── panels c/d: DEG categories (deposited orthogroup table + og_summary) ──────
+# Each DEG is classified by how many species carry a gene / a DEG in its orthogroup, mapping
+# through the full deposited orthogroup table and the deposited per-orthogroup og_summary.
 DEGl  <- lapply(sp, function(s) ld(sprintf("data/DEGs/DEGs_%s.RData", s))); names(DEGl) <- sp
-degOG <- lapply(sp, function(s){ og <- OGm[[s]]; unique(og$OrthoGroup[og[[key[s]]] %in% DEGl[[s]]]) }); names(degOG) <- sp
-allOGd <- unique(unlist(degOG)); nsp <- sapply(allOGd, function(o) sum(sapply(degOG, function(x) o %in% x))); names(nsp) <- allOGd
-core_OG_DEG <- names(nsp[nsp == 6])
-cat(sprintf("Panels c/d: orthogroups with a DEG in all six species = %d\n", length(core_OG_DEG)))
+ogtab <- read.delim(Sys.glob("data/*/Orthogroups_20240613.tsv")[1], check.names = FALSE)
+sc <- c(col0="Arabidopsis_thaliana", ost0="Arabidopsis_thaliana", aspen="Populus_tremula",
+        birch="Betula_pendula", spruce="Picea_abies", pine="Pinus_sylvestris")
+orthos <- bind_rows(lapply(sp, function(s){
+  d <- data.frame(OrthoGroup = ogtab[["Ortholog_Group"]], GeneID = ogtab[[sc[s]]], stringsAsFactors = FALSE)
+  d <- separate_rows(d, GeneID, sep = ", "); d <- d[nzchar(d$GeneID), ]; d$species <- s; d }))
+orthos$DEG <- mapply(function(g, s) g %in% DEGl[[s]], orthos$GeneID, orthos$species)
+ogsum <- ld("data/DEGs/og_summary.RData")   # per-orthogroup n_species_with_genes / n_species_with_DEGs
+DEGclasses <- orthos %>% filter(DEG) %>% left_join(ogsum, by = "OrthoGroup") %>%
+  mutate(category = case_when(
+    n_species_with_genes == 1 & n_species_with_DEGs == 1 ~ "Singletons",
+    n_species_with_DEGs == 6                             ~ "DEG across all",
+    n_species_with_DEGs >  1 & n_species_with_DEGs != 6  ~ "DEG in some",
+    n_species_with_DEGs == 1 & n_species_with_genes >  1 ~ "Species-specific DEG",
+    TRUE ~ NA_character_))
+cat(sprintf("Panels c/d: orthogroups with a DEG in all six species = %d\n", sum(ogsum$n_species_with_DEGs == 6)))
 
 catlev <- c("DEG across all","DEG in some","Species-specific DEG","Singletons")
 Crows <- list(); Dcount <- integer(0)
-for (s in sp) { og <- OGm[[s]]; D <- DEGl[[s]]; tot <- length(D)
-  ogof <- og$OrthoGroup[match(D, og[[key[s]]])]; nc <- nsp[ogof]
-  cnts <- c("DEG across all" = sum(!is.na(nc) & nc == 6), "DEG in some" = sum(!is.na(nc) & nc >= 2 & nc <= 5),
-            "Species-specific DEG" = sum(!is.na(nc) & nc == 1), "Singletons" = sum(is.na(ogof)))
-  Crows[[s]] <- data.frame(species = labs[s], category = names(cnts), Counts = as.integer(cnts),
-                           prop = as.numeric(cnts)/tot, row.names = NULL)
-  Dcount[s] <- sum(!is.na(ogof) & ogof %in% core_OG_DEG)
+for (s in sp) {
+  sub  <- DEGclasses[DEGclasses$species == s & !is.na(DEGclasses$category), ]
+  cnts <- setNames(sapply(catlev, function(c) sum(sub$category == c)), catlev)
+  Crows[[s]] <- data.frame(species = labs[s], category = catlev, Counts = as.integer(cnts),
+                           prop = as.numeric(cnts)/sum(cnts), row.names = NULL)
+  Dcount[s] <- sum(sub$category == "DEG across all")     # DEGs in orthogroups with a DEG in all six
 }
 Cdf <- bind_rows(Crows); Cdf$category <- factor(Cdf$category, levels = catlev)
 Cdf$species <- factor(Cdf$species, levels = unname(labs))

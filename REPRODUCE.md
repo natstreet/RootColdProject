@@ -67,9 +67,10 @@ of the figshare deposit: the per-timepoint **median** expression tables
 expression exceeds zero (control timepoint, or any cold timepoint); the shared expressed core is
 the intersection across all twelve species×condition sets. Panels b and d (composition of expressed
 genes and of DEGs in the shared orthogroups) reproduce exactly. Panel c (the DEG-category stacked
-bars) is computed here from the same `gene2OG` maps for internal consistency; its category split
-differs slightly from the originally published panel, which used a more complete gene→orthogroup
-assignment for that panel only. No value cited in the main text depends on panel c.
+bars) classifies each DEG by how many species carry a gene, and a DEG, in its orthogroup — mapping
+through the full deposited `Orthogroups_20240613.tsv` and the deposited per-orthogroup `og_summary`
+(categories: DEG across all six species / in some / species-specific / singletons) — and reproduces
+the published panel to within rounding.
 
 The twelve cross-species super clusters drawn on Figure S1 are a manual grouping of the
 per-species clusters (Pearson r ≥ 0.7); their memberships are given by
