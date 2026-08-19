@@ -2,6 +2,12 @@
 !/data/superclusters/
 /data/superclusters/*
 !/data/superclusters/membership/
+!/data/expression/
+/data/expression/*
+!/data/expression/med_expression/
+!/data/ComPlEx/
+/data/ComPlEx/*
+!/data/ComPlEx/gene2OG/
 *.Rproj
 .Rhistory
 .RData

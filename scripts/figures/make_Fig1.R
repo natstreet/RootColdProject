@@ -1,74 +1,130 @@
 #!/usr/bin/env Rscript
-# make_Fig1.R — Figure 1: orthogroup overlap of expressed genes (UpSet, panel A), the
-# composition of expressed genes (B) and of DEGs (C, D) in the common orthogroups.
-# Run from a directory containing the unpacked figshare deposit `data/`.
+# make_Fig1.R — Figure 1: orthogroup overlap of expressed genes (UpSet, panel a), and the
+# composition of expressed genes (b) and differentially expressed genes (c, d) in the
+# orthogroups shared across all species/ecotypes.
 #
-# Definitions:
-#   * "expressed transcriptome" of a species (panel B denominators): genes with mean VST > 0
-#     across that species' samples (reproduces the published totals to <0.1%: col0 26457 vs
-#     26468, birch 21072 vs 21075, etc.).
-#   * "expressed in a condition" (panel A, per row): a gene detected (raw count > 0) in ALL
-#     replicates of that condition; an orthogroup is expressed in a condition if >=1 of its
-#     genes is. Panel A has 12 rows = 6 species x {control, cold treatment}. For spruce and
-#     pine, "cold treatment" is the 5 C series, selected by grepl("_5C$", Condition). NB the
-#     deposited spruce/pine dds contain only the 5 C timepoints (control, 6h, 24h, 3d, 10d at
-#     5 C): they carry no -5 C freezing samples, so this pattern matches every non-control
-#     sample (12 of 12 for spruce, 16 of 16 for pine) and excludes nothing. If the original
-#     experiment's freezing samples are ever added back, this rule would then drop them. Those
-#     two dds label condition in `Condition`; the others label it in `treatment`.
+# Reproduces the published figure from the deposited data plus two intermediate inputs that are
+# provided in this repository (they are not in the figshare deposit): the per-timepoint MEDIAN
+# expression tables and Elena van Zalen's per-species gene->orthogroup maps. The published figure
+# was assembled externally in Illustrator; this script regenerates its underlying values and a
+# composite rendering.
 #
-# Inputs: data/dds/*.rda, data/expression/*_root_cold_stress_expression.txt,
-#         data/ComPlEx/Orthogroups_20240613.tsv, data/DEGs/DEGs_*.RData, data/DEGs/og_summary.RData
-# Output: prints the panel-A intersection and panel-B/1D composition; writes Fig1_setmembership.csv.
+# Definitions (matching the original analysis):
+#   * expressed in a condition: median expression > 0 in the control timepoint, or in >=1 of the
+#     cold timepoints (6h/24h/3d/10d), per species. An orthogroup is expressed in a condition if
+#     >=1 of its genes is. Panel a = UpSet of the 12 species x {control, treatment} sets; the
+#     top intersection (all 12) is the shared expressed core.
+#   * panel b: expressed genes (in the GO background bg_*) whose orthogroup is in that shared core.
+#   * panels c/d: DEGs categorised by how many species have a DEG in the orthogroup — "DEG across
+#     all" (all six), "in some" (2-5), "species-specific" (1), "singletons" (no orthogroup). Panel
+#     d shows, per species, the DEGs in the "DEG across all" orthogroups.
+#
+# Inputs (run from a directory with the unpacked figshare deposit `data/`, into which this repo's
+# committed data/ files merge):
+#   data/expression/med_expression/<sp>_med.txt.gz          per-timepoint median expression (repo)
+#   data/ComPlEx/gene2OG/gene2OG_<Sp>.rda                    gene -> orthogroup maps (repo)
+#   data/annotation/bg_<sp>_<code>.rda                       expressed-gene backgrounds (repo)
+#   data/DEGs/DEGs_<sp>.RData                                per-species DEG lists (deposit)
+# Output: Figure1.pdf, Figure1.png, and printed panel values.
+# Usage:  Rscript scripts/figures/make_Fig1.R
 
-suppressMessages({ library(DESeq2) })
-ld <- function(f){ e<-new.env(); load(f, envir=e); get(ls(e)[1], envir=e) }
-SP <- list(
-  col0  =list(dds="dds_col0_soil", pre="Col", col="Arabidopsis_thaliana", degs="DEGs_col0",  field="treatment"),
-  ost0  =list(dds="dds_ost0_soil", pre="Ost", col="Arabidopsis_thaliana", degs="DEGs_ost0",  field="treatment"),
-  aspen =list(dds="dds_Pt_new",    pre="Pt",  col="Populus_tremula",      degs="DEGs_aspen", field="treatment"),
-  birch =list(dds="dds_Bp_new",    pre="Bp",  col="Betula_pendula",       degs="DEGs_birch", field="treatment"),
-  spruce=list(dds="dds_Pa",        pre="Pa",  col="Picea_abies",          degs="DEGs_spruce",field="Condition"),
-  pine  =list(dds="dds_Ps",        pre="Ps",  col="Pinus_sylvestris",     degs="DEGs_pine",  field="Condition"))
+suppressPackageStartupMessages({ library(dplyr); library(readr); library(ggplot2)
+  library(UpSetR); library(cowplot); library(grid); library(png) })
+ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 
-# gene -> orthogroup per Orthogroups column (data rows carry a leading row-number field vs the header)
-lines <- readLines("data/ComPlEx/Orthogroups_20240613.tsv"); hdr <- gsub('"',"",strsplit(lines[1],"\t")[[1]])
-g2og <- list()
-for(col in unique(sapply(SP, function(x) x$col))){ ci<-which(hdr==col); mp<-new.env()
-  for(k in 2:length(lines)){ f<-gsub('"',"",strsplit(lines[k],"\t")[[1]]); og<-f[2]; cell<-f[ci+1]
-    if(is.na(cell)||cell=="") next; for(gn in strsplit(cell,", ")[[1]]) assign(gn, og, envir=mp) }
-  g2og[[col]] <- mp }
-mapog <- function(genes,col){ mp<-g2og[[col]]; unique(na.omit(unlist(lapply(genes, function(g) if(exists(g,envir=mp,inherits=FALSE)) get(g,envir=mp) else NA)))) }
+sp   <- c("col0","ost0","aspen","birch","spruce","pine")
+labs <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
+key  <- c(col0="col0", ost0="ost0", aspen="aspen", birch="birch", spruce="spruce", pine="pine")
 
-cond_ogs <- list(); expressed_tot <- c()
-for(sp in names(SP)){ m<-SP[[sp]]; dds<-ld(sprintf("data/dds/%s.rda", m$dds)); cnt<-counts(dds); cd<-colData(dds)
-  if(m$field=="treatment"){ lab<-as.character(cd$treatment); ctrl<-which(lab=="control"); cold<-which(lab!="control") }
-  else { cond<-as.character(cd$Condition); ctrl<-which(cond=="control"); cold<-which(grepl("_5C$", cond)) }
-  exAll <- function(S) rownames(cnt)[rowSums(cnt[,S,drop=FALSE] > 0) == length(S)]
-  cond_ogs[[paste0(sp,"_control")]]   <- mapog(exAll(ctrl),  m$col)
-  cond_ogs[[paste0(sp,"_treatment")]] <- mapog(exAll(cold),  m$col)
-  ex <- read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", sp), check.names=FALSE)
-  expressed_tot[sp] <- sum(rowMeans(as.matrix(ex[,-1]), na.rm=TRUE) > 0)
+# gene -> orthogroup maps (objects OG_Col0, OG_Ost0, OG_aspen, OG_birch, OG_spruce, OG_pine)
+for (f in c("Col0","Ost0","aspen","birch","spruce","pine"))
+  load(sprintf("data/ComPlEx/gene2OG/gene2OG_%s.rda", f))
+OGm <- list(col0=OG_Col0, ost0=OG_Ost0, aspen=OG_aspen, birch=OG_birch, spruce=OG_spruce, pine=OG_pine)
+
+# ── panel a: expressed-orthogroup sets per condition + UpSet ──────────────────
+ctl <- list(); trt <- list()
+for (s in sp) {
+  e <- suppressMessages(as.data.frame(readr::read_delim(
+        sprintf("data/expression/med_expression/%s_med.txt.gz", s), show_col_types = FALSE)))
+  cc <- grep("Control$", colnames(e), value = TRUE)
+  tc <- grep("(6h|24h|3d|10d)$", colnames(e), value = TRUE)
+  ec <- e$Genes[ rowSums(as.matrix(e[, cc, drop = FALSE]) > 0) == length(cc) ]
+  et <- e$Genes[ rowSums(as.matrix(e[, tc, drop = FALSE]) > 0) > 0 ]
+  og <- OGm[[s]]; gc <- key[s]
+  ctl[[s]] <- unique(og$OrthoGroup[og[[gc]] %in% ec])
+  trt[[s]] <- unique(og$OrthoGroup[og[[gc]] %in% et])
 }
-shared <- Reduce(intersect, cond_ogs)
-cat("Panel A per-condition orthogroup counts:\n"); for(n in names(cond_ogs)) cat(sprintf("  %-18s %d\n", n, length(cond_ogs[[n]])))
-cat(sprintf("\nPanel A shared set (all 12): %d orthogroups  [published Fig 1A: 6,502]\n", length(shared)))
+sets <- c(setNames(ctl, paste(unname(labs), "control")),
+          setNames(trt, paste(unname(labs), "treatment")))
+common_OG_expr <- Reduce(intersect, sets)
+cat(sprintf("Panel a: all-12 shared expressed orthogroups = %d\n", length(common_OG_expr)))
 
-# Panel B / 1D composition: genes / DEGs in the shared orthogroups, per species
-cat("\nPanel B (expressed genes in common orthogroups) and 1D (DEGs in common orthogroups):\n")
-for(sp in names(SP)){ m<-SP[[sp]]
-  og_genes <- ls(g2og[[m$col]])                      # all mapped genes for this column
-  in_shared <- og_genes[vapply(og_genes, function(g) get(g, envir=g2og[[m$col]]) %in% shared, logical(1))]
-  ex <- read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", sp), check.names=FALSE)
-  expr_genes <- ex$Genes[rowMeans(as.matrix(ex[,-1]), na.rm=TRUE) > 0]
-  nB <- length(intersect(expr_genes, in_shared))
-  degf <- sprintf("data/DEGs/%s.RData", m$degs); D <- if(file.exists(degf)) ld(degf) else character(0)
-  nD <- length(intersect(D, in_shared))
-  cat(sprintf("  %-7s  1B genes=%-6d (%.1f%% of %d expressed)   1D DEGs=%-5d (%.1f%% of %d)\n",
-      sp, nB, 100*nB/expressed_tot[sp], expressed_tot[sp], nD, 100*nD/length(D), length(D)))
+all_OG <- unique(unlist(sets)); bm <- sapply(sets, function(x) all_OG %in% x)
+OG_binary <- data.frame(lapply(as.data.frame(bm), as.numeric), row.names = all_OG, check.names = FALSE)
+
+# ── panel b: expressed genes in the shared core, per species ──────────────────
+bg <- list(col0 = ld("data/annotation/bg_col0_ATC.rda"), ost0 = ld("data/annotation/bg_ost0_ATO.rda"),
+           aspen = ld("data/annotation/bg_aspen_PT.rda"), birch = ld("data/annotation/bg_birch_BP.rda"),
+           spruce = ld("data/annotation/bg_spruce_PA.rda"), pine = ld("data/annotation/bg_pine_PS.rda"))
+tile <- function(df, title, pal) ggplot(df, aes(1, Percent, fill = Group)) +
+  geom_col(width = 0.5, colour = "white") +
+  geom_text(aes(label = paste0(Group, "\n", Count, " (", round(Percent, 1), "%)")),
+            position = position_stack(vjust = 0.5), size = 3.4) +
+  scale_fill_manual(values = pal) + coord_flip() + labs(title = title) + theme_void() +
+  theme(plot.title = element_text(size = 11, face = "bold", hjust = 0.5), legend.position = "none")
+pal6 <- rev(c("#7CC347","#95EC96","#DAA918","#F3D476","#A770C5","#DEADF9"))
+Bcount <- sapply(sp, function(s){ og <- OGm[[s]]; gc <- key[s]
+  length(unique(og[[gc]][ og[[gc]] %in% bg[[s]] & og$OrthoGroup %in% common_OG_expr ])) })
+Bdf <- data.frame(Group = factor(unname(labs), levels = rev(unname(labs))),
+                  Count = as.integer(Bcount), Percent = 100 * Bcount / sapply(bg, length))
+pB <- tile(Bdf, "Composition of expressed genes in common orthogroups", pal6)
+
+# ── panels c/d: DEG categories ────────────────────────────────────────────────
+DEGl  <- lapply(sp, function(s) ld(sprintf("data/DEGs/DEGs_%s.RData", s))); names(DEGl) <- sp
+degOG <- lapply(sp, function(s){ og <- OGm[[s]]; unique(og$OrthoGroup[og[[key[s]]] %in% DEGl[[s]]]) }); names(degOG) <- sp
+allOGd <- unique(unlist(degOG)); nsp <- sapply(allOGd, function(o) sum(sapply(degOG, function(x) o %in% x))); names(nsp) <- allOGd
+core_OG_DEG <- names(nsp[nsp == 6])
+cat(sprintf("Panels c/d: orthogroups with a DEG in all six species = %d\n", length(core_OG_DEG)))
+
+catlev <- c("DEG across all","DEG in some","Species-specific DEG","Singletons")
+Crows <- list(); Dcount <- integer(0)
+for (s in sp) { og <- OGm[[s]]; D <- DEGl[[s]]; tot <- length(D)
+  ogof <- og$OrthoGroup[match(D, og[[key[s]]])]; nc <- nsp[ogof]
+  cnts <- c("DEG across all" = sum(!is.na(nc) & nc == 6), "DEG in some" = sum(!is.na(nc) & nc >= 2 & nc <= 5),
+            "Species-specific DEG" = sum(!is.na(nc) & nc == 1), "Singletons" = sum(is.na(ogof)))
+  Crows[[s]] <- data.frame(species = labs[s], category = names(cnts), Counts = as.integer(cnts),
+                           prop = as.numeric(cnts)/tot, row.names = NULL)
+  Dcount[s] <- sum(!is.na(ogof) & ogof %in% core_OG_DEG)
 }
-write.csv(data.frame(condition=names(cond_ogs), n_orthogroups=sapply(cond_ogs,length)), "Fig1_setmembership.csv", row.names=FALSE)
+Cdf <- bind_rows(Crows); Cdf$category <- factor(Cdf$category, levels = catlev)
+Cdf$species <- factor(Cdf$species, levels = unname(labs))
+pal4 <- rev(c("#A092E4","#80C5BA","#E4A1AC","#CFD676"))
+pC <- ggplot(Cdf, aes(species, Counts, fill = category)) + geom_col(colour = "black", width = 0.7) +
+  geom_text(aes(label = scales::percent(prop, accuracy = 1)), position = position_stack(vjust = 0.5), size = 3) +
+  scale_fill_manual(values = pal4) + theme_minimal(base_size = 12) +
+  labs(x = NULL, y = "Number of DEGs", fill = "Category") +
+  theme(panel.grid = element_blank(), legend.position = "top")
+Ddf <- data.frame(Group = factor(unname(labs), levels = rev(unname(labs))),
+                  Count = as.integer(Dcount[sp]), Percent = 100 * Dcount[sp] / sapply(DEGl, length))
+pD <- tile(Ddf, "Composition of DEGs in common orthogroups", pal6)
 
-# Panel B per-species totals reproduce the published values to within 0.1%. Panel A reports the
-# shared-orthogroup set under the "expressed in all replicates of a condition" rule;
-# Fig1_setmembership.csv records the 12 per-condition set sizes.
+cat("\nPanel b (expressed genes in common orthogroups):\n")
+for (s in sp) cat(sprintf("  %-6s %d (%.1f%%)\n", labs[s], Bdf$Count[Bdf$Group==labs[s]], Bdf$Percent[Bdf$Group==labs[s]]))
+cat("Panel d (DEGs in common orthogroups):\n")
+for (s in sp) cat(sprintf("  %-6s %d (%.1f%%)\n", labs[s], Ddf$Count[Ddf$Group==labs[s]], Ddf$Percent[Ddf$Group==labs[s]]))
+
+# ── render ────────────────────────────────────────────────────────────────────
+png("panelA_fig1.png", width = 2600, height = 1150, res = 210)
+upset(OG_binary, sets = rev(colnames(OG_binary)), keep.order = TRUE, nintersects = 15,
+      order.by = "freq", decreasing = TRUE, set_size.show = TRUE,
+      main.bar.color = "#636363", matrix.color = "#828282", sets.bar.color = "#828282",
+      sets.x.label = "Total orthogroups per selection", mainbar.y.label = "Orthogroup overlap of expressed genes",
+      set_size.scale_max = 18000, text.scale = c(1.5,1.5,0,1.5,1.5,1.6))
+dev.off()
+pA <- ggdraw() + draw_image("panelA_fig1.png")
+top <- plot_grid(pA, pB, ncol = 2, rel_widths = c(1.9, 1), labels = c("a","b"))
+bot <- plot_grid(pC, pD, ncol = 2, rel_widths = c(1.4, 1), labels = c("c","d"))
+fig <- plot_grid(top, bot, ncol = 1, rel_heights = c(1.25, 1))
+ggsave("Figure1.pdf", fig, width = 15, height = 11)
+ggsave("Figure1.png", fig, width = 15, height = 11, dpi = 110)
+cat("\nWrote Figure1.pdf / Figure1.png\n")
