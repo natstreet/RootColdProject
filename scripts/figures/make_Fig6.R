@@ -18,6 +18,7 @@
 suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2) })
 
 symbols <- c("ANAC018","bZIP61","HSFB2A","KAN3","LBD11","LBD13","MYB87","WRKY48")  # panel order
+disp    <- c(ANAC018 = "ANAC018/ANAC002", WRKY48 = "WRKY48/WRKY23")  # NAC/WRKY: Ost-0 member differs from Col-0
 species <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
 pre     <- c(col0="Col", ost0="Ost", aspen="Pt", birch="Bp", spruce="Pa", pine="Ps")
 cond    <- c("01"="Control","02"="6h","03"="24h","04"="3d","05"="10d")
@@ -51,7 +52,7 @@ rows <- list(); stars <- list()
 for (s in symbols) {
   og <- og_of(seed[[s]]); if (is.na(og)) next
   mem <- members(og)
-  lab <- s                                                # panel title = the Arabidopsis symbol
+  lab <- if (s %in% names(disp)) disp[[s]] else s         # panel label (dual where Ost-0 member differs)
   for (sp in names(species)) {
     g <- intersect(mem[[sp]], rownames(EXP[[sp]])); if (!length(g)) next
     v <- colMeans(EXP[[sp]][g, , drop = FALSE], na.rm = TRUE)                          # if >1 paralog, average
@@ -86,7 +87,6 @@ p <- ggplot(summ, aes(Condition, m, colour = Species, group = Species)) +
   facet_wrap(~TF, nrow = 2, scales = "free_y") +
   scale_colour_manual(values = pal) + scale_fill_manual(values = pal, guide = "none") +
   labs(x = "Condition", y = "Expression (VST)", colour = "Species",
-       title = "Species expression profiles of transcription factors",
        caption = "* differentially expressed in that species (DEG, padj < 0.05)") +
   theme_bw(base_size = 11) +
   theme(panel.grid.minor = element_blank(), strip.background = element_rect(fill = "grey92"),

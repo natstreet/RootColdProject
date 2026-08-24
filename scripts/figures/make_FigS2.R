@@ -19,8 +19,8 @@ suppressPackageStartupMessages({ library(dplyr); library(ggplot2); library(tidyr
 
 # main-text super cluster label -> original super cluster number
 SC <- c(SC_I = 6, SC_II = 2, SC_III = 3, SC_IV = 1)
-species <- c(col0 = "Col-0", ost0 = "Ost-0", birch = "Birch",
-             aspen = "Aspen", pine = "Pine", spruce = "Spruce")
+species <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "Aspen",
+             birch = "Birch", spruce = "Spruce", pine = "Pine")
 majors  <- c("ERF", "MYB", "NAC", "bHLH", "WRKY")
 
 ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }

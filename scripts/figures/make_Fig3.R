@@ -5,7 +5,7 @@
 #   (B) Cluster composition: number of member genes per species, split into transcription
 #       factors (TFs) and the remaining DEGs.
 #   (C) Conservation: distribution of each super cluster's orthogroups across the three
-#       phylogenetic groups (Arabidopsis / Deciduous / Coniferous), for DEGs and TF-DEGs.
+#       phylogenetic groups (Arabidopsis / Broadleaf / Conifer), for DEGs and TF-DEGs.
 #
 # Run from a directory containing the unpacked figshare deposit `data/`. Panels A and B use the
 # per-species super cluster membership in data/superclusters/membership/; panel C uses the pooled
@@ -17,9 +17,9 @@
 suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2); library(patchwork) })
 
 SC      <- c(SC_I = 6, SC_II = 2, SC_III = 3, SC_IV = 1)
-species <- c(col0="Col0", ost0="Ost0", birch="Birch", aspen="Aspen", pine="Pine", spruce="Spruce")
+species <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
 pre     <- c(col0="Col", ost0="Ost", aspen="Pt", birch="Bp", spruce="Pa", pine="Ps")
-condlab <- c("01"="control","02"="6h","03"="24h","04"="3d","05"="10d")
+condlab <- c("01"="Control","02"="6h","03"="24h","04"="3d","05"="10d")
 ld <- function(f){ e<-new.env(); load(f,envir=e); get(ls(e)[1],envir=e) }
 memb <- function(sp,n) read.csv(sprintf("data/superclusters/membership/%s/cluster_%d_members.csv",sp,n),
                                 stringsAsFactors=FALSE)$gene_id
@@ -50,7 +50,7 @@ pA <- ggplot(A, aes(cond, m, group=1)) +
             hjust=0, vjust=1.4, fontface="bold", size=3) +
   facet_wrap(~SC, ncol=1) +
   scale_x_discrete(labels=condlab) + coord_cartesian(clip="off") +
-  labs(x=NULL, y="Mean z-score", title="(A) Clustering patterns") +
+  labs(x=NULL, y="Mean z-score", title="(a) Clustering patterns") +
   theme_bw(base_size=10) + theme(panel.grid.minor=element_blank(),
     strip.text=element_blank(), strip.background=element_blank(),
     axis.text.x=element_text(angle=45,hjust=1))
@@ -67,7 +67,7 @@ B$Species<-factor(B$Species,levels=unname(species)); B$part<-factor(B$part,level
 pB <- ggplot(B, aes(Species, n, fill=part)) + geom_col() +
   facet_wrap(~SC, ncol=1, scales="free_y", strip.position="right") +
   scale_fill_manual(values=c(DEGs="#5B6C9F", TFs="#E08214"), name=NULL) +
-  labs(x=NULL, y="Count", title="(B) Cluster composition") +
+  labs(x=NULL, y="Count", title="(b) Cluster composition") +
   theme_bw(base_size=10) + theme(panel.grid.minor=element_blank(),
     axis.text.x=element_text(angle=45,hjust=1), legend.position="top")
 
@@ -81,8 +81,8 @@ for(i in seq_len(nrow(og))) for(g in c(splt(og[i,Ar]),splt(og[i,Bi]),splt(og[i,P
 clade<-function(g) if(grepl("^AT",g)) "A" else if(grepl("^Bpev|^Potr",g)) "D" else "C"
 mapping<-read.csv("data/superclusters/SC_mapping.csv",stringsAsFactors=FALSE)
 CAT<-c("A","C","D","AC","AD","CD","ACD")
-NAMES<-c(A="Arabidopsis only",C="Coniferous only",D="Deciduous only",AC="Arabidopsis & Coniferous",
-         AD="Arabidopsis & Deciduous",CD="Coniferous & Deciduous",ACD="All three groups")
+NAMES<-c(A="Arabidopsis only",C="Conifer only",D="Broadleaf only",AC="Arabidopsis & Conifer",
+         AD="Arabidopsis & Broadleaf",CD="Conifer & Broadleaf",ACD="All three groups")
 pie_of<-function(orig,tfonly){ sc<-sub("\\.\\d+$","",read.csv(Sys.glob(sprintf("data/superclusters/DEGs_TFs/%s/%s_gene_list.csv",orig,orig))[1],stringsAsFactors=FALSE)[,2])
   if(tfonly) sc<-sc[sc%in%TFset]
   ogi<-sapply(sc,function(g){i<-mget(g,envir=g2og,ifnotfound=NA)[[1]]; if(is.null(i)||is.na(i)) NA else i})
@@ -94,16 +94,16 @@ for(k in seq_len(nrow(mapping))) for(ty in c("DEGs","TF-DEGs")){
   Crows[[length(Crows)+1]]<-data.frame(SC=mapping$Main_text[k],type=ty,
     category=factor(NAMES[CAT],levels=NAMES[CAT]),pct=as.numeric(v)) }
 Cd<-bind_rows(Crows); Cd$SC<-factor(Cd$SC,levels=names(SC)); Cd$type<-factor(Cd$type,levels=c("DEGs","TF-DEGs"))
-pal<-c("Arabidopsis only"="#3F936A","Coniferous only"="#786C9C","Deciduous only"="#E49C24",
-       "Arabidopsis & Coniferous"="#6CB490","Arabidopsis & Deciduous"="#E48460",
-       "Coniferous & Deciduous"="#9090B4","All three groups"="#A8C048")
+pal<-c("Arabidopsis only"="#3F936A","Conifer only"="#786C9C","Broadleaf only"="#E49C24",
+       "Arabidopsis & Conifer"="#6CB490","Arabidopsis & Broadleaf"="#E48460",
+       "Conifer & Broadleaf"="#9090B4","All three groups"="#A8C048")
 pC <- ggplot(Cd, aes(x="", y=pct, fill=category)) +
   geom_col(width=1,colour="white",linewidth=0.3) +
   geom_text(aes(label=ifelse(pct>=4, paste0(round(pct),"%"), "")),
             position=position_stack(vjust=0.5), colour="white", size=2.5) +
   coord_polar("y") +
   facet_grid(SC~type, switch="y") + scale_fill_manual(values=pal,name=NULL) +
-  labs(title="(C) Conservation") +
+  labs(title="(c) Conservation") +
   theme_void(base_size=10) + theme(legend.position="right", plot.title=element_text(hjust=0.5),
     strip.text=element_text(size=9))
 

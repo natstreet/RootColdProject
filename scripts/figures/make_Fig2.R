@@ -50,7 +50,7 @@ d$species   <- factor(d$species, levels = names(sp))
 d$tp        <- factor(d$tp, levels = tps)
 d$Direction <- factor(d$Direction, levels = c("Up", "Down"))
 # tag panels (A)-(F)
-levels(d$species) <- paste0("(", LETTERS[seq_along(levels(d$species))], ") ", levels(d$species))
+levels(d$species) <- paste0("(", letters[seq_along(levels(d$species))], ") ", levels(d$species))
 
 p <- ggplot(d, aes(tp, Count, fill = Direction)) +
   geom_col(width = 0.8) +

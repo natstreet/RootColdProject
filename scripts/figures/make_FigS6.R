@@ -13,11 +13,11 @@ rd <- function(sp) read.delim(sprintf("data/expression/%s_root_cold_stress_expre
                               header=TRUE, sep="\t", check.names=FALSE)
 E <- lapply(names(prefix), rd); names(E) <- names(prefix)
 
-## timepoint coding (verified): 01=Control 02=6h 03=24h 04=3d 05=10d
+## timepoint coding: 01=Control, 02=6h, 03=24h, 04=3d, 05=10d
 tp_levels <- c("Control","6h","24h","3d","10d")
 tp_map    <- c("01"="Control","02"="6h","03"="24h","04"="3d","05"="10d")
 
-## sanity: per-code sample counts per species (should match the Methods 25/24/25/25/15/18)
+## per-code sample counts per species (Control/6h/24h/3d/10d)
 cat("== per-code sample counts (Control/6h/24h/3d/10d) ==\n")
 for(sp in names(E)){
   cols <- setdiff(colnames(E[[sp]]), "Genes")

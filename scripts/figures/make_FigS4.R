@@ -13,6 +13,10 @@ P <- 0.1
 ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 co <- ld("data/ComPlEx/co_expressologs.RData")
 
+# species display names
+disp <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "Aspen", birch = "Birch", spruce = "Spruce", pine = "Pine")
+co$Species1 <- disp[co$Species1]; co$Species2 <- disp[co$Species2]
+
 co$pair <- apply(cbind(co$Species1, co$Species2), 1, function(v) paste(sort(v), collapse = "_"))
 d <- co %>% filter(MaxpVal < P) %>% distinct(OrthologGroup, pair)
 M <- (as.data.frame.matrix(table(d$OrthologGroup, d$pair) > 0)) * 1
@@ -20,9 +24,9 @@ allp <- colnames(M)
 
 teal <- "#2A9BAF"; orange <- "#C46E00"
 q <- list(
-  list(query = intersects, params = list("col0_ost0"),   color = teal,   active = TRUE),
-  list(query = intersects, params = list("pine_spruce"), color = teal,   active = TRUE),
-  list(query = intersects, params = list("aspen_birch"), color = teal,   active = TRUE),
+  list(query = intersects, params = list("Col-0_Ost-0"),  color = teal,   active = TRUE),
+  list(query = intersects, params = list("Pine_Spruce"),  color = teal,   active = TRUE),
+  list(query = intersects, params = list("Aspen_Birch"),  color = teal,   active = TRUE),
   list(query = intersects, params = as.list(allp),        color = orange, active = TRUE))
 
 pdf("Figure_S4.pdf", width = 11, height = 8)

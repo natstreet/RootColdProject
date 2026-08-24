@@ -8,10 +8,8 @@
 #
 # Inputs (unpack data.tar.gz from figshare into ./data):
 #   data/*/Orthogroups_20240613.tsv
-#   data/DEGs/og_summary.RData            (orthogroup x genotype DEG summary; the 270 common
-#                                          orthogroups are those with n_species_with_DEGs == 6.
-#                                          This is the definition of the common set and is
-#                                          provided in the figshare archive.)
+#   data/DEGs/og_summary.RData            (per-orthogroup DEG summary; the common set is the
+#                                          orthogroups with n_species_with_DEGs == 6)
 #   data/DEGs/DEGs_col0.RData
 #   data/annotation/Athal_go_ids.tsv      (gene -> GO mapping, Arabidopsis)
 #   data/annotation/bg_col0_ATC.rda       (expressed-gene background, Col-0)
@@ -32,9 +30,8 @@ if (length(ogsf)) {
   osum <- ld(ogsf[1])
   common <- osum$OrthoGroup[osum$n_species_with_DEGs == 6]
 } else {
-  stop("data/DEGs/og_summary.RData not found. It defines the 270 common-DEG orthogroups ",
-       "(n_species_with_DEGs == 6) and is included in the figshare data archive; unpack it into ",
-       "data/DEGs/.")
+  stop("data/DEGs/og_summary.RData not found; it defines the common-DEG orthogroups ",
+       "(n_species_with_DEGs == 6) and is provided in this repository under data/DEGs/.")
 }
 sub <- og[og[["Ortholog_Group"]] %in% common, ]
 at <- unique(trimws(unlist(strsplit(paste(sub[["Arabidopsis_thaliana"]], collapse = ", "), "[,;[:space:]]+"))))

@@ -20,13 +20,23 @@ supplementary tables from the processed data deposited on figshare
    ```
 
 Outputs are written to the working directory. R package requirements: `DESeq2`,
-`matrixStats`, `topGO`, `GO.db`, `ggplot2`, `corrplot`, `dplyr`, `tidyr`, `openxlsx`.
+`matrixStats`, `topGO`, `GO.db`, `ggplot2`, `corrplot`, `dplyr`, `tidyr`, `pheatmap`,
+`patchwork`, `UpSetR`, `readr`, `openxlsx`.
+
+Some small derived inputs are provided in this repository rather than in the figshare deposit:
+the median-expression tables (`expression/med_expression/`), the gene→orthogroup maps
+(`ComPlEx/gene2OG/`), the per-species GO backgrounds (`annotation/bg_*.rda`), the Arabidopsis gene
+aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
+(`DEGs/og_summary.RData`), the per-timepoint DEG lists (`DEGs/per_timepoint_DEG_lists/`), the
+super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
+`superclusters/merged_super_clusters_means.RData`) and the super-cluster memberships
+(`superclusters/membership/`). Unpacking the deposit alongside them gives a complete `data/` tree.
 
 ## Definitions used throughout
 
-- **DEG:** adjusted P ≤ 0.05 and |log2 fold change| ≥ 1 (a two-fold change). The deposited
-  per-timepoint lists (`…_p0.05_lfc0.txt`) and per-species union sets (`DEGs_*.RData`) are the
-  DEGs used throughout the paper.
+- **DEG:** adjusted P ≤ 0.05 and |log2 fold change| ≥ 1 (a two-fold change). The per-timepoint
+  lists (`…_p0.05_lfc0.txt`, provided in this repository) and the deposited per-species union sets
+  (`DEGs_*.RData`) are the DEGs used throughout the paper.
 - **GO enrichment:** topGO, classic Fisher's exact test, biological process,
   Benjamini–Hochberg adjustment, padj < 0.05 (Tables S1, S2 and S3).
 - **Super clusters:** main-text labels SC_I–SC_IV map to the original super cluster numbers
@@ -40,7 +50,7 @@ Outputs are written to the working directory. R package requirements: `DESeq2`,
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
 | Fig. 3 | `scripts/figures/make_Fig3.R` | `superclusters/membership/`, `expression/`, `superclusters/DEGs_TFs/`, `*/Orthogroups_20240613.tsv`, `superclusters/SC_mapping.csv`, `TranscriptionFactors/` |
 | Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/co_expressologs.RData`, `ComPlEx/all_go_results_clades.RData` |
-| Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `expression/` |
+| Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `expression/med_expression/` |
 | Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS`, `expression/`, `DEGs/` |
 | Fig. S1 (matrix) | `scripts/figures/make_FigS1.R` | `superclusters/merged_super_clusters_means.RData` |
 | Fig. S2 | `scripts/figures/make_FigS2.R` | `superclusters/membership/`, `TranscriptionFactors/` |
@@ -53,6 +63,11 @@ Outputs are written to the working directory. R package requirements: `DESeq2`,
 | Table S3 | `scripts/GO/make_TableS3.R` | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
 | Table S4 | `scripts/GO/make_TableS4.R` | `superclusters/membership/` |
 | DEGs (Fig. 1 / Fig. 2) | `scripts/DE/differential_expression.R` | `dds/dds_{col0_soil,ost0_soil,Pt_new,Bp_new,Pa,Ps}.rda` |
+| GO backgrounds | `scripts/annotation/make_backgrounds.R` | `expression/<sp>_root_cold_stress_expression.txt` |
+
+The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each
+species — every gene with nonzero VST expression across the cold time-course samples.
+`scripts/annotation/make_backgrounds.R` regenerates them from the deposited expression tables.
 
 Figure S5 is the one figure not regenerable from the deposit alone: its two null distributions come
 from `scripts/validation/conservation_null_test.py` (needs the per-species co-expression edge lists)
@@ -68,7 +83,7 @@ expression exceeds zero (control timepoint, or any cold timepoint); the shared e
 the intersection across all twelve species×condition sets. Panels b and d (composition of expressed
 genes and of DEGs in the shared orthogroups) reproduce exactly. Panel c (the DEG-category stacked
 bars) classifies each DEG by how many species carry a gene, and a DEG, in its orthogroup — mapping
-through the full deposited `Orthogroups_20240613.tsv` and the deposited per-orthogroup `og_summary`
+through the full deposited `Orthogroups_20240613.tsv` and the per-orthogroup `og_summary`
 (categories: DEG across all six species / in some / species-specific / singletons) — and reproduces
 the published panel to within rounding.
 

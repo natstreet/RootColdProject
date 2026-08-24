@@ -191,7 +191,6 @@ def main():
     for k, v in obs_pairs.items():
         print(f"  {k[0]} vs {k[1]}: {v} co-expressologs")
     print(f"  >>> OBSERVED all-pairwise core = {obs_core} orthogroups")
-    print("  (sanity-check this against your reported 118 before trusting the null)\n")
 
     print(f"Building null ({N_NULL} degree-preserving rewirings)...")
     null = np.empty(N_NULL, dtype=int)
