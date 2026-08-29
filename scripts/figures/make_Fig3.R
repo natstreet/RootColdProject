@@ -14,7 +14,7 @@
 # Output: Figure3.pdf, Figure3.png
 # Usage:  Rscript scripts/figures/make_Fig3.R
 
-suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2); library(patchwork) })
+suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2); library(patchwork); library(ggtext) })
 
 SC      <- c(SC_I = 6, SC_II = 2, SC_III = 3, SC_IV = 1)
 species <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
@@ -50,9 +50,10 @@ pA <- ggplot(A, aes(cond, m, group=1)) +
             hjust=0, vjust=1.4, fontface="bold", size=3) +
   facet_wrap(~SC, ncol=1) +
   scale_x_discrete(labels=condlab) + coord_cartesian(clip="off") +
-  labs(x=NULL, y="Mean z-score", title="(a) Clustering patterns") +
+  labs(x=NULL, y="Mean z-score", title="**(a)** Clustering patterns") +
   theme_bw(base_size=10) + theme(panel.grid.minor=element_blank(),
     strip.text=element_blank(), strip.background=element_blank(),
+    plot.title=element_markdown(),
     axis.text.x=element_text(angle=45,hjust=1))
 
 # ── panel B: composition (TFs vs remaining DEGs) per species ──────────────────
@@ -67,11 +68,12 @@ B$Species<-factor(B$Species,levels=unname(species)); B$part<-factor(B$part,level
 pB <- ggplot(B, aes(Species, n, fill=part)) + geom_col() +
   facet_wrap(~SC, ncol=1, scales="free_y", strip.position="right") +
   scale_fill_manual(values=c(DEGs="#5B6C9F", TFs="#E08214"), name=NULL) +
-  labs(x=NULL, y="Count", title="(b) Cluster composition") +
+  labs(x=NULL, y="Count", title="**(b)** Cluster composition") +
   theme_bw(base_size=10) + theme(panel.grid.minor=element_blank(),
+    plot.title=element_markdown(),
     axis.text.x=element_text(angle=45,hjust=1), legend.position="top")
 
-# ── panel C: conservation pies (as in make_Fig3C.R) ──────────────────────────
+# ── panel C: conservation composition (as in make_Fig3C.R) ──────────────────
 og <- read.delim(Sys.glob("data/*/Orthogroups_20240613.tsv")[1], stringsAsFactors=FALSE, check.names=FALSE)
 cols<-colnames(og); Ar<-"Arabidopsis_thaliana"; Bi<-"Betula_pendula"
 Po<-grep("Populus_trem",cols,value=TRUE)[1]; Pa<-grep("Picea_abies",cols,value=TRUE)[1]; Ps<-grep("Pinus_sylv",cols,value=TRUE)[1]
@@ -94,18 +96,29 @@ for(k in seq_len(nrow(mapping))) for(ty in c("DEGs","TF-DEGs")){
   Crows[[length(Crows)+1]]<-data.frame(SC=mapping$Main_text[k],type=ty,
     category=factor(NAMES[CAT],levels=NAMES[CAT]),pct=as.numeric(v)) }
 Cd<-bind_rows(Crows); Cd$SC<-factor(Cd$SC,levels=names(SC)); Cd$type<-factor(Cd$type,levels=c("DEGs","TF-DEGs"))
-pal<-c("Arabidopsis only"="#3F936A","Conifer only"="#786C9C","Broadleaf only"="#E49C24",
-       "Arabidopsis & Conifer"="#6CB490","Arabidopsis & Broadleaf"="#E48460",
-       "Conifer & Broadleaf"="#9090B4","All three groups"="#A8C048")
-pC <- ggplot(Cd, aes(x="", y=pct, fill=category)) +
-  geom_col(width=1,colour="white",linewidth=0.3) +
-  geom_text(aes(label=ifelse(pct>=4, paste0(round(pct),"%"), "")),
+# orthogroups distributed across the phylogenetic groups, as 100% stacked bars ordered
+# lineage-specific -> shared by two -> shared by all three
+Cd$category <- factor(Cd$category, levels = NAMES[c("A","D","C","AD","AC","CD","ACD")])
+Cd$SCr      <- factor(Cd$SC, levels = rev(names(SC)))
+pal <- c("Arabidopsis only"="#2F9E6E", "Broadleaf only"="#D8892B", "Conifer only"="#7B6BA8",
+         "Arabidopsis & Broadleaf"="#6FA88C", "Arabidopsis & Conifer"="#5E8CA8",
+         "Conifer & Broadleaf"="#A67BA0", "All three groups"="#4D4D4D")
+pC <- ggplot(Cd, aes(pct, SCr, fill=category)) +
+  geom_col(width=0.7, colour="white", linewidth=0.4) +
+  geom_text(aes(label=ifelse(pct>=6, round(pct), ""), group=category),
             position=position_stack(vjust=0.5), colour="white", size=2.5) +
-  coord_polar("y") +
-  facet_grid(SC~type, switch="y") + scale_fill_manual(values=pal,name=NULL) +
-  labs(title="(c) Conservation") +
-  theme_void(base_size=10) + theme(legend.position="right", plot.title=element_text(hjust=0.5),
-    strip.text=element_text(size=9))
+  facet_wrap(~type, ncol=1, strip.position="top") +
+  scale_fill_manual(values=pal, name=NULL, guide=guide_legend(ncol=1)) +
+  scale_x_continuous(expand=expansion(0), breaks=c(0,25,50,75,100)) +
+  labs(x="Orthogroups (%)", y=NULL, title="**(c)** Conservation") +
+  theme_bw(base_size=10) +
+  theme(panel.grid.major.y=element_blank(), panel.grid.minor=element_blank(),
+        panel.grid.major.x=element_line(colour="grey90", linewidth=0.3),
+        axis.text.y=element_text(face="bold", colour="black"), axis.ticks.y=element_blank(),
+        strip.text=element_text(face="bold", hjust=0, size=9.5), strip.background=element_blank(),
+        plot.title=element_markdown(size=12),
+        legend.text=element_text(size=8), legend.key.size=unit(10,"pt"),
+        legend.position="right", panel.spacing=unit(8,"pt"))
 
 fig <- (pA | pB | pC) + plot_layout(widths=c(1,1,1.4))
 ggsave("Figure3.pdf", fig, width = 15, height = 9)

@@ -20,8 +20,8 @@ supplementary tables from the processed data deposited on figshare
    ```
 
 Outputs are written to the working directory. R package requirements: `DESeq2`,
-`matrixStats`, `topGO`, `GO.db`, `ggplot2`, `corrplot`, `dplyr`, `tidyr`, `pheatmap`,
-`patchwork`, `UpSetR`, `readr`, `openxlsx`.
+`matrixStats`, `topGO`, `GO.db`, `ggplot2`, `ggtext`, `corrplot`, `dplyr`, `tidyr`,
+`pheatmap`, `patchwork`, `UpSetR`, `readr`, `openxlsx`.
 
 Some small derived inputs are provided in this repository rather than in the figshare deposit:
 the median-expression tables (`expression/med_expression/`), the gene→orthogroup maps
