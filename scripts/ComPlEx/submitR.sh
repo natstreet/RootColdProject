@@ -2,8 +2,8 @@
 set -eux
 
 ## variables
-proj=u2020001
-mail=elena.vanzalen@umu.se
+proj=PROJECT
+mail=you@example.org
 rscript=scripts/ComPlEx/ComPlEx.R
 out=data/ComPlEx
 

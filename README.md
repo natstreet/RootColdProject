@@ -2,7 +2,7 @@
 
 Analysis code for:
 
-**Comparative genomics of cold-temperature responses in boreal tree roots**
+**Comparative co-expression reveals a regulatory core shared by angiosperm and conifer roots under cold**
 Norway spruce (*Picea abies*), Scots pine (*Pinus sylvestris*), silver birch (*Betula pendula*),
 aspen (*Populus tremula*) and two *Arabidopsis thaliana* ecotypes (Col-0, Ost-0).
 
@@ -13,9 +13,9 @@ directory before running the scripts.
 ## Overview
 Fine-root transcriptomes of four boreal trees and two *Arabidopsis* ecotypes were profiled over a
 ten-day 5 °C (chilling) treatment. Differential expression is largely lineage-specific, but
-comparative co-expression (ComPlEx) recovers a conserved regulatory core (116 cliques /
-118 orthogroups) shared across all 15 pairwise species comparisons and spanning more than
-300 million years of evolution. Supporting analyses test that this core is significant against a
+comparative co-expression (ComPlEx) recovers a conserved regulatory core of 256 co-expressolog
+orthogroups (116 of which form complete cliques) shared across all 15 pairwise species
+comparisons and spanning more than 300 million years of evolution. Supporting analyses test that this core is significant against a
 permutation null, is coherent in an independent co-expression compendium (STRING), replicates in
 independent data, and shows conserved promoter cis-motifs.
 

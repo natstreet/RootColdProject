@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH -A u2020001
+#SBATCH -A PROJECT
 #SBATCH -n 4
 #SBATCH --mem=200G
 #SBATCH -t 2-00:00:00
-#SBATCH --mail-user=elena.vanzalen@umu.se
+#SBATCH --mail-user=you@example.org
 #SBATCH --mail-type=FAIL
 #SBATCH -J "RunR"
 set -ex
