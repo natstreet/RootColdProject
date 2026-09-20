@@ -32,9 +32,10 @@ membership used by Figure S2 and Table S4, which is included directly under
   `data/` directory containing `expression/`, `metadata/`, `DEGs/`, `TranscriptionFactors/`,
   `annotation/`, `orthologs/`, `ComPlEx/` and `superclusters/`.
   The `ComPlEx/` step can be re-run either from the cached per-pair orthologue
-  and annotation tables (`ComPlEx/orthologs-*.RData`, `ComPlEx/annotation-*.RData`) or, from
-  scratch, from `orthologs/orthologs.parquet` together with `annotation/gene_aliases_20140331.txt`
-  and `annotation/Orthogroups_130323_predefined_tree.tsv`. The variance-stabilised
+  tables (`ComPlEx/orthologs-*.RData`) or, from scratch, from `orthologs/orthologs.parquet`
+  together with `annotation/gene_aliases_20140331.txt`. *Arabidopsis* annotation is derived
+  from `orthologs.parquet` itself, so that it cannot disagree with the orthology used for the
+  comparisons. The variance-stabilised
   `expression/` matrices are the starting point for network construction; the per-species
   `DESeqDataSet` objects (`dds/`) are included and are the input to
   `scripts/DE/differential_expression.R`.

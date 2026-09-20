@@ -89,31 +89,40 @@ if (!file.exists(ortholog_group_RData)) {
   load(file = ortholog_group_RData)
 }
 
-# Add annotations from arabidopsis
-symbols <- read.delim("data/annotation/gene_aliases_20140331.txt", sep = "\t") %>%
-  dplyr::rename(Arabidopsis = locus_name, Symbol = symbol, Name = full_name)
-ortholog_annot_file <- "data/annotation/Orthogroups_130323_predefined_tree.tsv"
+# Add annotations from Arabidopsis.
+# The annotation is derived from the SAME orthology the analysis keys on
+# (ortholog_group_file, the 27-species orthologs.parquet), NOT from a second
+# OrthoFinder run: both runs number groups OG0000000, OG0000001, ... so a join on
+# the identifier succeeds while denoting different gene sets, which attaches the
+# annotation to the wrong orthogroups. This derivation mirrors the deposit's
+# export_open_formats.R, so the two produce an identical orthogroup_annotation.tsv.
+alias <- read.delim("data/annotation/gene_aliases_20140331.txt",
+                    stringsAsFactors = FALSE, colClasses = "character") %>%
+  dplyr::transmute(locus = toupper(trimws(locus_name)), symbol, full_name) %>%
+  dplyr::group_by(locus) %>%
+  dplyr::summarise(Symbol = paste(sort(unique(symbol[nzchar(symbol)])), collapse = "; "),
+                   Name   = paste(sort(unique(full_name[nzchar(full_name)])), collapse = "; "),
+                   .groups = "drop")
+ath <- ortholog_group_file %>%
+  dplyr::filter(species == "Arabidopsis_thaliana") %>%
+  dplyr::transmute(OrthoGroup = Ortholog_Group, locus = toupper(trimws(as.character(gene)))) %>%
+  dplyr::filter(grepl("^AT[1-5CM]G[0-9]{5}$", locus)) %>%
+  dplyr::distinct()
+annot <- ath %>%
+  dplyr::left_join(alias, by = "locus") %>%
+  dplyr::group_by(OrthoGroup) %>%
+  dplyr::summarise(
+    Arabidopsis = paste(sort(unique(locus)), collapse = "; "),
+    Symbol = substr(paste(sort(unique(Symbol[!is.na(Symbol) & nzchar(Symbol)])), collapse = "; "), 1, 300),
+    Name   = substr(paste(sort(unique(Name[!is.na(Name) & nzchar(Name)])),   collapse = "; "), 1, 300),
+    .groups = "drop")
 
-ortholog_annot_RData <- paste0("data/ComPlEx/annotation-", species1_name, "-", species2_name, ".RData")
-if (!file.exists(ortholog_annot_RData)) {
-  annot <- read.delim2(ortholog_annot_file, header = TRUE, sep = "\t") %>%
-    dplyr::rename(Arabidopsis = Aratha.SHORT.pep, OrthoGroup = Orthogroup) %>%
-    dplyr::select(Arabidopsis, OrthoGroup) %>%
-    filter(Arabidopsis != "") %>%
-    separate_rows(Arabidopsis, sep = ", ", convert = FALSE) %>%
-    mutate(Arabidopsis = gsub("\\.\\d.p\\d$", "", Arabidopsis)) %>%
-    mutate(Arabidopsis = gsub("Aratha_", "", Arabidopsis)) %>%
-    left_join(symbols, by = "Arabidopsis") %>%
-    group_by(OrthoGroup) %>%
-    summarise(Arabidopsis = paste0(unique(Arabidopsis), collapse = "; "), 
-              Symbol = paste0(unique(Symbol), collapse = "; "), 
-              Name = paste0(unique(Name), collapse = "; ")) %>%
-    mutate(Symbol = gsub("NA", "", Symbol),
-           Name = gsub("NA", "", Name))
-  save(ortho, annot, file = ortholog_annot_RData)
-} else {
-  load(file = ortholog_annot_RData)
-}
+# Guard: every annotated locus must belong to the group it annotates. This
+# assertion is the whole point of the change -- it fails loudly if the orthology
+# is ever swapped for a differently-numbered run again.
+.memb  <- split(ath$locus, ath$OrthoGroup)
+.first <- sub(";.*$", "", annot$Arabidopsis)
+stopifnot(all(mapply(function(og, l) l %in% .memb[[og]], annot$OrthoGroup, .first)))
 
 species1_transcription_txt <- paste0("data/expression/", species1_name,"_root_cold_stress_expression.txt") 
 species2_transcription_txt <- paste0("data/expression/", species2_name,"_root_cold_stress_expression.txt")

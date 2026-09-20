@@ -107,10 +107,9 @@ dir.create("data/ComPlEx/networks", recursive = TRUE, showWarnings = FALSE)
 # 
 # duplicated_keys <- ortho_A$Ortholog_Group[duplicated(ortho_A$Ortholog_Group)]
 # ortho_A %>% filter(Ortholog_Group %in% duplicated_keys)
-# # Add annotations from arabidopsis
-# symbols <- read.delim("data/gene_aliases_20140331.txt", sep = "\t") %>%
-#   dplyr::rename(Arabidopsis = locus_name, Symbol = symbol, Name = full_name)
-# ortholog_annot_file <- "data/Orthogroups_130323_predefined_tree.tsv"
+# # Historical note: Arabidopsis annotation is derived from orthologs.parquet
+# # (the analysis orthology) in scripts/ComPlEx/ComPlEx.R; do not reintroduce a
+# # separate OrthoFinder annotation file here.
 
 # Read in expression data
 # =======================
