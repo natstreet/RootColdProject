@@ -58,6 +58,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Fig. S4 | `scripts/figures/make_FigS4.R` | `ComPlEx/co_expressologs.RData` |
 | Fig. S5 | `scripts/figures/make_FigS5.py` | outputs of the two `scripts/validation/` analyses — **external inputs, see note** |
 | Fig. S6 | `scripts/figures/make_FigS6.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
+| Fig. S7 | `scripts/figures/make_FigS7.py` | `open/{conserved_core,gene_index,co_expressologs,transcription_factors}.tsv`, `networks/network_*_hrr100.tsv` — **deposit v4 or later** |
 | Table S1 | `scripts/GO/make_TableS1.R` | `DEGs/og_summary.RData`, `DEGs/DEGs_col0.RData`, `*/Orthogroups_20240613.tsv`, `annotation/Athal_go_ids.tsv`, `annotation/bg_col0_ATC.rda` |
 | Table S2 | `scripts/GO/make_TableS2.R` | `ComPlEx/co_expressologs.RData`, `annotation/{go_ids,bg_*}`, `DEGs/DEGs_*.RData` |
 | Table S3 | `scripts/GO/make_TableS3.R` | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
@@ -68,6 +69,10 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each
 species — every gene with nonzero VST expression across the cold time-course samples.
 `scripts/annotation/make_backgrounds.R` regenerates them from the deposited expression tables.
+
+Figure S7 reads the open-format tables in `data/open/` and the per-species co-expression networks
+in `data/networks/`, both introduced in **version 4** of the figshare deposit. It will not run
+against versions 1–3.
 
 Figure S5 is the one figure not regenerable from the deposit alone: its two null distributions come
 from `scripts/validation/conservation_null_test.py` (needs the per-species co-expression edge lists)
