@@ -42,8 +42,13 @@ membership used by Figure S2 and Table S4, which is included directly under
 - **Raw sequencing reads:** ENA umbrella BioProject **PRJEB104158** (components PRJEB104117
   Arabidopsis, PRJEB104118 birch, PRJEB104119 aspen, PRJEB104120 Scots pine, PRJEB26918 Norway
   spruce roots).
-- **Genome assemblies:** *Picea abies* v2.0 and *Pinus sylvestris* v1.0 (Kalman et al. 2025),
-  *Populus tremula* v2.2, *Betula pendula* v1.4, *A. thaliana* TAIR10 / AtRTD3.
+- **Genome assemblies and annotation releases:** *Picea abies* v2.0 and *Pinus sylvestris* v1.0
+  (Kalman et al. 2025), *Populus tremula* v2.2, *Betula pendula* v1.4, *A. thaliana* TAIR10 with
+  the AtRTD3 reference transcript dataset. The AtRTD3 release used is the dated
+  `atRTD3_TS_21Feb22_transfix` build from https://ics.hutton.ac.uk/atRTD/RTD3/ — AtRTD3 is
+  versioned by release date rather than by a version number, so the date identifies it
+  unambiguously. Gene identifiers in the deposited tables belong to these releases; joining them
+  to a resource built on a different release will silently fail to match rather than error.
 
 ## Repository layout
 ```
