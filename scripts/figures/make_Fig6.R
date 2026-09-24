@@ -3,12 +3,14 @@
 # conserved co-expression core. One panel per transcription factor (labelled by its Arabidopsis
 # symbol); within a panel, the VST expression profile of that orthogroup's member in each species
 # over the cold time course (mean line, +/-1 SD ribbon, individual replicates as points). A
-# coloured star marks each species in which that member is differentially expressed (padj < 0.05).
+# coloured star marks each species in which that member is differentially expressed (adjusted P <= 0.05
+# and |log2FC| >= 1 at any timepoint).
 #
 # Run from a directory containing the unpacked figshare deposit `data/`.
 # Inputs:
 #   data/annotation/gene_aliases_20140331.txt              Arabidopsis symbol -> gene ID
-#   data/ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS  orthogroup -> per-species member
+#   data/ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS  Arabidopsis gene -> orthogroup
+#   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS orthogroup -> per-species clique member
 #   data/expression/<species>_root_cold_stress_expression.txt  per-sample VST
 #   data/DEGs/DEGs_<species>.RData                         per-species DEG sets (for the stars)
 # Output: Figure6.pdf, Figure6.png
@@ -32,13 +34,15 @@ sym2id <- function(s){ i <- which(toupper(al$symbol) == toupper(s)); if (!length
 id2sym <- function(g){ i <- which(al$locus_name == g); if (!length(i)) g else al$symbol[i[1]] }
 seed <- setNames(vapply(symbols, sym2id, character(1)), symbols)
 
-# clique table -> orthogroup and its per-species members
+# clique table -> orthogroup of each seed gene
 cl <- readRDS("data/ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS")
 og_of <- function(gid){ h <- cl[cl$GeneSpecies1 == gid | cl$GeneSpecies2 == gid, "OrthoGroup", drop = TRUE]; if (!length(h)) NA else h[1] }
-members <- function(og){                                   # species -> gene id(s)
-  r <- cl[cl$OrthoGroup == og, ]
-  m <- tapply(c(r$GeneSpecies1, r$GeneSpecies2), c(r$Species1, r$Species2), function(x) unique(x))
-  lapply(m, as.character)
+# the selected conserved clique: one member gene per species for each orthogroup
+cgsel <- as.data.frame(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS"))
+members <- function(og){                                   # species -> that species' clique member
+  r <- cgsel[cgsel$OrthoGroup == og, ]
+  if (!nrow(r)) return(list())
+  setNames(lapply(names(species), function(sp) as.character(r[[sp]])), names(species))
 }
 
 # per-species per-sample VST for one gene -> long table of (Species, Condition, rep, VST)
@@ -55,7 +59,7 @@ for (s in symbols) {
   lab <- if (s %in% names(disp)) disp[[s]] else s         # panel label (dual where Ost-0 member differs)
   for (sp in names(species)) {
     g <- intersect(mem[[sp]], rownames(EXP[[sp]])); if (!length(g)) next
-    v <- colMeans(EXP[[sp]][g, , drop = FALSE], na.rm = TRUE)                          # if >1 paralog, average
+    v <- colMeans(EXP[[sp]][g, , drop = FALSE], na.rm = TRUE)                          # the clique member
     cc <- cond[sub(paste0("^", pre[sp], "\\d+\\."), "", names(v))]
     df <- data.frame(TF = lab, Species = species[[sp]], Condition = cc, VST = as.numeric(v))
     rows[[paste(s, sp)]] <- df
@@ -87,7 +91,7 @@ p <- ggplot(summ, aes(Condition, m, colour = Species, group = Species)) +
   facet_wrap(~TF, nrow = 2, scales = "free_y") +
   scale_colour_manual(values = pal) + scale_fill_manual(values = pal, guide = "none") +
   labs(x = "Condition", y = "Expression (VST)", colour = "Species",
-       caption = "* differentially expressed in that species (DEG, padj < 0.05)") +
+       caption = "* differentially expressed in that species (DEG: adjusted P <= 0.05 and |log2FC| >= 1 at any timepoint)") +
   theme_bw(base_size = 11) +
   theme(panel.grid.minor = element_blank(), strip.background = element_rect(fill = "grey92"),
         strip.text = element_text(face = "bold"), axis.text.x = element_text(angle = 45, hjust = 1))
