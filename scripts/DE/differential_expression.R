@@ -4,8 +4,8 @@
 # DEG definition: adjusted P <= 0.05 AND |log2 fold change| >= 1 (a two-fold change).
 #
 # Method (per species): from the raw gene-level DESeqDataSet, DESeq2's negative-binomial Wald test
-# contrasts each cold timepoint (6h, 24h, 3d, 10d at 5 C) against the pooled control, using the
-# median normalised count as the independent-filter statistic. Genes with padj <= 0.05 and
+# contrasts each cold timepoint (6h, 24h, 3d, 10d at 5 C) against the pooled control, with DESeq2's
+# default independent filtering (mean of normalised counts). Genes with padj <= 0.05 and
 # |log2FoldChange| >= 1 are differentially expressed; direction is the sign of log2FoldChange. The
 # per-species DEG total is the union over timepoints (Col-0 5689, Ost-0 7995, aspen 11729,
 # birch 3312, spruce 6353, pine 4717).
@@ -18,7 +18,7 @@
 #
 # Usage: Rscript scripts/DE/differential_expression.R
 
-suppressMessages({ library(DESeq2); library(matrixStats) })
+suppressMessages(library(DESeq2))
 
 # species -> (dds file, control-level label). Design variable is read from each dds.
 SP <- list(
@@ -38,11 +38,10 @@ for (sp in names(SP)) {
   dv  <- all.vars(design(dds))[1]
   ctrl <- SP[[sp]]["ctrl"]
   levs <- setdiff(levels(colData(dds)[[dv]]), ctrl)
-  mf  <- rowMedians(counts(dds, normalized = TRUE))
   outdir <- file.path("DE", sp); dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
   counts_tab <- data.frame(); u <- character(0)
   for (lv in levs) {
-    r <- results(dds, contrast = c(dv, lv, ctrl), alpha = 0.05, lfcThreshold = 0, filter = mf)
+    r <- results(dds, contrast = c(dv, lv, ctrl), alpha = 0.05, lfcThreshold = 0)
     deg <- rownames(r)[!is.na(r$padj) & r$padj <= 0.05 & abs(r$log2FoldChange) >= 1]
     up  <- sum(r[deg, "log2FoldChange"] > 0); down <- length(deg) - up
     writeLines(deg, file.path(outdir, sprintf("DEGs_%s_C_vs_%s.txt", sp, lv)))
