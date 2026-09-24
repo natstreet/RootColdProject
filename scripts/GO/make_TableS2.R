@@ -10,7 +10,7 @@
 # Inputs (unpack data.tar.gz from figshare into ./data):
 #   data/ComPlEx/co_expressologs.RData
 #   data/annotation/{Athal_go_ids.tsv, Potra02_go_ids.tsv, Picab02_go_ids.csv}
-#   data/annotation/{bg_col0_ATC.rda, bg_aspen_PT.rda, bg_spruce_PA.rda}
+#   data/annotation/{bg_col0_ATC.rda, bg_ost0_ATO.rda, bg_aspen_PT.rda, bg_spruce_PA.rda}
 #   data/DEGs/DEGs_{col0,ost0,aspen,spruce}.RData
 # Output:
 #   tables/TableS2_cladeGO_classic_p<thr>.tsv
@@ -38,8 +38,8 @@ ld <- function(f, o = NULL) { e <- new.env(); load(f, envir = e); if (is.null(o)
 athal <- readMappings("data/annotation/Athal_go_ids.tsv")[-1]
 potra <- readMappings("data/annotation/Potra02_go_ids.tsv")[-1]
 picab_df <- read.csv("data/annotation/Picab02_go_ids.csv"); picab <- unstack(picab_df[, c("go_id", "external_gene_name")])
-bg_ATC <- ld("data/annotation/bg_col0_ATC.rda"); bg_PT <- ld("data/annotation/bg_aspen_PT.rda"); bg_PA <- ld("data/annotation/bg_spruce_PA.rda")
-ANN <- list(Col0 = athal[names(athal) %in% bg_ATC], Ost0 = athal[names(athal) %in% bg_ATC],
+bg_ATC <- ld("data/annotation/bg_col0_ATC.rda"); bg_ATO <- ld("data/annotation/bg_ost0_ATO.rda"); bg_PT <- ld("data/annotation/bg_aspen_PT.rda"); bg_PA <- ld("data/annotation/bg_spruce_PA.rda")
+ANN <- list(Col0 = athal[names(athal) %in% bg_ATC], Ost0 = athal[names(athal) %in% bg_ATO],
             Aspen = potra[names(potra) %in% bg_PT], Spruce = picab[names(picab) %in% bg_PA])
 DEG <- list(Col0 = ld("data/DEGs/DEGs_col0.RData"), Ost0 = ld("data/DEGs/DEGs_ost0.RData"),
             Aspen = ld("data/DEGs/DEGs_aspen.RData"), Spruce = ld("data/DEGs/DEGs_spruce.RData"))
@@ -50,7 +50,7 @@ run_go <- function(species, gene_set) { g2 <- ANN[[species]]
   GOdata <- new("topGOdata", ontology = "BP", allGenes = gl, annot = annFUN.gene2GO, gene2GO = g2)
   res <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
   GenTable(GOdata, classicFisher = res, orderBy = "classicFisher", topNodes = length(usedGO(GOdata))) %>%
-    mutate_at("classicFisher", as.numeric) %>% mutate(padj = round(p.adjust(classicFisher, "BH"), 4)) %>%
+    mutate(classicFisher = unname(score(res)[GO.ID])) %>% mutate(padj = round(p.adjust(classicFisher, "BH"), 4)) %>%
     arrange(padj) %>% filter(padj < 0.05) }
 
 cells <- list(c("Col0","ABC"), c("Aspen","ABC"), c("Col0","AB"), c("Aspen","AB"),

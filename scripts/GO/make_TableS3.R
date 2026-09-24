@@ -66,7 +66,7 @@ run_go <- function(sp, genes) {
   allGO <- usedGO(GOdata)
   res <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
   GenTable(GOdata, classicFisher = res, orderBy = "classicFisher", topNodes = length(allGO)) %>%
-    mutate_at("classicFisher", as.numeric) %>%
+    mutate(classicFisher = unname(score(res)[GO.ID])) %>%   # exact p (GenTable prints p < 1e-30 as text)
     mutate(padj = round(p.adjust(classicFisher, "BH"), 4)) %>%
     arrange(padj) %>% filter(padj < 0.05) %>%
     mutate(scores = -log10(classicFisher))

@@ -45,7 +45,7 @@ gl <- factor(as.integer(names(g2) %in% studyset)); names(gl) <- names(g2)
 GOdata <- new("topGOdata", ontology = "BP", allGenes = gl, annot = annFUN.gene2GO, gene2GO = g2)
 res <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
 tab <- GenTable(GOdata, classicFisher = res, orderBy = "classicFisher", topNodes = length(usedGO(GOdata)))
-tab$classicFisher <- as.numeric(tab$classicFisher)
+tab$classicFisher <- unname(score(res)[tab$GO.ID])   # exact p (GenTable prints p < 1e-30 as text)
 tab$padj <- round(p.adjust(tab$classicFisher, "BH"), 4)
 tab <- tab[order(tab$padj), ]
 sig <- tab[tab$padj < 0.05, ]
