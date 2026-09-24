@@ -2,8 +2,8 @@
 # make_FigS7.py — Figure S7: worked example of resource use, conserved-core orthogroup
 #   OG0000118 (NAC transcription factors, ATAF/NAM clade).
 #   (a) Cold response of the orthogroup's member gene in each genotype across the time
-#       course, as log2 fold change against the matched control; an open ring marks
-#       adjusted P < 0.05.
+#       course, as log2 fold change against the matched control; an open ring marks a timepoint
+#       at which it is differentially expressed (adjusted P <= 0.05 and |log2FC| >= 1).
 #   (b) The six members and their co-expressolog relationships: all 15 pairwise species
 #       comparisons are linked, so the orthogroup forms a complete conserved clique.
 #   (c) Number of genes co-expressed with each member in that species' whole-genome
@@ -17,6 +17,8 @@
 #   data/open/co_expressologs.tsv         co-expressolog pairs, used for panel (b)
 #   data/open/transcription_factors.tsv   TF assignments, used for panel (c)
 #   data/networks/network_<species>_hrr100.tsv   per-species co-expression networks
+#   DE/<species>/DEGs_<species>_C_vs_<timepoint>.txt   per-timepoint DEG lists written by
+#                                         scripts/DE/differential_expression.R (the rings in panel a)
 #
 # Output: Figure_S7.pdf, Figure_S7.png
 #
@@ -55,12 +57,25 @@ row = core.loc[core.OrthoGroup == OG].iloc[0]
 mem = {s: row[s] for s in SP if pd.notna(row[s])}
 tfset = {(r.species, r.gene) for r in tf.itertuples()}
 
+# Differentially expressed at a timepoint as defined in the Methods (Wald test against no change,
+# adjusted P <= 0.05 and |log2FC| >= 1): membership of that timepoint's DEG list from
+# differential_expression.R. (The deposit's padj columns test against a two-fold change instead.)
+_deg_cache = {}
+def is_deg(species, gene, tp):
+    key = (species, tp)
+    if key not in _deg_cache:
+        hits = [f for f in os.listdir(f"DE/{species}") if f.startswith(f"DEGs_{species}_C_vs_{tp}")]
+        if len(hits) != 1:
+            raise SystemExit(f"expected one DEG list for {species} {tp} in DE/{species}, found {hits}")
+        _deg_cache[key] = set(open(f"DE/{species}/{hits[0]}").read().split())
+    return gene in _deg_cache[key]
+
 info = {}
 for s, g in mem.items():
     r = gi[(gi.species == s) & (gi.gene == g)].iloc[0]
     info[s] = {"gene": g,
                "lfc": [r.lfc_6h, r.lfc_24h, r.lfc_3d, r.lfc_10d],
-               "padj": [r.padj_6h, r.padj_24h, r.padj_3d, r.padj_10d]}
+               "deg": [is_deg(s, g, tp) for tp in ("6h", "24h", "3d", "10d")]}
 
 nbr = {}
 for s, g in mem.items():
@@ -86,8 +101,8 @@ x = np.arange(4)
 for s in SP:
     y = [np.nan if pd.isna(v) else v for v in info[s]["lfc"]]
     ax.plot(x, y, "-o", color=COL[s], ms=4, lw=1.6, label=LAB[s], zorder=3)
-    for k, (v, p) in enumerate(zip(y, info[s]["padj"])):
-        if not pd.isna(p) and p < 0.05:
+    for k, (v, d) in enumerate(zip(y, info[s]["deg"])):
+        if d and not pd.isna(v):
             ax.plot(x[k], v, "o", ms=9, mfc="none", mec=COL[s], mew=1.3, zorder=4)
 ax.axhline(0, color=GREY, lw=0.8, zorder=1)
 ax.set_xticks(x)
@@ -96,8 +111,8 @@ ax.set_ylabel("log$_2$ fold change vs control")
 ax.set_title("Repressed in both $\\it{Arabidopsis}$ ecotypes, "
              "induced in aspen, spruce and pine")
 ax.margins(0.06)
-ax.text(0.985, 0.04, "open ring: adjusted $P$ < 0.05", transform=ax.transAxes,
-        ha="right", va="bottom", fontsize=6, color=GREY)
+ax.text(0.015, 0.97, "open ring: differentially expressed (adjusted $P$ ≤ 0.05, |log$_2$FC| ≥ 1)", transform=ax.transAxes,
+        ha="left", va="top", fontsize=6, color=GREY)
 ax.legend(frameon=False, ncol=6, loc="lower center", bbox_to_anchor=(0.5, -0.30),
           handlelength=1.2, columnspacing=1.1)
 ax.text(-0.075, 1.06, "a", transform=ax.transAxes, fontweight="bold", fontsize=10)
