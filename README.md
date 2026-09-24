@@ -54,19 +54,30 @@ membership used by Figure S2 and Table S4, which is included directly under
 ## Repository layout
 ```
 scripts/ComPlEx/     Comparative co-expression pipeline and conserved-core analysis
+scripts/networks/    Per-species whole-genome co-expression networks of the resource
+scripts/DE/          Differential expression
+scripts/GO/          GO enrichment (Tables S1-S3)
+scripts/annotation/  GO-enrichment backgrounds (expressed genes per species)
+scripts/figures/     Figure producers
 scripts/validation/  Analyses supporting the conserved core
 results/             Key reference outputs, for checking a successful run
 data/                Not included; download from figshare and unpack here (see Data)
 ```
 
 `scripts/ComPlEx/` -- the ComPlEx co-expression workflow (Netotea et al. 2014): variance-stabilising
-data preparation (`Network_Generation_setup.R`), per-species mutual-rank network construction
-(`ComPlEx_MR_Network.R`), the 15 pairwise co-expressolog comparisons (`ComPlEx.R`, run once per
-species pair), extraction of cliques and the conserved core (`cliques_step1.R`, `cliques_step2.R`),
+data preparation (`Network_Generation_setup.R`), the 15 pairwise co-expressolog comparisons
+(`ComPlEx.R`, run once per species pair; for each pair it builds mutual-rank networks from absolute
+Pearson correlation on the genes with an orthologue in that pair and keeps the top 3 % of edges), extraction of cliques and the conserved core (`cliques_step1.R`, `cliques_step2.R`),
 and the downstream visualisation and clique analyses (`1_Data_visualisation.Rmd`,
 `2_Sample_comparison.Rmd`, `3_Cliques.Rmd`, `5_Clique_analysis.Rmd`, `Genelists.Rmd`,
 `UpsetPlotsEtc.Rmd`). `RunR.sh` / `submitR.sh` / `submit_ComPlEx_cold.sh` are HPC
 wrappers; adapt them to your environment.
+
+`scripts/networks/build_species_networks.R` -- the per-species whole-genome co-expression networks
+provided with the resource (`data/networks/network_<species>_hrr100.tsv`): absolute Pearson
+correlation, ranked per gene, with an edge kept where the highest reciprocal rank is at most 100.
+These are for exploring a gene's co-expression neighbourhood and are separate from the pairwise
+ComPlEx networks.
 
 `scripts/validation/`:
 - `conservation_null_test.py` -- permutation null test for the conserved core.
@@ -79,8 +90,9 @@ wrappers; adapt them to your environment.
 1. Quantify reads (Salmon) against each species assembly, import with tximport, and VST-normalise
    (DESeq2). Call differential expression (DESeq2) per species and define orthogroups with
    OrthoFinder (as in Rodriguez et al. 2025).
-2. Build per-species mutual-rank co-expression networks (top 3 % of edges) and compute the 15
-   pairwise co-expressolog comparisons (`scripts/ComPlEx/`).
+2. Compute the 15 pairwise co-expressolog comparisons (`scripts/ComPlEx/ComPlEx.R`), which build
+   each pair's mutual-rank networks (top 3 % of edges), and the per-species whole-genome networks of
+   the resource (`scripts/networks/build_species_networks.R`).
 3. Extract cliques and the conserved core (`cliques_step1.R`, `cliques_step2.R`).
 4. Produce the clique and transcription-factor expression analyses and figures
    (`5_Clique_analysis.Rmd`, `UpsetPlotsEtc.Rmd`, `Genelists.Rmd`).
