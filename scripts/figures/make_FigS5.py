@@ -2,14 +2,14 @@
 # make_FigS5.py — Figure S5: robustness of the conserved co-expression core.
 #   (a) Conservation permutation test: the observed number of orthogroups with a co-expressolog in
 #       all 15 comparisons against the label-permutation null.
-#   (b) Cluster coherence in independent data (STRING): observed within-cluster co-expression
-#       edges among the core Arabidopsis genes against the label-permuted null.
+#   (b) Cluster coherence in independent data (STRING): observed within-cluster co-expressed gene
+#       pairs among the core Arabidopsis genes against the label-permuted null.
 #
 # This step only plots. The null distributions and observed values are produced by:
 #   panel (a): scripts/validation/conservation_label_permutation.R -> conservation_null_null.csv,
 #              conservation_null_obs.txt   (from the figshare deposit)
-#   panel (b): scripts/validation/string_external_validation.py -> string_null.csv,
-#              string_obs.txt   (needs the STRING v12 A. thaliana download, not in the deposit)
+#   panel (b): scripts/validation/make_core_clusters.R, then string_external_validation.py ->
+#              string_null.csv, string_obs.txt   (needs the STRING v12 A. thaliana download)
 # Run those first, then run this from the same directory.
 #
 # Output: Figure_S5.pdf, Figure_S5.png
@@ -42,7 +42,7 @@ ax[1].annotate(f"observed = {obsB}", xy=(obsB, h * 0.02), xytext=(obsB * 0.60, h
                color="#d62728", fontsize=13, va="center",
                arrowprops=dict(color="#d62728", arrowstyle="->", lw=1.5))
 ax[1].set_title(f"(b) Cluster coherence in independent data ({foldB:.1f}-fold; P = {pB:.4g})", fontsize=12)
-ax[1].set_xlabel("Within-cluster co-expression edges in\nSTRING (clusters randomised)", fontsize=11)
+ax[1].set_xlabel("Within-cluster co-expressed gene pairs\nin STRING (clusters randomised)", fontsize=11)
 ax[1].set_ylabel("Permutations", fontsize=11); ax[1].set_xlim(nullB.min() - 20, obsB + 30)
 
 plt.tight_layout()

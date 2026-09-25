@@ -13,15 +13,18 @@ conservation itself.
 Inputs (download once from STRING; https://string-db.org):
   3702.protein.links.detailed.v12.0.txt.gz   (co-expression channel = column 6)
   3702.protein.aliases.v12.0.txt.gz          (STRING protein -> TAIR locus)
-  cliques.xlsx                               (conserved-core cliques: Col0 gene + Cluster)
+  core_clusters.tsv                          (conserved-core cliques: Col0 gene + Cluster; written by
+                                             scripts/validation/make_core_clusters.R from the deposit)
 
 Method: build the co-expression network at combined score >= THRESHOLD among genes mappable
 to TAIR loci; among the conserved-core Arabidopsis genes (with cluster labels), count
 co-expression edges that fall WITHIN a cluster; compare to N permutations that randomly
 re-assign the same genes to clusters (preserving cluster sizes).
 
-Result (this study, THRESHOLD=400, N=5000): 692 within-cluster edges observed vs ~203
-expected; 3.4-fold; empirical P < 0.001.
+STRING lists each pair in both directions; each gene pair is counted once here.
+
+Result (this study, THRESHOLD=400, N=5000): 346 within-cluster gene pairs observed vs ~102
+expected; 3.4-fold; empirical P = 0.0002 (1/5001).
 """
 import numpy as np, re, gzip, pandas as pd
 
@@ -29,7 +32,7 @@ THRESHOLD = 400
 N_PERM = 5000
 LINKS = "3702.protein.links.detailed.v12.0.txt.gz"
 ALIASES = "3702.protein.aliases.v12.0.txt.gz"
-CLIQUES = "cliques.xlsx"      # columns: Col0 (AT id), Cluster
+CLIQUES = "core_clusters.tsv"   # columns: Col0 (AT id), Cluster
 
 def main():
     at2s = {}
@@ -45,12 +48,13 @@ def main():
         next(fh)
         for line in fh:
             a, b, *c = line.split()
-            if int(c[3]) < THRESHOLD or a not in mappable or b not in mappable:
+            # each pair appears twice (a-b and b-a); keep one orientation
+            if a >= b or int(c[3]) < THRESHOLD or a not in mappable or b not in mappable:
                 continue
             us.append(idx.setdefault(a, len(idx))); vs.append(idx.setdefault(b, len(idx)))
     us, vs = np.array(us), np.array(vs)
 
-    cl = pd.read_excel(CLIQUES)[["Col0", "Cluster"]].dropna()
+    cl = pd.read_csv(CLIQUES, sep="\t")[["Col0", "Cluster"]].dropna()
     g2c = {}
     for _, r in cl.iterrows():
         prot = at2s.get(str(r["Col0"]).upper())
@@ -70,8 +74,10 @@ def main():
     pval = (np.sum(null >= obs) + 1) / (N_PERM + 1)
     np.savetxt("string_null.csv", null, fmt="%d", header="null", comments="")   # for make_FigS5.py
     open("string_obs.txt", "w").write(str(obs))
-    print(f"core genes with cluster + STRING: {len(nodes)}; core-core edges: {len(eu)}")
-    print(f"observed within-cluster edges: {obs}")
+    print(f"core genes with cluster + STRING: {len(nodes)}; core-core gene pairs: {len(eu)}")
+    print(f"observed within-cluster gene pairs: {obs}")
+    within = [g2c[u] for u, v in zip(eu, ev) if g2c[u] == g2c[v]]
+    print("within-cluster pairs by cluster:", {k: within.count(k) for k in sorted(set(within))})
     print(f"null mean={null.mean():.1f} sd={null.std():.1f} max={null.max()}")
     print(f"fold={obs/max(null.mean(),1e-9):.1f}x ; empirical P={pval:.4g}")
 
