@@ -34,23 +34,23 @@ cat_counts <- function(S){
 m <- as.data.frame(t(sapply(specs, cat_counts))); m$species <- labmap[rownames(m)]
 
 catlev <- c("DEcoexpr_DEpart","DEcoexpr","coexpr_DEpart","coexpr")
-catlab <- c(DEcoexpr_DEpart = "DE co-expressologs, partner DE in another species",
+catlab <- c(DEcoexpr_DEpart = "DE co-expressologs with DE co-expressolog in other species",
             DEcoexpr        = "DE co-expressologs",
-            coexpr_DEpart   = "co-expressologs, partner DE in another species",
+            coexpr_DEpart   = "co-expressologs with DE co-expressolog in other species",
             coexpr          = "co-expressologs")
 long <- m %>% pivot_longer(all_of(catlev), names_to = "cat", values_to = "n")
 long$species <- factor(long$species, levels = unname(labmap))
-long$cat <- factor(long$cat, levels = catlev, labels = catlab[catlev])
+long$cat <- factor(long$cat, levels = catlev)
 
-pal <- setNames(c("#1B5E9C","#4A90C2","#C46E00","#E0B080"), catlab[catlev])
+cols <- c(DEcoexpr_DEpart = "#8A5FC0", DEcoexpr = "#C9A8DD", coexpr_DEpart = "#C8963C", coexpr = "#E0C089")
 p <- ggplot(long, aes(species, n, fill = cat)) +
-  geom_col(width = 0.75) +
-  scale_fill_manual(values = pal, name = NULL) +
-  labs(x = NULL, y = "Number of genes") +
-  theme_bw(base_size = 12) +
-  theme(panel.grid.major.x = element_blank(), legend.position = "top",
-        legend.text = element_text(size = 8)) +
-  guides(fill = guide_legend(ncol = 2))
-ggsave("Figure_S3.pdf", p, width = 9, height = 6)
-ggsave("Figure_S3.png", p, width = 9, height = 6, dpi = 150)
+  geom_col(width = 0.8) +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.1, colour = "grey15") +
+  scale_fill_manual(values = cols, labels = catlab, name = "Category",
+                    breaks = c("coexpr","coexpr_DEpart","DEcoexpr","DEcoexpr_DEpart")) +
+  labs(x = "Species", y = "Number of genes") +
+  theme_minimal(base_size = 13) +
+  theme(legend.title = element_text(face = "bold"), panel.grid.major.x = element_blank())
+ggsave("Figure_S3.pdf", p, width = 11, height = 6.5)
+ggsave("Figure_S3.png", p, width = 11, height = 6.5, dpi = 150)
 print(m[, c("species", catlev)], row.names = FALSE)
