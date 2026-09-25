@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 # make_FigS5.py — Figure S5: robustness of the conserved co-expression core.
-#   (a) Conservation permutation test: the observed all-pairwise core size against the
-#       degree-preserving rewired null.
+#   (a) Conservation permutation test: the observed number of orthogroups with a co-expressolog in
+#       all 15 comparisons against the label-permutation null.
 #   (b) Cluster coherence in independent data (STRING): observed within-cluster co-expression
 #       edges among the core Arabidopsis genes against the label-permuted null.
 #
-# This step only plots. The null distributions and observed values are produced by the two
-# analysis scripts in scripts/validation/, which require inputs that are NOT in the figshare
-# deposit and must be obtained separately:
-#   panel (a): scripts/validation/conservation_null_test.py  -> conservation_null_null.csv,
-#              conservation_null_obs.txt   (needs the per-species co-expression edge lists)
+# This step only plots. The null distributions and observed values are produced by:
+#   panel (a): scripts/validation/conservation_label_permutation.R -> conservation_null_null.csv,
+#              conservation_null_obs.txt   (from the figshare deposit)
 #   panel (b): scripts/validation/string_external_validation.py -> string_null.csv,
-#              string_obs.txt   (needs the STRING v12 A. thaliana co-expression download)
+#              string_obs.txt   (needs the STRING v12 A. thaliana download, not in the deposit)
 # Run those first, then run this from the same directory.
 #
 # Output: Figure_S5.pdf, Figure_S5.png
