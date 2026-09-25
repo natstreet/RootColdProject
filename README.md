@@ -89,7 +89,7 @@ ComPlEx networks.
 ## Reproducing the analysis
 1. Quantify reads (Salmon) against each species assembly, import with tximport, and VST-normalise
    (DESeq2). Call differential expression (DESeq2) per species and define orthogroups with
-   OrthoFinder (as in Rodriguez et al. 2025).
+   OrthoFinder (as in Rodriguez et al. 2026, *Nat. Commun.* 17, doi:10.1038/s41467-026-75624-2).
 2. Compute the 15 pairwise co-expressolog comparisons (`scripts/ComPlEx/ComPlEx.R`), which build
    each pair's mutual-rank networks (top 3 % of edges), and the per-species whole-genome networks of
    the resource (`scripts/networks/build_species_networks.R`).
