@@ -66,6 +66,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | DEGs (Fig. 1 / Fig. 2) | `scripts/DE/differential_expression.R` | `dds/dds_{col0_soil,ost0_soil,Pt_new,Bp_new,Pa,Ps}.rda` |
 | GO backgrounds | `scripts/annotation/make_backgrounds.R` | `expression/<sp>_root_cold_stress_expression.txt` |
 | Species networks | `scripts/networks/build_species_networks.R` | `expression/<sp>_root_cold_stress_expression.txt` |
+| Cluster profiles (Results, clusters 1–2) | `scripts/analysis/cluster_profiles.py` | `open/{gene_index,conserved_core,orthogroup_annotation}.tsv` — **deposit v4 or later**; outputs in `results/cluster_profiles/` |
 
 The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each
 species — every gene with nonzero VST expression across the cold time-course samples.
