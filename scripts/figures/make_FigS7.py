@@ -108,8 +108,14 @@ ax.axhline(0, color=GREY, lw=0.8, zorder=1)
 ax.set_xticks(x)
 ax.set_xticklabels(["6 h", "24 h", "3 d", "10 d"])
 ax.set_ylabel("log$_2$ fold change vs control")
-ax.set_title("Repressed in both $\\it{Arabidopsis}$ ecotypes, "
-             "induced in aspen, spruce and pine")
+# title from the DEG calls: each differentially expressed genotype, by the sign of its DEG fold changes
+def _join(xs): return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
+_dir = {}
+for s in SP:
+    v = [l for l, d in zip(info[s]["lfc"], info[s]["deg"]) if d and not pd.isna(l)]
+    if v: _dir.setdefault("repressed" if max(v) < 0 else "induced" if min(v) > 0 else "changed", []).append(LAB[s])
+_t = "; ".join(f"{k} in {_join(v)}" for k, v in _dir.items())
+ax.set_title(_t[:1].upper() + _t[1:])
 ax.margins(0.06)
 ax.text(0.015, 0.97, "open ring: differentially expressed (adjusted $P$ ≤ 0.05, |log$_2$FC| ≥ 1)", transform=ax.transAxes,
         ha="left", va="top", fontsize=6, color=GREY)
