@@ -29,7 +29,7 @@ q <- list(
   list(query = intersects, params = list("Aspen_Birch"),  color = teal,   active = TRUE),
   list(query = intersects, params = as.list(allp),        color = orange, active = TRUE))
 
-pdf("Figure_S4.pdf", width = 11, height = 8)
+pdf("Figure_S4.pdf", width = 11, height = 8, onefile = FALSE)   # one page (UpSetR opens a blank one otherwise)
 upset(M, sets = allp, nintersects = 6, order.by = "freq",
       mainbar.y.label = "Orthogroup overlap of co-expressologs",
       sets.x.label = "Co-expressolog orthogroups", text.scale = 1.4,

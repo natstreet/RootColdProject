@@ -69,7 +69,7 @@ lab <- combined %>% group_by(Species, gene) %>%
 
 p <- ggplot(combined, aes(Timepoint, med, group=gene, color=gene)) +
   geom_line(linewidth=0.9) +
-  geom_text_repel(data=lab, aes(label=gene), hjust=0, size=3.0, direction="y",
+  geom_text_repel(data=lab, aes(label=gene), hjust=0, size=3.0, direction="y", seed=1,
                   segment.color="grey70", box.padding=0.2, max.overlaps=Inf,
                   show.legend=FALSE, xlim=c(5.2, NA)) +
   facet_wrap(~Species, scales="free_y", ncol=3) +
@@ -79,8 +79,7 @@ p <- ggplot(combined, aes(Timepoint, med, group=gene, color=gene)) +
         legend.position="none", plot.margin=margin(t=5,r=45,b=5,l=5),
         panel.spacing=unit(1.4,"lines"), plot.title=element_text(size=15,hjust=0.5),
         axis.title=element_text(size=13), axis.text=element_text(size=11)) +
-  labs(title="Expression profiles of co-expressologs (P<0.1) directly linked to Arabidopsis CBFs",
-       x="Cold time course", y="Expression (median VST)")
+  labs(x="Cold time course", y="Expression (median VST)")
 
 ggsave("Figure_S6.pdf", p, width=13.5, height=9)
 ggsave("Figure_S6_preview.png", p, width=13.5, height=9, dpi=120, bg="white")
