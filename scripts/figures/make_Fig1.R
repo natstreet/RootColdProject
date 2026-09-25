@@ -25,6 +25,7 @@
 #   data/ComPlEx/gene2OG/gene2OG_<Sp>.rda                    gene -> orthogroup maps (repo)
 #   data/annotation/bg_<sp>_<code>.rda                       expressed-gene backgrounds (repo)
 #   data/DEGs/DEGs_<sp>.RData                                per-species DEG lists (deposit)
+#   data/DEGs/og_summary.RData                               per-orthogroup species counts (deposit)
 # Output: Figure1.pdf, Figure1.png, and printed panel values.
 # Usage:  Rscript scripts/figures/make_Fig1.R
 
@@ -80,15 +81,12 @@ Bdf <- data.frame(Group = factor(unname(labs), levels = rev(unname(labs))),
 pB <- tile(Bdf, "Composition of expressed genes in common orthogroups", pal6)
 
 # ── panels c/d: DEG categories (deposited orthogroup table + og_summary) ──────
-# Each DEG is classified by how many species carry a gene / a DEG in its orthogroup, mapping
-# through the full deposited orthogroup table and the deposited per-orthogroup og_summary.
+# Each DEG is mapped to its orthogroup through the per-species gene -> orthogroup maps (OGm) and
+# classified by how many species carry a gene / a DEG in that orthogroup (deposited og_summary).
 DEGl  <- lapply(sp, function(s) ld(sprintf("data/DEGs/DEGs_%s.RData", s))); names(DEGl) <- sp
-ogtab <- read.delim(Sys.glob("data/*/Orthogroups_20240613.tsv")[1], check.names = FALSE)
-sc <- c(col0="Arabidopsis_thaliana", ost0="Arabidopsis_thaliana", aspen="Populus_tremula",
-        birch="Betula_pendula", spruce="Picea_abies", pine="Pinus_sylvestris")
-orthos <- bind_rows(lapply(sp, function(s){
-  d <- data.frame(OrthoGroup = ogtab[["Ortholog_Group"]], GeneID = ogtab[[sc[s]]], stringsAsFactors = FALSE)
-  d <- separate_rows(d, GeneID, sep = ", "); d <- d[nzchar(d$GeneID), ]; d$species <- s; d }))
+orthos <- bind_rows(lapply(sp, function(s)
+  data.frame(OrthoGroup = OGm[[s]]$OrthoGroup, GeneID = OGm[[s]][[key[s]]], species = s,
+             stringsAsFactors = FALSE)))
 orthos$DEG <- mapply(function(g, s) g %in% DEGl[[s]], orthos$GeneID, orthos$species)
 ogsum <- ld("data/DEGs/og_summary.RData")   # per-orthogroup n_species_with_genes / n_species_with_DEGs
 DEGclasses <- orthos %>% filter(DEG) %>% left_join(ogsum, by = "OrthoGroup") %>%
