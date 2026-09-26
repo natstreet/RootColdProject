@@ -3,14 +3,16 @@
 #   (A) Triple Venn of the co-expressolog orthogroups shared within each lineage pair —
 #       Arabidopsis (col0|ost0), broadleaf trees (aspen|birch) and conifers (pine|spruce),
 #       at MaxpVal < 0.1. Areas are computed from the data, not hard-coded.
-#   (B) GO (biological-process) enrichment of three Venn regions (top terms): the shared core
-#       ABC and the Arabidopsis–broadleaf AB set (Arabidopsis genes), and the broadleaf–conifer
-#       BC set (aspen genes).
+#   (B) GO (biological-process) enrichment of three Venn regions (the ten terms with the smallest P): the shared
+#       core ABC and the Arabidopsis–broadleaf AB set (Arabidopsis genes), and the broadleaf–conifer BC set (aspen
+#       genes). The terms and P-values are those of Table S2 (topGO classic Fisher's exact test), read from the table
+#       make_TableS2.R writes, so the panel and the table agree.
 #
-# Run from a directory containing the unpacked figshare deposit `data/`.
-# Inputs: data/ComPlEx/co_expressologs.RData, data/ComPlEx/all_go_results_clades.RData
-# Output: Figure4.pdf, Figure4.png, Figure4_venn_regions.tsv (set totals, the seven exclusive Venn regions, and
-#         the share of the Arabidopsis and broadleaf sets that is conifer-conserved)
+# Run from a directory containing the unpacked figshare deposit `data/`, after scripts/GO/make_TableS2.R.
+# Inputs: data/ComPlEx/co_expressologs.RData, tables/TableS2_cladeGO_classic_p10.tsv
+# Output: Figure4.pdf, Figure4.png (300 dpi), Figure4_venn_regions.tsv (set totals, the seven exclusive Venn regions,
+#         and the share of the Arabidopsis and broadleaf sets that is conifer-conserved), Figure4b_values.tsv (the
+#         plotted terms: panel, GO ID, term, genes, classic Fisher P, -log10 P, padj)
 # Usage:  Rscript scripts/figures/make_Fig4.R
 
 suppressPackageStartupMessages({ library(VennDiagram); library(ggplot2); library(dplyr)
@@ -29,7 +31,7 @@ vg <- draw.triple.venn(area1=length(A), area2=length(B), area3=length(C),
   n123=length(Reduce(intersect,list(A,B,C))),
   category=c("Arabidopsis","Broadleaf","Conifer"), fill=c("#7FBF9E","#F4C08A","#B9B9CE"),
   alpha=rep(0.55,3), lwd=1.4, col=rep("grey30",3), cex=rep(1.1,7), fontface="bold", fontfamily="sans",
-  cat.col=c("#2E8B57","#D2691E","#6A5ACD"), cat.cex=rep(1.2,3), cat.fontface="bold",
+  cat.col=c("#2E8B57","#D2691E","#6A5ACD"), cat.cex=rep(1.2,3), cat.fontface="bold", cat.fontfamily="sans",
   cat.pos=c(-20,20,180), cat.dist=c(0.06,0.06,0.045), ind=FALSE)
 grid.newpage(); PA <- as.ggplot(grid::gTree(children=vg))
 
@@ -49,15 +51,20 @@ reg <- rbind(reg, data.frame(
   value = c(v[["AC only"]] + ABC, v[["BC only"]] + ABC, round(shareA, 4), round(shareB, 4), round(shareB / shareA, 4))))
 write.table(reg, "Figure4_venn_regions.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
 
-# ── panel B: GO dot-plots from the deposited clade GO results ─────────────────
-go <- do.call(c, ld("data/ComPlEx/all_go_results_clades.RData"))   # flatten per-cell lists -> named list
-pan <- c("ABC (Arabidopsis)"="Col0 ABC_DE", "AB (Arabidopsis)"="Col0 AB_DE", "BC (aspen)"="Aspen BC_DE")
+# ── panel B: GO dot-plots from the Table S2 results (classic Fisher) ─────────
+go <- read.delim("tables/TableS2_cladeGO_classic_p10.tsv", stringsAsFactors = FALSE, quote = "")
+go$scores <- -log10(go$classicFisher)
+pan <- c("ABC (Arabidopsis)"="Col0 ABC", "AB (Arabidopsis)"="Col0 AB", "BC (aspen)"="Aspen BC")
+plotted <- list()
 subplot <- function(key, title, n=10, col){
-  d <- go[[key]]
-  d <- d[order(-d$scores), , drop=FALSE][seq_len(min(n, nrow(d))), ]
-  full <- go_terms[d$GO.ID]                                    # full names by GO id (some stored truncated)
+  d <- go[paste(go$species, go$set) == key, , drop=FALSE]
+  stopifnot(nrow(d) > 0)
+  d <- d[order(d$classicFisher, d$GO.ID), , drop=FALSE][seq_len(min(n, nrow(d))), ]
+  plotted[[title]] <<- data.frame(panel = title, GO.ID = d$GO.ID, Term = d$Term, Significant = d$Significant,
+                                  classicFisher = d$classicFisher, minus_log10_P = d$scores, padj = d$padj)
+  full <- go_terms[d$GO.ID]                                    # full names by GO id
   d$Term <- ifelse(is.na(full), as.character(d$Term), unname(full))
-  d$Term <- vapply(d$Term, function(s) paste(strwrap(s, width=34), collapse="\n"), character(1))
+  d$Term <- vapply(d$Term, function(s) paste(strwrap(s, width=50), collapse="\n"), character(1))
   d$Term <- factor(d$Term, levels=rev(d$Term))
   ggplot(d, aes(scores, Term)) +
     geom_segment(aes(x=0, xend=scores, yend=Term), colour="grey80", linewidth=0.4) +
@@ -74,6 +81,7 @@ PB <- plot_grid(plotlist=Bs, ncol=1, align="v")
 
 fig <- plot_grid(PA, PB, ncol=1, labels=c("(a)","(b)"), label_size=16, rel_heights=c(0.85,1.7))
 ggsave("Figure4.pdf", fig, width=8, height=12)
-ggsave("Figure4.png", fig, width=8, height=12, dpi=110)
+ggsave("Figure4.png", fig, width=8, height=12, dpi=300)
+write.table(do.call(rbind, plotted), "Figure4b_values.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
 cat(sprintf("Venn areas: A=%d B=%d C=%d  ABC=%d\n", length(A), length(B), length(C),
             length(Reduce(intersect,list(A,B,C)))))
