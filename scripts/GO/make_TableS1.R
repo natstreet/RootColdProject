@@ -15,10 +15,11 @@
 #   data/annotation/bg_col0_ATC.rda       (expressed-gene background, Col-0)
 # Output:
 #   tables/TableS1_commonDEG_GO_classic.tsv
+#   tables/Table_S1.xlsx   (the supplementary table: Legend sheet + "Table S1" sheet; p and padj to 3 s.f.)
 #
 # Usage: Rscript scripts/GO/make_TableS1.R
 
-suppressMessages({ library(topGO); library(GO.db) })
+source("scripts/GO/go_table_utils.R")
 
 ld <- function(f, o = NULL) { e <- new.env(); load(f, envir = e); if (is.null(o)) get(ls(e)[1], envir = e) else get(o, e) }
 ogfile <- Sys.glob("data/*/Orthogroups_20240613.tsv")[1]
@@ -44,13 +45,14 @@ gl <- factor(as.integer(names(g2) %in% studyset)); names(gl) <- names(g2)
 
 GOdata <- new("topGOdata", ontology = "BP", allGenes = gl, annot = annFUN.gene2GO, gene2GO = g2)
 res <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
-tab <- GenTable(GOdata, classicFisher = res, orderBy = "classicFisher", topNodes = length(usedGO(GOdata)))
-tab$classicFisher <- unname(score(res)[tab$GO.ID])   # exact p (GenTable prints p < 1e-30 as text)
-tab$padj <- round(p.adjust(tab$classicFisher, "BH"), 4)
-tab <- tab[order(tab$padj), ]
-sig <- tab[tab$padj < 0.05, ]
+sig <- go_result(GOdata, res)
 
 dir.create("tables", showWarnings = FALSE)
 write.table(sig, "tables/TableS1_commonDEG_GO_classic.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
-cat(sprintf("Wrote tables/TableS1_commonDEG_GO_classic.tsv (%d significant BP terms; padj < 0.05)\n", nrow(sig)))
+xl <- sig[, c("GO.ID", "Term", "Annotated", "Significant", "Expected", "classicFisher", "padj")]
+names(xl)[names(xl) == "classicFisher"] <- "classicFisher P"
+write_supp_xlsx(xl, "tables/Table_S1.xlsx", "Table S1", sig_cols = c("classicFisher P", "padj"),
+  legend = sprintf(paste("Table S1 GO enrichment of the %d commonly differentially expressed orthogroups (topGO",
+                         "classic Fisher's exact test, biological process; padj < 0.05)."), length(common)))
+cat(sprintf("Wrote tables/TableS1_commonDEG_GO_classic.tsv and tables/Table_S1.xlsx (%d significant BP terms; padj < 0.05)\n", nrow(sig)))
 cat("Top 5 terms:\n"); print(head(sig[, c("GO.ID", "Term", "Annotated", "Significant", "padj")], 5), row.names = FALSE)

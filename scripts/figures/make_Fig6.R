@@ -91,7 +91,8 @@ p <- ggplot(summ, aes(Condition, m, colour = Species, group = Species)) +
   facet_wrap(~TF, nrow = 2, scales = "free_y") +
   scale_colour_manual(values = pal) + scale_fill_manual(values = pal, guide = "none") +
   labs(x = "Condition", y = "Expression (VST)", colour = "Species",
-       caption = "* differentially expressed in that species (DEG: adjusted P <= 0.05 and |log2FC| >= 1 at any timepoint)") +
+       caption = expression("* differentially expressed in that species (DEG: adjusted" ~ italic(P) <= 0.05 ~
+                            "and |" * log[2] * "FC|" >= 1 ~ "at any timepoint)")) +
   theme_bw(base_size = 11) +
   theme(panel.grid.minor = element_blank(), strip.background = element_rect(fill = "grey92"),
         strip.text = element_text(face = "bold"), axis.text.x = element_text(angle = 45, hjust = 1))

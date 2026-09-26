@@ -14,10 +14,11 @@
 #   data/DEGs/DEGs_{col0,ost0,aspen,spruce}.RData
 # Output:
 #   tables/TableS2_cladeGO_classic_p<thr>.tsv
+#   tables/Table_S2.xlsx   (the supplementary table: Legend sheet + "Table S2" sheet; p and padj to 3 s.f.)
 #
 # Usage: Rscript scripts/GO/make_TableS2.R [threshold]     # e.g. 0.1 (default) or 0.05
 
-suppressMessages({ library(topGO); library(dplyr) })
+suppressMessages(library(dplyr)); source("scripts/GO/go_table_utils.R")
 
 thr <- suppressWarnings(as.numeric(commandArgs(trailingOnly = TRUE)[1])); if (is.na(thr)) thr <- 0.1
 
@@ -49,9 +50,7 @@ run_go <- function(species, gene_set) { g2 <- ANN[[species]]
   if (sum(gl == 1) < 3) return(data.frame())
   GOdata <- new("topGOdata", ontology = "BP", allGenes = gl, annot = annFUN.gene2GO, gene2GO = g2)
   res <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
-  GenTable(GOdata, classicFisher = res, orderBy = "classicFisher", topNodes = length(usedGO(GOdata))) %>%
-    mutate(classicFisher = unname(score(res)[GO.ID])) %>% mutate(padj = round(p.adjust(classicFisher, "BH"), 4)) %>%
-    arrange(padj) %>% filter(padj < 0.05) }
+  go_result(GOdata, res) }
 
 cells <- list(c("Col0","ABC"), c("Aspen","ABC"), c("Col0","AB"), c("Aspen","AB"),
               c("Aspen","BC"), c("Spruce","BC"), c("Col0","A"), c("Aspen","B"))
@@ -67,4 +66,15 @@ out <- do.call(rbind, all)
 f <- sprintf("tables/TableS2_cladeGO_classic_p%02d.tsv", round(thr * 100))
 write.table(out[, c("species","set","GO.ID","Term","Annotated","Significant","classicFisher","padj")],
             f, sep = "\t", quote = FALSE, row.names = FALSE)
-cat("Wrote", f, "(", nrow(out), "rows )\n")
+SETNAME <- c(ABC = "the shared core (ABC)", AB = "the Arabidopsis-broadleaf set (AB)",
+             BC = "the broadleaf-conifer set (BC)", A = "the Arabidopsis-exclusive set (A)",
+             B = "the broadleaf-exclusive set (B)")
+tested <- unique(vapply(cells, `[`, "", 2))
+xl <- out[, c("species","set","GO.ID","Term","Annotated","Significant","Expected","classicFisher","padj")]
+names(xl) <- c("Species","Co-expressolog set","GO.ID","Term","Annotated","Significant","Expected","classicFisher P","padj")
+write_supp_xlsx(xl, "tables/Table_S2.xlsx", "Table S2", sig_cols = c("classicFisher P", "padj"),
+  legend = paste0("Table S2 GO enrichment of the conserved co-expressolog clade sets (co-expressologs at adjusted P < ",
+    thr, ") \u2014 ", paste(SETNAME[tested], collapse = ", "), " \u2014 analysed per species and restricted to that ",
+    "species' differentially expressed genes, each tested against that genotype's own expressed-gene background ",
+    "(topGO classic Fisher's exact test, biological process; padj < 0.05). Sets with no enriched term are not listed."))
+cat("Wrote", f, "and tables/Table_S2.xlsx (", nrow(out), "rows )\n")

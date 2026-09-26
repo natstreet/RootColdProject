@@ -9,7 +9,8 @@
 #
 # Run from a directory containing the unpacked figshare deposit `data/`.
 # Inputs: data/ComPlEx/co_expressologs.RData, data/ComPlEx/all_go_results_clades.RData
-# Output: Figure4.pdf, Figure4.png
+# Output: Figure4.pdf, Figure4.png, Figure4_venn_regions.tsv (set totals, the seven exclusive Venn regions, and
+#         the share of the Arabidopsis and broadleaf sets that is conifer-conserved)
 # Usage:  Rscript scripts/figures/make_Fig4.R
 
 suppressPackageStartupMessages({ library(VennDiagram); library(ggplot2); library(dplyr)
@@ -31,6 +32,22 @@ vg <- draw.triple.venn(area1=length(A), area2=length(B), area3=length(C),
   cat.col=c("#2E8B57","#D2691E","#6A5ACD"), cat.cex=rep(1.2,3), cat.fontface="bold",
   cat.pos=c(-20,20,180), cat.dist=c(0.06,0.06,0.045), ind=FALSE)
 grid.newpage(); PA <- as.ggplot(grid::gTree(children=vg))
+
+# the Venn regions and the conifer-conserved shares quoted in the Results
+only <- function(x, y, z) length(setdiff(intersect(x, y), z))
+ABC <- length(Reduce(intersect, list(A, B, C)))
+reg <- data.frame(
+  quantity = c("A total", "B total", "C total", "A only", "B only", "C only", "AB only", "AC only", "BC only", "ABC"),
+  value = c(length(A), length(B), length(C),
+            length(setdiff(A, union(B, C))), length(setdiff(B, union(A, C))), length(setdiff(C, union(A, B))),
+            only(A, B, C), only(A, C, B), only(B, C, A), ABC))
+v <- setNames(reg$value, reg$quantity)
+shareA <- (v[["AC only"]] + ABC) / v[["A total"]]; shareB <- (v[["BC only"]] + ABC) / v[["B total"]]
+reg <- rbind(reg, data.frame(
+  quantity = c("AC only + ABC", "BC only + ABC", "conifer-conserved share of A (AC only + ABC) / A total",
+               "conifer-conserved share of B (BC only + ABC) / B total", "share of B / share of A"),
+  value = c(v[["AC only"]] + ABC, v[["BC only"]] + ABC, round(shareA, 4), round(shareB, 4), round(shareB / shareA, 4))))
+write.table(reg, "Figure4_venn_regions.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
 
 # ── panel B: GO dot-plots from the deposited clade GO results ─────────────────
 go <- do.call(c, ld("data/ComPlEx/all_go_results_clades.RData"))   # flatten per-cell lists -> named list

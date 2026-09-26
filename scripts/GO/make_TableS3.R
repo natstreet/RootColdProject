@@ -23,10 +23,11 @@
 #   data/annotation/bg_{col0_ATC,ost0_ATO,aspen_PT,birch_BP,spruce_PA,pine_PS}.rda
 # Output:
 #   tables/TableS3_cliqueClusterGO_classic.tsv
+#   tables/Table_S3.xlsx   (the supplementary table: Legend sheet + "Table S3" sheet; p and padj to 3 s.f.)
 #
 # Usage: Rscript scripts/GO/make_TableS3.R
 
-suppressMessages({ library(topGO); library(dplyr) })
+suppressMessages(library(dplyr)); source("scripts/GO/go_table_utils.R")
 
 ld <- function(f, o = NULL) { e <- new.env(); load(f, envir = e); if (is.null(o)) get(ls(e)[1], envir = e) else get(o, e) }
 
@@ -63,13 +64,8 @@ run_go <- function(sp, genes) {
   gl <- factor(as.integer(names(g2) %in% genes)); names(gl) <- names(g2)
   if (sum(gl == 1) < 1) return(data.frame())
   GOdata <- new("topGOdata", ontology = "BP", allGenes = gl, annot = annFUN.gene2GO, gene2GO = g2)
-  allGO <- usedGO(GOdata)
   res <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
-  GenTable(GOdata, classicFisher = res, orderBy = "classicFisher", topNodes = length(allGO)) %>%
-    mutate(classicFisher = unname(score(res)[GO.ID])) %>%   # exact p (GenTable prints p < 1e-30 as text)
-    mutate(padj = round(p.adjust(classicFisher, "BH"), 4)) %>%
-    arrange(padj) %>% filter(padj < 0.05) %>%
-    mutate(scores = -log10(classicFisher))
+  go_result(GOdata, res) %>% mutate(scores = -log10(classicFisher))
 }
 
 ## manuscript cluster -> analysis cluster
@@ -91,4 +87,8 @@ D <- D[, c("Cluster (manuscript)","Species","GO.ID","Term","Annotated","Signific
            "classicFisher","padj","scores","analysis_cluster")]
 dir.create("tables", showWarnings = FALSE)
 write.table(D, "tables/TableS3_cliqueClusterGO_classic.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
-cat("Wrote tables/TableS3_cliqueClusterGO_classic.tsv (", nrow(D), "rows )\n")
+write_supp_xlsx(D, "tables/Table_S3.xlsx", "Table S3", sig_cols = c("classicFisher", "padj", "scores"),
+  legend = sprintf(paste("Table S3 GO enrichment of the %s conserved-core clique expression clusters, per species",
+                         "(manuscript cluster numbering; topGO classic Fisher's exact test, biological process;",
+                         "padj < 0.05)."), c("one","two","three","four","five","six","seven","eight","nine")[length(MAP)]))
+cat("Wrote tables/TableS3_cliqueClusterGO_classic.tsv and tables/Table_S3.xlsx (", nrow(D), "rows )\n")

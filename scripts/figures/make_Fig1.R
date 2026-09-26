@@ -26,7 +26,7 @@
 #   data/annotation/bg_<sp>_<code>.rda                       expressed-gene backgrounds (repo)
 #   data/DEGs/DEGs_<sp>.RData                                per-species DEG lists (deposit)
 #   data/DEGs/og_summary.RData                               per-orthogroup species counts (deposit)
-# Output: Figure1.pdf, Figure1.png, and printed panel values.
+# Output: Figure1.pdf, Figure1.png, and Figure1_panel_values.tsv (panels b-d: count, denominator, percent).
 # Usage:  Rscript scripts/figures/make_Fig1.R
 
 suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(readr); library(ggplot2)
@@ -118,6 +118,22 @@ pC <- ggplot(Cdf, aes(species, Counts, fill = category)) + geom_col(colour = "bl
 Ddf <- data.frame(Group = factor(unname(labs), levels = rev(unname(labs))),
                   Count = as.integer(Dcount[sp]), Percent = 100 * Dcount[sp] / sapply(DEGl, length))
 pD <- tile(Ddf, "Composition of DEGs in common orthogroups", pal6)
+
+# panel values behind the Results text (rows of Bdf and Ddf are in `sp` order)
+vals <- bind_rows(
+  data.frame(panel = "b", species = unname(labs[sp]), category = "expressed genes in common orthogroups",
+             count = Bdf$Count, denominator = as.integer(sapply(bg, length)[sp]), percent = round(Bdf$Percent, 2)),
+  data.frame(panel = "c", species = as.character(Cdf$species), category = as.character(Cdf$category),
+             count = Cdf$Counts, denominator = as.integer(ave(Cdf$Counts, Cdf$species, FUN = sum)),
+             percent = round(100 * Cdf$prop, 2)),
+  data.frame(panel = "d", species = unname(labs[sp]), category = "DEGs in common orthogroups",
+             count = Ddf$Count, denominator = as.integer(sapply(DEGl, length)[sp]), percent = round(Ddf$Percent, 2)),
+  data.frame(panel = "d/b", species = unname(labs[sp]),
+             category = "DEGs in common orthogroups per expressed gene in common orthogroups",
+             count = Ddf$Count, denominator = Bdf$Count, percent = round(100 * Ddf$Count / Bdf$Count, 2)),
+  data.frame(panel = "c/d", species = "all", category = "orthogroups with a DEG in all six species",
+             count = sum(ogsum$n_species_with_DEGs == 6), denominator = nrow(ogsum), percent = NA))
+write.table(vals, "Figure1_panel_values.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
 
 cat("\nPanel b (expressed genes in common orthogroups):\n")
 for (s in sp) cat(sprintf("  %-6s %d (%.1f%%)\n", labs[s], Bdf$Count[Bdf$Group==labs[s]], Bdf$Percent[Bdf$Group==labs[s]]))
