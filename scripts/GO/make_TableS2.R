@@ -14,7 +14,7 @@
 #   data/DEGs/DEGs_{col0,ost0,aspen,spruce}.RData
 # Output:
 #   tables/TableS2_cladeGO_classic_p<thr>.tsv
-#   tables/Table_S2.xlsx   (the supplementary table: Legend sheet + "Table S2" sheet; p and padj to 3 s.f.)
+#   tables/Table_S2.xlsx   (the supplementary table: Legend sheet + "Table S2" sheet; padj to 4 s.f., p to 3)
 #
 # Usage: Rscript scripts/GO/make_TableS2.R [threshold]     # e.g. 0.1 (default) or 0.05
 

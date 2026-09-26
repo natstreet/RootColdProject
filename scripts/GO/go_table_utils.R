@@ -4,7 +4,8 @@
 #                   cuts names at 40 characters), the exact p-value and the Benjamini-Hochberg padj. Terms are
 #                   selected on the unrounded padj (< 0.05) and ordered by padj, then p.
 # write_supp_xlsx(): a supplementary table in the journal layout — a "Legend" sheet holding the legend and a
-#                   "Table Sn" sheet holding the table — with p-values and padj given to three significant figures.
+#                   "Table Sn" sheet holding the table — with padj given to four significant figures and
+#                   p-values to three.
 
 suppressMessages({ library(topGO); library(GO.db); library(openxlsx) })
 
@@ -18,7 +19,9 @@ go_result <- function(GOdata, res, alpha = 0.05) {
 }
 
 write_supp_xlsx <- function(tab, file, sheet, legend, sig_cols) {
-  for (k in sig_cols) tab[[k]] <- signif(tab[[k]], 3)
+  # padj to four significant figures, so that a value just below the 0.05 cut-off (e.g. 0.04995) does not
+  # display as 0.05; the other statistics to three
+  for (k in sig_cols) tab[[k]] <- signif(tab[[k]], if (k == "padj") 4 else 3)
   wb <- createWorkbook()
   addWorksheet(wb, "Legend"); writeData(wb, "Legend", legend, colNames = FALSE)
   addWorksheet(wb, sheet); writeData(wb, sheet, tab)

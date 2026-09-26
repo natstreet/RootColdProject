@@ -23,7 +23,7 @@
 #   data/annotation/bg_{col0_ATC,ost0_ATO,aspen_PT,birch_BP,spruce_PA,pine_PS}.rda
 # Output:
 #   tables/TableS3_cliqueClusterGO_classic.tsv
-#   tables/Table_S3.xlsx   (the supplementary table: Legend sheet + "Table S3" sheet; p and padj to 3 s.f.)
+#   tables/Table_S3.xlsx   (the supplementary table: Legend sheet + "Table S3" sheet; padj to 4 s.f., p to 3)
 #
 # Usage: Rscript scripts/GO/make_TableS3.R
 

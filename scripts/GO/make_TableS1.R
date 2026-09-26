@@ -15,7 +15,7 @@
 #   data/annotation/bg_col0_ATC.rda       (expressed-gene background, Col-0)
 # Output:
 #   tables/TableS1_commonDEG_GO_classic.tsv
-#   tables/Table_S1.xlsx   (the supplementary table: Legend sheet + "Table S1" sheet; p and padj to 3 s.f.)
+#   tables/Table_S1.xlsx   (the supplementary table: Legend sheet + "Table S1" sheet; padj to 4 s.f., p to 3)
 #
 # Usage: Rscript scripts/GO/make_TableS1.R
 
