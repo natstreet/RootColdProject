@@ -1,0 +1,10 @@
+quantity	value
+common_orthogroups	270
+common_with_at_least_20_genes	218
+common_pct_at_least_20_genes	80.7407407407407
+orthogroups_with_genes_in_all_six_genotypes	6643
+of_those_with_at_least_20_genes	880
+of_those_pct_at_least_20_genes	13.2470269456571
+common_via_Orthogroups_20240613.tsv	341
+common_via_ComPlEx_gene2OG	270
+common_via_gene_orthogroup_map.tsv	341

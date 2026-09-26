@@ -1,0 +1,9 @@
+quantity	value
+observed	256.0
+universe	7318.0
+expected	25.137611751447203
+null_mean	25.1578
+null_max	43.0
+fold	10.18394279183112
+empirical_P	0.0001999600079984003
+n_sim	5000.0

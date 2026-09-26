@@ -1,0 +1,3 @@
+orthogroup	arabidopsis_loci	arabidopsis_symbols	comparisons_with_coexpressolog	of_comparisons	comparisons
+OG0000037	AT1G01250; AT1G12610; AT1G12630; AT1G33760; AT1G63030; AT1G71450; AT1G77200; AT2G25820; AT2G35700; AT2G36450; AT2G44940; AT3G16280; AT3G60490; AT4G16750; AT4G25470; AT4G25480; AT4G25490; AT4G32800; AT5G11590; AT5G25810; AT5G51990; AT5G52020	ATCBF1; CBF1; DREB1B; ATCBF2; CBF2; DREB1C; FTQ4; ATCBF3; CBF3; DREB1A; ATERF38; ERF38; CBF4; DREB1D; DDF1; ESE2; HRD; TINY2; ddf2; tny	15	15	aspen-birch;aspen-col0;aspen-ost0;aspen-pine;aspen-spruce;birch-col0;birch-ost0;birch-pine;birch-spruce;col0-ost0;col0-pine;col0-spruce;ost0-pine;ost0-spruce;pine-spruce
+OG0001369	AT1G12860; AT3G26744	ATICE1; ICE1; SCRM; ICE2; SCRM2	3	15	col0-ost0;col0-pine;pine-spruce
