@@ -15,6 +15,8 @@
 # Output:
 #   DE/<species>/DEGs_<species>_C_vs_<tp>.txt   per-timepoint DEG lists
 #   DE/<species>/DEG_counts.tsv                 up/down/total per timepoint
+#   DE/de_results.tsv                           every gene x timepoint: log2FoldChange (DESeq2 MLE, not shrunken),
+#                                               padj (null of no change) and whether it is a DEG
 #
 # Usage: Rscript scripts/DE/differential_expression.R
 
@@ -30,6 +32,7 @@ SP <- list(
   pine   = c(dds = "dds_Ps",        ctrl = "control"))
 
 getdds <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
+all_res <- list()
 
 for (sp in names(SP)) {
   f <- Sys.glob(sprintf("data/dds/%s.rda", SP[[sp]]["dds"]))
@@ -47,7 +50,10 @@ for (sp in names(SP)) {
     writeLines(deg, file.path(outdir, sprintf("DEGs_%s_C_vs_%s.txt", sp, lv)))
     counts_tab <- rbind(counts_tab, data.frame(timepoint = lv, up = up, down = down, total = length(deg)))
     u <- union(u, deg)
+    all_res[[length(all_res) + 1]] <- data.frame(species = sp, gene = rownames(r), timepoint = sub("_5C$", "", lv),
+      log2FoldChange = r$log2FoldChange, padj = r$padj, deg = rownames(r) %in% deg)
   }
   write.table(counts_tab, file.path(outdir, "DEG_counts.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("%-7s union DEGs = %d\n", sp, length(u)))
 }
+write.table(do.call(rbind, all_res), file.path("DE", "de_results.tsv"), sep = "\t", quote = FALSE, row.names = FALSE, na = "")
