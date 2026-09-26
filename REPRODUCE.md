@@ -49,7 +49,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Fig. 1 | `scripts/figures/make_Fig1.R` | `expression/med_expression/`, `ComPlEx/gene2OG/`, `annotation/bg_*`, `DEGs/`; panel values in `results/Figure1_panel_values.tsv` |
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
 | Fig. 3 | `scripts/figures/make_Fig3.R` | `superclusters/membership/`, `expression/`, `superclusters/DEGs_TFs/`, `*/Orthogroups_20240613.tsv`, `superclusters/SC_mapping.csv`, `TranscriptionFactors/` |
-| Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/co_expressologs.RData`, `ComPlEx/all_go_results_clades.RData`; Venn regions in `results/Figure4_venn_regions.tsv` |
+| Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/co_expressologs.RData`; panel b from the Table S2 output (`tables/TableS2_cladeGO_classic_p10.tsv`); Venn regions in `results/Figure4_venn_regions.tsv`, panel b values in `results/Figure4b_values.tsv` |
 | Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S3 output and `scripts/figures/Fig5_captions.tsv` (block captions, by GO ID) |
 | Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/` |
 | Fig. S1 | `scripts/figures/make_FigS1.R` | `superclusters/merged_super_clusters_means.RData`, `superclusters/SC_mapping.csv` |
@@ -70,6 +70,12 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Orthogroups split into several HOGs (Methods) | `scripts/analysis/orthogroup_hog_split.R` | `ComPlEx/Orthogroups_20240613.tsv`, `ComPlEx/Phylogenetic_Hierarchical_Orthogroups_N0.tsv.gz` (in this repository; N0.tsv of the same OrthoFinder run, from github.com/tallgran/conifer-JasonHill); output `results/orthogroup_hog_split.tsv` |
 | Complete cliques per core orthogroup (Methods) | `scripts/analysis/complete_cliques_per_orthogroup.R` | `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`; outputs `results/complete_cliques_per_orthogroup.tsv`, `results/complete_cliques_summary.tsv` |
 | Cluster profiles (Results, clusters 1–2) | `scripts/analysis/cluster_profiles.py` | `open/{gene_index,conserved_core,orthogroup_annotation}.tsv` — **deposit v4 or later**; outputs in `results/cluster_profiles/` |
+| Common DEG orthogroups: count per gene-to-orthogroup map, and share with ≥ 20 genes (Results) | `scripts/validation/common_orthogroups.R` | `DEGs/og_summary.RData`, `DEGs/DEGs_*.RData`, `*/Orthogroups_20240613.tsv`, `ComPlEx/gene2OG/`, `open/gene_orthogroup_map.tsv` (deposit v4 or later; optional); output `results/common_orthogroups.tsv` |
+| Col-0 DEGs that are also Ost-0 DEGs (Results) | `scripts/validation/ecotype_deg_overlap.R` | `DEGs/per_timepoint_DEG_lists/{col0,ost0}/`, `DEGs/DEGs_{col0,ost0}.RData`; output `results/ecotype_deg_overlap.tsv` |
+| Co-expressolog comparisons per orthogroup (Results; run with `0.1 OG0000037 OG0001369`) | `scripts/validation/orthogroup_coexpressolog_comparisons.R` | `ComPlEx/co_expressologs.RData`, `open/orthogroup_annotation.tsv` — **deposit v4 or later**; output `results/orthogroup_coexpressolog_comparisons.tsv` |
+| Family-size-aware null for the conserved core (Results) | `scripts/validation/conservation_sizeaware_null.py` | `open/co_expressologs.tsv` — **deposit v4 or later**, `*/Orthogroups_20240613.tsv`; outputs `results/conservation_sizeaware_{null.csv,summary.tsv}` |
+| ENA runs, sequencing depth and platform per sample (Methods; deposit `samples.tsv`) | `scripts/deposit/sample_ena_runs.py` | `open/samples.tsv`, `quantification/{sample_name_map,lane_map}.tsv` — **deposit v4 or later**; ENA portal API (network); outputs `results/{sample_ena_runs,ena_run_metadata,sequencing_depth}.tsv` |
+| Per-gene DE results (fold change, padj against no change, DEG call) | `scripts/DE/differential_expression.R` | as for DEGs; output `DE/de_results.tsv` |
 
 The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each
 species — every gene with nonzero VST expression across the cold time-course samples.
