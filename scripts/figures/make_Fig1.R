@@ -26,7 +26,7 @@
 #   data/annotation/bg_<sp>_<code>.rda                       expressed-gene backgrounds (repo)
 #   data/DEGs/DEGs_<sp>.RData                                per-species DEG lists (deposit)
 #   data/DEGs/og_summary.RData                               per-orthogroup species counts (deposit)
-# Output: Figure1.pdf, Figure1.png, and Figure1_panel_values.tsv (panels b-d: count, denominator, percent).
+# Output: Figure1.pdf, Figure1.png, and Figure1_panel_values.tsv (panels a-d: count, denominator, percent).
 # Usage:  Rscript scripts/figures/make_Fig1.R
 
 suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(readr); library(ggplot2)
@@ -121,6 +121,8 @@ pD <- tile(Ddf, "Composition of DEGs in common orthogroups", pal6)
 
 # panel values behind the Results text (rows of Bdf and Ddf are in `sp` order)
 vals <- bind_rows(
+  data.frame(panel = "a", species = "all", category = "expressed orthogroups shared by all 12 condition sets",
+             count = length(common_OG_expr), denominator = length(all_OG), percent = round(100 * length(common_OG_expr) / length(all_OG), 2)),
   data.frame(panel = "b", species = unname(labs[sp]), category = "expressed genes in common orthogroups",
              count = Bdf$Count, denominator = as.integer(sapply(bg, length)[sp]), percent = round(Bdf$Percent, 2)),
   data.frame(panel = "c", species = as.character(Cdf$species), category = as.character(Cdf$category),

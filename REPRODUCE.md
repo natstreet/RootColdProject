@@ -55,7 +55,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Fig. S1 | `scripts/figures/make_FigS1.R` | `superclusters/merged_super_clusters_means.RData`, `superclusters/SC_mapping.csv` |
 | Fig. S2 | `scripts/figures/make_FigS2.R` | `superclusters/membership/`, `TranscriptionFactors/` |
 | Fig. S3 | `scripts/figures/make_FigS3.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
-| Fig. S4 | `scripts/figures/make_FigS4.R` | `ComPlEx/co_expressologs.RData` |
+| Fig. S4 | `scripts/figures/make_FigS4.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S4_values.tsv` |
 | Fig. S5 | `scripts/figures/make_FigS5.py` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.py` (panel b; **STRING download, see note**) |
 | Fig. S6 | `scripts/figures/make_FigS6.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
 | Fig. S7 | `scripts/figures/make_FigS7.py` | `open/{conserved_core,gene_index,co_expressologs,transcription_factors}.tsv`, `networks/network_*_hrr100.tsv` — **deposit v4 or later**; `DE/<species>/` from `differential_expression.R` |
@@ -68,6 +68,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Species networks | `scripts/networks/build_species_networks.R` | `expression/<sp>_root_cold_stress_expression.txt` |
 | TF clique responses (Discussion) | `scripts/analysis/tf_clique_directions.R` | `dds/`, `expression/`, `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `annotation/gene_aliases_20140331.txt`; output `results/tf_clique_directions.tsv` |
 | Orthogroups split into several HOGs (Methods) | `scripts/analysis/orthogroup_hog_split.R` | `ComPlEx/Orthogroups_20240613.tsv`, `ComPlEx/Phylogenetic_Hierarchical_Orthogroups_N0.tsv.gz` (in this repository; N0.tsv of the same OrthoFinder run, from github.com/tallgran/conifer-JasonHill); output `results/orthogroup_hog_split.tsv` |
+| Complete cliques per core orthogroup (Methods) | `scripts/analysis/complete_cliques_per_orthogroup.R` | `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`; outputs `results/complete_cliques_per_orthogroup.tsv`, `results/complete_cliques_summary.tsv` |
 | Cluster profiles (Results, clusters 1–2) | `scripts/analysis/cluster_profiles.py` | `open/{gene_index,conserved_core,orthogroup_annotation}.tsv` — **deposit v4 or later**; outputs in `results/cluster_profiles/` |
 
 The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each

@@ -1,4 +1,5 @@
 panel	species	category	count	denominator	percent
+a	all	expressed orthogroups shared by all 12 condition sets	6502	19653	33.08
 b	Col-0	expressed genes in common orthogroups	14663	26457	55.42
 b	Ost-0	expressed genes in common orthogroups	14657	26286	55.76
 b	Aspen	expressed genes in common orthogroups	17941	31066	57.75

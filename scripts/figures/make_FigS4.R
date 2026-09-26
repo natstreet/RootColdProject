@@ -5,7 +5,8 @@
 #
 # Run from a directory containing the unpacked figshare deposit `data/`.
 # Inputs: data/ComPlEx/co_expressologs.RData
-# Output: Figure_S4.pdf
+# Output: Figure_S4.pdf, Figure_S4_values.tsv (per comparison: co-expressolog orthogroups, and those found in
+#         that comparison only; and the orthogroups found in every comparison)
 # Usage:  Rscript scripts/figures/make_FigS4.R
 
 suppressPackageStartupMessages({ library(UpSetR); library(dplyr) })
@@ -35,4 +36,11 @@ upset(M, sets = allp, nintersects = 6, order.by = "freq",
       sets.x.label = "Co-expressolog orthogroups", text.scale = 1.4,
       main.bar.color = "grey35", sets.bar.color = "grey50", queries = q)
 dev.off()
+only <- rowSums(M) == 1
+vals <- rbind(data.frame(comparison = allp, quantity = "co-expressolog orthogroups", value = as.integer(colSums(M))),
+              data.frame(comparison = allp, quantity = "co-expressolog orthogroups in this comparison only",
+                         value = as.integer(colSums(M[only, , drop = FALSE]))),
+              data.frame(comparison = "all", quantity = "co-expressolog orthogroups in every comparison",
+                         value = sum(rowSums(M) == length(allp))))
+write.table(vals, "Figure_S4_values.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
 cat("Figure_S4.pdf written;", length(allp), "pairwise comparisons\n")

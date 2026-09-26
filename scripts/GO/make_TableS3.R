@@ -90,5 +90,8 @@ write.table(D, "tables/TableS3_cliqueClusterGO_classic.tsv", sep = "\t", quote =
 write_supp_xlsx(D, "tables/Table_S3.xlsx", "Table S3", sig_cols = c("classicFisher", "padj", "scores"),
   legend = sprintf(paste("Table S3 GO enrichment of the %s conserved-core clique expression clusters, per species",
                          "(manuscript cluster numbering; topGO classic Fisher's exact test, biological process;",
-                         "padj < 0.05)."), c("one","two","three","four","five","six","seven","eight","nine")[length(MAP)]))
+                         "padj < 0.05).%s"), c("one","two","three","four","five","six","seven","eight","nine")[length(MAP)],
+                   {  none <- setdiff(names(MAP), as.character(unique(D[["Cluster (manuscript)"]])))   # clusters without a row
+                      if (length(none)) sprintf(" Cluster%s %s had no enriched term.", if (length(none) > 1) "s" else "",
+                                                paste(none, collapse = " and ")) else "" }))
 cat("Wrote tables/TableS3_cliqueClusterGO_classic.tsv and tables/Table_S3.xlsx (", nrow(D), "rows )\n")
