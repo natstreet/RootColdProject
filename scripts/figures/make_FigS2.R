@@ -27,7 +27,8 @@ suppressPackageStartupMessages({ library(ggplot2); library(patchwork) })
 OG <- "OG0000118"
 SP <- c("col0", "ost0", "aspen", "birch", "spruce", "pine")
 LAB <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "aspen", birch = "birch", spruce = "spruce", pine = "pine")
-COL <- c(col0 = "#0072B2", ost0 = "#56B4E9", aspen = "#009E73", birch = "#7FBF3F", spruce = "#D55E00", pine = "#CC79A7")
+source("scripts/figures/genotype_colours.R")
+COL <- GENOTYPE_COLOURS                                                  # the shared genotype palette
 TPS <- c("6h", "24h", "3d", "10d"); TPLAB <- c("6 h", "24 h", "3 d", "10 d")
 GREY <- "#666666"
 rd <- function(f) read.delim(f, stringsAsFactors = FALSE, quote = "", check.names = FALSE)

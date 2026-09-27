@@ -24,8 +24,8 @@ disp    <- c(ANAC018 = "ANAC018/ANAC002", WRKY48 = "WRKY48/WRKY23")  # NAC/WRKY:
 species <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
 pre     <- c(col0="Col", ost0="Ost", aspen="Pt", birch="Bp", spruce="Pa", pine="Ps")
 cond    <- c("01"="Control","02"="6h","03"="24h","04"="3d","05"="10d")
-pal     <- c("Col-0"="#2ca02c","Ost-0"="#ff7f0e","Aspen"="#1f3b8c","Birch"="#4aa3df",
-             "Spruce"="#d62728","Pine"="#e377c2")
+source("scripts/figures/genotype_colours.R")
+pal     <- setNames(GENOTYPE_COLOURS[names(species)], species)   # the shared genotype palette, by display name
 ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 
 # symbol -> Arabidopsis gene ID
@@ -98,5 +98,5 @@ p <- ggplot(summ, aes(Condition, m, colour = Species, group = Species)) +
         strip.text = element_text(face = "bold"), axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggsave("Figure6.pdf", p, width = 13, height = 6)
-ggsave("Figure6.png", p, width = 13, height = 6, dpi = 150)
+ggsave("Figure6.png", p, width = 13, height = 6, dpi = 300)
 cat("TFs plotted:", nlevels(d$TF), "| orthogroups:", paste(levels(d$TF), collapse=", "), "\n")

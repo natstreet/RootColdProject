@@ -47,6 +47,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 
 | Output | Script | Key inputs (under `data/`) |
 |---|---|---|
+| Genotype colours (every figure that colours by genotype; the deposit explorer) | `scripts/figures/genotype_colours.R` (writes `genotype_colours.json`); `check_genotype_colours.R` fails if a producer defines its own | none |
 | Fig. 1 | `scripts/figures/make_Fig1.R` | `expression/med_expression/`, `ComPlEx/gene2OG/`, `annotation/bg_*`, `DEGs/`; panel values in `results/Figure1_panel_values.tsv` |
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
 | Fig. 3 | `scripts/figures/make_Fig3.R` | `superclusters/membership/`, `expression/`, `superclusters/DEGs_TFs/`, `*/Orthogroups_20240613.tsv`, `superclusters/SC_mapping.csv`, `TranscriptionFactors/` |

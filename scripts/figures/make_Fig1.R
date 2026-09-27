@@ -67,13 +67,18 @@ OG_binary <- data.frame(lapply(as.data.frame(bm), as.numeric), row.names = all_O
 bg <- list(col0 = ld("data/annotation/bg_col0_ATC.rda"), ost0 = ld("data/annotation/bg_ost0_ATO.rda"),
            aspen = ld("data/annotation/bg_aspen_PT.rda"), birch = ld("data/annotation/bg_birch_BP.rda"),
            spruce = ld("data/annotation/bg_spruce_PA.rda"), pine = ld("data/annotation/bg_pine_PS.rda"))
-tile <- function(df, title, pal) ggplot(df, aes(1, Percent, fill = Group)) +
-  geom_col(width = 0.5, colour = "white") +
-  geom_text(aes(label = paste0(Group, "\n", Count, " (", round(Percent, 1), "%)")),
-            position = position_stack(vjust = 0.5), size = 3.4) +
-  scale_fill_manual(values = pal) + coord_flip() + labs(title = title) + theme_void() +
-  theme(plot.title = element_text(size = 11, face = "bold", hjust = 0.5), legend.position = "none")
-pal6 <- rev(c("#7CC347","#95EC96","#DAA918","#F3D476","#A770C5","#DEADF9"))
+# one equal-width tile per genotype, labelled with its count and percentage
+tile <- function(df, title, pal) {
+  df$x <- match(as.character(df$Group), unname(labs[sp]))
+  ggplot(df, aes(x, 1, fill = Group)) +
+    geom_tile(width = 0.98, height = 1) +
+    geom_text(aes(label = paste0(Group, "\n", Count, "\n(", round(Percent, 1), "%)")), size = 3.6, lineheight = 0.95) +
+    scale_fill_manual(values = pal) + scale_x_continuous(expand = c(0, 0)) + labs(title = title) + theme_void() +
+    theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5, margin = margin(b = 6)),
+          legend.position = "none")
+}
+source("scripts/figures/genotype_colours.R")
+pal6 <- setNames(genotype_tint(GENOTYPE_COLOURS[sp]), labs[sp])   # the shared genotype palette, lightened for black labels
 Bcount <- sapply(sp, function(s){ og <- OGm[[s]]; gc <- key[s]
   length(unique(og[[gc]][ og[[gc]] %in% bg[[s]] & og$OrthoGroup %in% common_OG_expr ])) })
 Bdf <- data.frame(Group = factor(unname(labs), levels = rev(unname(labs))),
@@ -114,7 +119,8 @@ pC <- ggplot(Cdf, aes(species, Counts, fill = category)) + geom_col(colour = "bl
   geom_text(aes(label = scales::percent(prop, accuracy = 1)), position = position_stack(vjust = 0.5), size = 3) +
   scale_fill_manual(values = pal4) + theme_minimal(base_size = 12) +
   labs(x = NULL, y = "Number of DEGs", fill = "Category") +
-  theme(panel.grid = element_blank(), legend.position = "top")
+  theme(panel.grid = element_blank(), legend.position = "right", axis.line = element_line(colour = "black"),
+        plot.margin = margin(40, 5, 5, 5))
 Ddf <- data.frame(Group = factor(unname(labs), levels = rev(unname(labs))),
                   Count = as.integer(Dcount[sp]), Percent = 100 * Dcount[sp] / sapply(DEGl, length))
 pD <- tile(Ddf, "Composition of DEGs in common orthogroups", pal6)
@@ -143,17 +149,20 @@ cat("Panel d (DEGs in common orthogroups):\n")
 for (s in sp) cat(sprintf("  %-6s %d (%.1f%%)\n", labs[s], Ddf$Count[Ddf$Group==labs[s]], Ddf$Percent[Ddf$Group==labs[s]]))
 
 # ── render ────────────────────────────────────────────────────────────────────
-png("panelA_fig1.png", width = 2600, height = 1150, res = 210)
+png("panelA_fig1.png", width = 3900, height = 1750, res = 300)
 upset(OG_binary, sets = rev(colnames(OG_binary)), keep.order = TRUE, nintersects = 15,
       order.by = "freq", decreasing = TRUE, set_size.show = TRUE,
       main.bar.color = "#636363", matrix.color = "#828282", sets.bar.color = "#828282",
       sets.x.label = "Total orthogroups per selection", mainbar.y.label = "Orthogroup overlap of expressed genes",
       set_size.scale_max = 18000, text.scale = c(1.5,1.5,0,1.5,1.5,1.6))
 dev.off()
-pA <- ggdraw() + draw_image("panelA_fig1.png")
-top <- plot_grid(pA, pB, ncol = 2, rel_widths = c(1.9, 1), labels = c("a","b"))
-bot <- plot_grid(pC, pD, ncol = 2, rel_widths = c(1.4, 1), labels = c("c","d"))
-fig <- plot_grid(top, bot, ncol = 1, rel_heights = c(1.25, 1))
-ggsave("Figure1.pdf", fig, width = 15, height = 11)
-ggsave("Figure1.png", fig, width = 15, height = 11, dpi = 110)
+# layout as in the article: panels b and d sit in the empty upper right of panels a and c (13 x 12 in)
+fig <- ggdraw() +
+  draw_image("panelA_fig1.png", x = 0, y = 0.52, width = 1, height = 0.48) +
+  draw_plot(pB, x = 0.47, y = 0.86, width = 0.53, height = 0.13) +
+  draw_plot(pC, x = 0, y = 0, width = 1, height = 0.5) +
+  draw_plot(pD, x = 0.47, y = 0.36, width = 0.53, height = 0.13) +
+  draw_plot_label(c("a", "b", "c", "d"), x = c(0, 0.45, 0, 0.45), y = c(1, 1, 0.5, 0.5), size = 16)
+ggsave("Figure1.pdf", fig, width = 13, height = 12)
+ggsave("Figure1.png", fig, width = 13, height = 12, dpi = 300)
 cat("\nWrote Figure1.pdf / Figure1.png\n")
