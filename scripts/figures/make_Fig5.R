@@ -12,7 +12,8 @@
 #
 # Inputs:
 #   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS  116 cliques, one gene per species
-#   data/ComPlEx/cliques/clique_HMcluster_list.rda              clique -> analysis cluster
+#   data/ComPlEx/cliques/clique_HMcluster_list.rda              clique -> analysis cluster (clique_clusters.R)
+#   scripts/ComPlEx/clique_matrix.R                            the z-scored matrix and the row clustering
 #   data/expression/med_expression/<sp>_med.txt.gz             per-timepoint median expression
 #   scripts/GO/make_TableS4.R                                  manuscript -> analysis cluster map
 #   tables/TableS4_cliqueClusterGO_classic.tsv                 GO terms per manuscript cluster
@@ -23,31 +24,16 @@
 suppressPackageStartupMessages({ library(dplyr); library(readr); library(pheatmap); library(cowplot)
   library(grid); library(ggplot2) })
 
-sp    <- c("col0","ost0","aspen","birch","spruce","pine")
-labs  <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
-conds <- c("Control","6h","24h","3d","10d")
+source("scripts/ComPlEx/clique_matrix.R")                                   # the matrix, shared with clique_clusters.R
+sp <- clique_sp; labs <- clique_labs; conds <- clique_conds
 ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 
 ## ---- z-scored median expression, one row per clique ----
-cl <- readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS")
-template <- data.frame(cliqueID = cl$cliqueID, stringsAsFactors = FALSE)
-for (s in sp) {
-  e  <- as.data.frame(read_delim(sprintf("data/expression/med_expression/%s_med.txt.gz", s), show_col_types = FALSE))
-  cc <- vapply(conds, function(k) grep(paste0("_", k, "$"), colnames(e), value = TRUE)[1], character(1))
-  ex <- e[, c("Genes", cc)]; colnames(ex) <- c("Genes", conds)
-  g  <- data.frame(cliqueID = cl$cliqueID, Genes = cl[[s]], stringsAsFactors = FALSE)
-  m  <- left_join(g, ex, by = "Genes")
-  v  <- as.matrix(sapply(m[, conds], as.numeric))
-  z  <- t(apply(v, 1, function(r){ sdv <- sd(r); if (is.na(sdv) || sdv == 0) rep(0, length(r)) else (r - mean(r)) / sdv }))
-  colnames(z) <- paste(labs[[s]], conds, sep = ".")
-  template <- cbind(template, z)
-}
-M <- as.matrix(template[, -1]); rownames(M) <- template$cliqueID
-M <- M[stats::complete.cases(M), ]
+M  <- clique_matrix()
 cat("Cliques in heatmap:", nrow(M), "\n")
 
 ## ---- row clustering; check it against the deposited cluster assignment ----
-tr  <- hclust(dist(M, method = "euclidean"), method = "ward.D2")
+tr  <- clique_tree(M)
 ord <- tr$order
 cut <- cutree(tr, k = 4)
 hm  <- ld(Sys.glob("data/*/cliques/clique_HMcluster_list.rda")[1])            # ID, Cluster (analysis)

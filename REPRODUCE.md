@@ -28,7 +28,7 @@ Some small derived inputs are provided in this repository rather than in the fig
 the median-expression tables (`expression/med_expression/`), the gene→orthogroup maps
 (`ComPlEx/gene2OG/`), the per-species GO backgrounds (`annotation/bg_*.rda`), the Arabidopsis gene
 aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
-(`DEGs/og_summary.RData`), the per-timepoint DEG lists (`DEGs/per_timepoint_DEG_lists/`), the
+(`DEGs/og_summary.RData`, from `scripts/DE/og_summary.R`), the per-timepoint DEG lists (`DEGs/per_timepoint_DEG_lists/`), the
 super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 `superclusters/merged_super_clusters_means.RData`) and the super-cluster memberships
 (`superclusters/membership/`). Unpacking the deposit alongside them gives a complete `data/` tree.
@@ -93,12 +93,21 @@ expression data, and are needed only to rebuild those objects:
 | `expression/<species>_root_cold_stress_expression.txt` (variance-stabilised matrices) | `scripts/ComPlEx/Network_Generation_setup.R` |
 | `ComPlEx/PairwiseComparisons/` (the 15 pairwise co-expressolog comparisons) | `scripts/ComPlEx/ComPlEx.R`, one run per species pair, submitted with `scripts/ComPlEx/submit_ComPlEx_cold.sh` (which uses `RunR.sh`) |
 | `ComPlEx/co_expressologs.RData`, `ComPlEx/all_expressed_genes.RData` | `scripts/ComPlEx/Genelists.Rmd` |
+| `ComPlEx/ones_and_zeros_all.RData` (per orthogroup and comparison, whether ComPlEx tested a gene pair) | `scripts/ComPlEx/ones_and_zeros.R` |
 | `ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS` (maximal cliques per orthogroup) | `scripts/ComPlEx/cliques_step1.R` |
 | conserved-clique selection | `scripts/ComPlEx/cliques_step2.R` |
+| `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS` (the conserved core: one complete clique per orthogroup) | `scripts/ComPlEx/core_cliques.R` |
+| `ComPlEx/cliques/clique_HMcluster_list.rda` (the four clique clusters, analysis numbering) | `scripts/ComPlEx/clique_clusters.R` (with `clique_matrix.R`, shared with `make_Fig5.R`) |
+| `DEGs/og_summary.RData` (per orthogroup, the genotypes with a gene and with a DEG) | `scripts/DE/og_summary.R` |
 
-`ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `ComPlEx/cliques/clique_HMcluster_list.rda`,
-`ComPlEx/ones_and_zeros_all.RData` and `DEGs/og_summary.RData` are deposited analysis objects without a producer
-script in this repository; the producers above read them from the deposit.
+Run them in this order: `ones_and_zeros.R` before `cliques_step1.R` and `cliques_step2.R`; `core_cliques.R`, then
+`clique_clusters.R`, before `make_TableS4.R`, `make_Fig5.R`, `make_Fig6.R` and `make_core_clusters.R`; `og_summary.R`
+before `make_Fig1.R`, `make_TableS1.R` and `common_orthogroups.R`. Each writes its object to the path above, or to
+the path given as its first argument. `scripts/tests/test_rebuilt_objects.R` runs the four into a temporary folder
+and checks that each result is identical to the copy under `data/`.
+
+`ComPlEx/cliques/conserved_genes_COMPLETE_wider.RDS`, the complete cliques from which `core_cliques.R` selects, has
+no producer script in this repository; it comes from the clique enumeration.
 
 The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each
 species — every gene with nonzero VST expression across the cold time-course samples.
