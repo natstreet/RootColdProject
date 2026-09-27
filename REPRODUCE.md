@@ -60,7 +60,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Fig. S6 | `scripts/figures/make_FigS6.py` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.py` (panel b; **STRING download, see note**) |
 | Fig. S7 | `scripts/figures/make_FigS7.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
 | Table S1 (`Table_S1.xlsx`) | `scripts/GO/make_TableS1.R` (with `go_table_utils.R`) | `DEGs/og_summary.RData`, `DEGs/DEGs_col0.RData`, `*/Orthogroups_20240613.tsv`, `annotation/Athal_go_ids.tsv`, `annotation/bg_col0_ATC.rda` |
-| Table S2 | `scripts/GO/make_TableS2.R` | `superclusters/membership/` |
+| Table S2 (`Table_S2.xlsx`) | `scripts/GO/make_TableS2.R` | `superclusters/membership/` |
 | Table S3 (`Table_S3.xlsx`) | `scripts/GO/make_TableS3.R` (with `go_table_utils.R`) | `ComPlEx/co_expressologs.RData`, `annotation/{go_ids,bg_*}`, `DEGs/DEGs_*.RData` |
 | Table S4 (`Table_S4.xlsx`) | `scripts/GO/make_TableS4.R` (with `go_table_utils.R`) | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
 | DEGs (Fig. 1 / Fig. 2) | `scripts/DE/differential_expression.R` | `dds/dds_{col0_soil,ost0_soil,Pt_new,Bp_new,Pa,Ps}.rda` |

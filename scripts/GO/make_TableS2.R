@@ -10,11 +10,11 @@
 # Inputs:
 #   data/superclusters/membership/<species>/cluster_<n>_members.csv   per-species SC membership
 #   data/TranscriptionFactors/TF_<species>.RData                      gene -> TF family
-# Output: Table_S2_supercluster_gene_membership.xlsx
+# Output: tables/Table_S2.xlsx (the supplementary table: a Legend sheet, then the SC_I-SC_IV and TF_families sheets)
 #
 # Usage: Rscript scripts/GO/make_TableS2.R
 
-suppressPackageStartupMessages({ library(openxlsx) })
+source("scripts/GO/go_table_utils.R")                         # check_xlsx_parts()
 
 SC <- c(SC_I = 6, SC_II = 2, SC_III = 3, SC_IV = 1)          # main-text label -> original number
 species <- c(col0 = "Col-0", ost0 = "Ost-0", birch = "Birch",
@@ -33,25 +33,26 @@ members <- function(sp, n)
   sort(read.csv(sprintf("data/superclusters/membership/%s/cluster_%d_members.csv", sp, n),
                 stringsAsFactors = FALSE)$gene_id)
 
-wb  <- createWorkbook()
-hdr <- createStyle(textDecoration = "bold", border = "bottom")
+legend <- paste("Table S2 Gene membership of the four superclusters (SC_I-SC_IV), per species/ecotype. One sheet per",
+                "supercluster lists, for each species/ecotype, the differentially expressed genes assigned to it (Pearson r",
+                ">= 0.7 with the supercluster mean profile); the TF_families sheet lists the transcription factors among the",
+                "members with their family.")
+sheets <- list(Legend = stats::setNames(data.frame(matrix(nrow = 0, ncol = 1)), legend))
 tf_seen <- character(0)
 for (lab in names(SC)) {
   cols <- lapply(names(species), members, n = SC[[lab]]); names(cols) <- unname(species)
   n <- max(lengths(cols), 1L)
-  df <- as.data.frame(lapply(cols, function(x) c(x, rep(NA_character_, n - length(x)))),
-                      check.names = FALSE, stringsAsFactors = FALSE)
-  addWorksheet(wb, lab); writeData(wb, lab, df, headerStyle = hdr, keepNA = FALSE)
-  setColWidths(wb, lab, cols = seq_along(df), widths = 16); freezePane(wb, lab, firstRow = TRUE)
+  sheets[[lab]] <- as.data.frame(lapply(cols, function(x) c(x, rep(NA_character_, n - length(x)))),
+                                 check.names = FALSE, stringsAsFactors = FALSE)
   tf_seen <- union(tf_seen, unlist(cols)[unlist(cols) %in% names(fam)])
 }
 # TF_families worksheet: every TF among the members, with its family
-tf <- data.frame(Gene = sort(tf_seen), `TF family` = fam[sort(tf_seen)],
-                 check.names = FALSE, row.names = NULL)
-addWorksheet(wb, "TF_families"); writeData(wb, "TF_families", tf, headerStyle = hdr)
-setColWidths(wb, "TF_families", cols = 1:2, widths = c(16, 14)); freezePane(wb, "TF_families", firstRow = TRUE)
-
-saveWorkbook(wb, "Table_S2_supercluster_gene_membership.xlsx", overwrite = TRUE)
+sheets$TF_families <- data.frame(Gene = sort(tf_seen), `TF family` = unname(fam[sort(tf_seen)]),
+                                 check.names = FALSE, row.names = NULL)
+tf <- sheets$TF_families
+dir.create("tables", showWarnings = FALSE)
+writexl::write_xlsx(sheets, "tables/Table_S2.xlsx", format_headers = TRUE)   # empty cells for NA
+check_xlsx_parts("tables/Table_S2.xlsx")
 
 for (lab in names(SC))
   cat(sprintf("%-6s: %s\n", lab,
