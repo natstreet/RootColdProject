@@ -2,7 +2,7 @@
 
 Analysis code for:
 
-**Comparative co-expression reveals a regulatory core shared by angiosperm and conifer roots under cold**
+**A comparative transcriptomic resource for the root cold response of boreal trees across the angiosperm–gymnosperm divide**
 Norway spruce (*Picea abies*), Scots pine (*Pinus sylvestris*), silver birch (*Betula pendula*),
 aspen (*Populus tremula*) and two *Arabidopsis thaliana* ecotypes (Col-0, Ost-0).
 
