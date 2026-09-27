@@ -68,10 +68,8 @@ data/                Not included; download from figshare and unpack here (see D
 data preparation (`Network_Generation_setup.R`), the 15 pairwise co-expressolog comparisons
 (`ComPlEx.R`, run once per species pair; for each pair it builds mutual-rank networks from absolute
 Pearson correlation on the genes with an orthologue in that pair and keeps the top 3 % of edges), extraction of cliques and the conserved core (`cliques_step1.R`, `cliques_step2.R`),
-and the downstream visualisation and clique analyses (`1_Data_visualisation.Rmd`,
-`2_Sample_comparison.Rmd`, `3_Cliques.Rmd`, `5_Clique_analysis.Rmd`, `Genelists.Rmd`,
-`UpsetPlotsEtc.Rmd`). `RunR.sh` / `submitR.sh` / `submit_ComPlEx_cold.sh` are HPC
-wrappers; adapt them to your environment.
+and the co-expressolog table (`Genelists.Rmd`). `submit_ComPlEx_cold.sh` submits `ComPlEx.R` through
+`RunR.sh` on a Slurm cluster; adapt both to your environment.
 
 `scripts/networks/build_species_networks.R` -- the per-species whole-genome co-expression networks
 provided with the resource (`data/networks/network_<species>_hrr100.tsv`): absolute Pearson
@@ -79,12 +77,9 @@ correlation, ranked per gene, with an edge kept where the highest reciprocal ran
 These are for exploring a gene's co-expression neighbourhood and are separate from the pairwise
 ComPlEx networks.
 
-`scripts/validation/`:
-- `conservation_null_test.py` -- permutation null test for the conserved core.
-- `string_external_validation.R` -- within-cluster co-expression test in STRING v12.
-- `independent_replication.py` -- replication of the core in independent data.
-- `cis_motif_conservation.py`, `run_spruce_pine_cismotif.py` -- cross-species promoter cis-motif
-  conservation test.
+`scripts/validation/` -- the tests and counts behind the conserved-core results: the label-permutation and
+family-size-aware nulls, the STRING cluster-coherence test (Fig. S6) and the counts quoted in the Results. Each is
+listed with its inputs and outputs in `REPRODUCE.md`.
 
 ## Reproducing the analysis
 1. Quantify reads (Salmon) against each species assembly, import with tximport, and VST-normalise
@@ -94,14 +89,12 @@ ComPlEx networks.
    each pair's mutual-rank networks (top 3 % of edges), and the per-species whole-genome networks of
    the resource (`scripts/networks/build_species_networks.R`).
 3. Extract cliques and the conserved core (`cliques_step1.R`, `cliques_step2.R`).
-4. Produce the clique and transcription-factor expression analyses and figures
-   (`5_Clique_analysis.Rmd`, `UpsetPlotsEtc.Rmd`, `Genelists.Rmd`).
-5. Run the supporting analyses in `scripts/validation/`.
+4. Produce the figures, tables and numbers of the article from the deposited data: `REPRODUCE.md` lists every
+   producer with its inputs and outputs.
 
 Paths in the scripts are given relative to the repository root and expect data under `data/`;
 adjust to your local layout where needed.
 
 ## Dependencies
-R (DESeq2, tximport, tidyverse, here) and Python 3.10 (numpy, pandas, scipy, statsmodels,
-networkx, pyreadr, openpyxl), with OrthoFinder, Salmon and the MEME suite (FIMO) for the upstream
-and cis-motif steps.
+R (DESeq2, tximport, tidyverse, here, and the packages listed in `REPRODUCE.md`), with OrthoFinder and Salmon for
+the upstream steps.
