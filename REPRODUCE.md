@@ -77,6 +77,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Family-size-aware null for the conserved core (Results) | `scripts/validation/conservation_sizeaware_null.R` | `open/co_expressologs.tsv` — **deposit v4 or later**, `*/Orthogroups_20240613.tsv`; outputs `results/conservation_sizeaware_{null.csv,summary.tsv}` |
 | ENA runs, sequencing depth and platform per sample (Methods; deposit `samples.tsv`) | `scripts/deposit/sample_ena_runs.R` | `open/samples.tsv`, `quantification/{sample_name_map,lane_map}.tsv` — **deposit v4 or later**; ENA portal API (network); outputs `results/{sample_ena_runs,ena_run_metadata,sequencing_depth}.tsv` |
 | Per-gene DE results (fold change, padj against no change, DEG call) | `scripts/DE/differential_expression.R` | as for DEGs; output `DE/de_results.tsv` |
+| Deposit `data/open/` additions: GO tables, manuscript cluster numbers, DEG calls, ENA runs | `scripts/deposit/{export_go_tables,manuscript_clusters,de_calls,sample_runs_columns}.R` | Tables S1/S3/S4 outputs, `DE/de_results.tsv`, `results/sample_ena_runs.tsv`; each edits the deposit's `open/` tables in place |
 
 The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each
 species — every gene with nonzero VST expression across the cold time-course samples.
