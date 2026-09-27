@@ -44,9 +44,9 @@ gene_set <- function(anaclust, sp) unique(glong$gene[glong$Cluster == anaclust &
 
 ## --- per-species GO annotation restricted to the enrichment background ---
 A <- "data/annotation"
-athal <- readMappings(file.path(A, "Athal_go_ids.tsv"))[-1]
-potra <- readMappings(file.path(A, "Potra02_go_ids.tsv"))[-1]
-betpen<- readMappings(file.path(A, "Betpen_go_ids.tsv"))[-1]
+athal <- read_go_mapping(file.path(A, "Athal_go_ids.tsv"))
+potra <- read_go_mapping(file.path(A, "Potra02_go_ids.tsv"))
+betpen<- read_go_mapping(file.path(A, "Betpen_go_ids.tsv"))
 picab <- unstack(read.csv(file.path(A, "Picab02_go_ids.csv"))[, c("go_id","external_gene_name")])
 pinsy <- unstack(read.csv(file.path(A, "Pinsy01_go_ids.csv"))[, c("go_id","external_gene_name")])
 bg <- function(o) ld(file.path(A, sprintf("bg_%s.rda", o)))

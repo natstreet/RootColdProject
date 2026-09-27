@@ -39,7 +39,7 @@ at <- unique(trimws(unlist(strsplit(paste(sub[["Arabidopsis_thaliana"]], collaps
 at <- at[grepl("^AT[0-9MC]G", at)]
 
 studyset <- intersect(at, ld("data/DEGs/DEGs_col0.RData"))
-geneID2GO <- readMappings("data/annotation/Athal_go_ids.tsv")[-1]
+geneID2GO <- read_go_mapping("data/annotation/Athal_go_ids.tsv")
 g2 <- geneID2GO[names(geneID2GO) %in% ld("data/annotation/bg_col0_ATC.rda")]
 gl <- factor(as.integer(names(g2) %in% studyset)); names(gl) <- names(g2)
 

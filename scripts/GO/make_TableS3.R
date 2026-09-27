@@ -36,8 +36,8 @@ coexpr_genes <- function(species, ogs, p) { pk <- sp_pair[[species]]; side <- sp
   unique(c(d$GeneSpecies1[d$Species1 == side], d$GeneSpecies2[d$Species2 == side])) }
 
 ld <- function(f, o = NULL) { e <- new.env(); load(f, envir = e); if (is.null(o)) get(ls(e)[1], envir = e) else get(o, e) }
-athal <- readMappings("data/annotation/Athal_go_ids.tsv")[-1]
-potra <- readMappings("data/annotation/Potra02_go_ids.tsv")[-1]
+athal <- read_go_mapping("data/annotation/Athal_go_ids.tsv")
+potra <- read_go_mapping("data/annotation/Potra02_go_ids.tsv")
 picab_df <- read.csv("data/annotation/Picab02_go_ids.csv"); picab <- unstack(picab_df[, c("go_id", "external_gene_name")])
 bg_ATC <- ld("data/annotation/bg_col0_ATC.rda"); bg_ATO <- ld("data/annotation/bg_ost0_ATO.rda"); bg_PT <- ld("data/annotation/bg_aspen_PT.rda"); bg_PA <- ld("data/annotation/bg_spruce_PA.rda")
 ANN <- list(Col0 = athal[names(athal) %in% bg_ATC], Ost0 = athal[names(athal) %in% bg_ATO],

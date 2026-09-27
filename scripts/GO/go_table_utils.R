@@ -3,11 +3,27 @@
 # go_result():      the significant terms of one topGO classic Fisher test, with full GO term names (GenTable
 #                   cuts names at 40 characters), the exact p-value and the Benjamini-Hochberg padj. Terms are
 #                   selected on the unrounded padj (< 0.05) and ordered by padj, then p.
+# read_go_mapping(): a gene -> GO mapping file of the form "gene<tab>GO:a,GO:b", with or without a header line
+#                   (Potra02_go_ids.tsv has one; Athal_go_ids.tsv and Betpen_go_ids.tsv do not), checked so that
+#                   every gene in the file is in the mapping.
 # write_supp_xlsx(): a supplementary table in the journal layout — a "Legend" sheet holding the legend and a
 #                   "Table Sn" sheet holding the table — with padj given to four significant figures and
 #                   p-values to three.
 
 suppressMessages({ library(topGO); library(GO.db) })
+
+read_go_mapping <- function(file) {
+  first <- strsplit(readLines(file, n = 1), "\t")[[1]]
+  has_header <- length(first) < 2 || !grepl("^GO:", trimws(first[2]))
+  m <- topGO::readMappings(file)
+  if (has_header) m <- m[-1]                                # readMappings reads a header line as a gene
+  genes <- unique(sub("\t.*$", "", readLines(file)))
+  if (has_header) genes <- genes[-1]
+  genes <- genes[nzchar(genes)]
+  if (!setequal(names(m), genes))
+    stop(file, ": the mapping holds ", length(m), " genes, the file ", length(genes))
+  m
+}
 
 go_result <- function(GOdata, res, alpha = 0.05) {
   tab <- GenTable(GOdata, classicFisher = res, orderBy = "classicFisher", topNodes = length(usedGO(GOdata)))
