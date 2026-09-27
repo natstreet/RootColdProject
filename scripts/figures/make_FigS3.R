@@ -1,56 +1,67 @@
 #!/usr/bin/env Rscript
-# make_FigS3.R — Figure S3: for each species, the number of genes classed as co-expressologs and
-# as differentially expressed (DE) co-expressologs, split by whether the partner gene in the other
-# species is itself differentially expressed. Co-expressologs are taken at MaxpVal < 0.1.
+# make_FigS3.R — Figure S3: transcription-factor family composition of each super cluster,
+# resolved per species. Each panel is one super cluster (SC_I–SC_IV); within a panel, one
+# stacked bar per species/ecotype gives the percentage of that super cluster's transcription
+# factors falling in each of the five most represented families (ERF, MYB, NAC, bHLH, WRKY),
+# with all remaining families pooled as "Others".
 #
 # Run from a directory containing the unpacked figshare deposit `data/`.
-# Inputs: data/ComPlEx/co_expressologs.RData, data/DEGs/DEGs_<species>.RData
-# Output: Figure_S3.pdf, Figure_S3.png
-# Usage:  Rscript scripts/figures/make_FigS3.R
+# Inputs:
+#   data/superclusters/membership/<species>/cluster_<n>_members.csv
+#       per-species gene membership of each super cluster (original numbering); the
+#       transcription factors among them are selected via the TF family table below
+#   data/TranscriptionFactors/TF_<species>.RData   gene -> TF family (Ost-0 uses the Col-0 set)
+# Output: Figure_S3.pdf, Figure_S3.tiff
+#
+# Usage: Rscript scripts/figures/make_FigS3.R
 
-suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2) })
-P <- 0.1
-specs <- c("col0","ost0","aspen","birch","spruce","pine")
-labmap <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
+suppressPackageStartupMessages({ library(dplyr); library(ggplot2); library(tidyr) })
+
+# main-text super cluster label -> original super cluster number
+SC <- c(SC_I = 6, SC_II = 2, SC_III = 3, SC_IV = 1)
+species <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "Aspen",
+             birch = "Birch", spruce = "Spruce", pine = "Pine")
+majors  <- c("ERF", "MYB", "NAC", "bHLH", "WRKY")
 
 ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
-co <- ld("data/ComPlEx/co_expressologs.RData")
-DEG <- lapply(specs, function(s) as.character(ld(sprintf("data/DEGs/DEGs_%s.RData", s)))); names(DEG) <- specs
-
-# each co-expressolog edge contributes two (gene, species, partner) rows
-L <- bind_rows(
-  transmute(co, gene = GeneSpecies1, sp = Species1, pg = GeneSpecies2, psp = Species2, MaxpVal),
-  transmute(co, gene = GeneSpecies2, sp = Species2, pg = GeneSpecies1, psp = Species1, MaxpVal)) %>%
-  filter(MaxpVal < P)
-
-cat_counts <- function(S){
-  d <- L %>% filter(sp == S)
-  d$isDE   <- d$gene %in% DEG[[S]]
-  d$partDE <- mapply(function(pg, psp) pg %in% DEG[[psp]], d$pg, d$psp)
-  g <- d %>% group_by(gene) %>% summarise(isDE = any(isDE), partDE = any(partDE), .groups = "drop")
-  c(coexpr = sum(!g$isDE & !g$partDE), coexpr_DEpart = sum(!g$isDE & g$partDE),
-    DEcoexpr = sum(g$isDE & !g$partDE), DEcoexpr_DEpart = sum(g$isDE & g$partDE))
+famtab <- function(sp){
+  x <- ld(sprintf("data/TranscriptionFactors/TF_%s.RData", if (sp == "ost0") "col0" else sp))
+  if (all(c("Gene_ID","Family") %in% colnames(x)))
+    setNames(as.character(x$Family), as.character(x$Gene_ID))
+  else setNames(as.character(x[[2]]), as.character(x[[1]]))
 }
-m <- as.data.frame(t(sapply(specs, cat_counts))); m$species <- labmap[rownames(m)]
+fam <- lapply(names(species), famtab); names(fam) <- names(species)
 
-catlev <- c("DEcoexpr_DEpart","DEcoexpr","coexpr_DEpart","coexpr")
-catlab <- c(DEcoexpr_DEpart = "DE co-expressologs with DE co-expressolog in other species",
-            DEcoexpr        = "DE co-expressologs",
-            coexpr_DEpart   = "co-expressologs with DE co-expressolog in other species",
-            coexpr          = "co-expressologs")
-long <- m %>% pivot_longer(all_of(catlev), names_to = "cat", values_to = "n")
-long$species <- factor(long$species, levels = unname(labmap))
-long$cat <- factor(long$cat, levels = catlev)
+rows <- list()
+for (lab in names(SC)) for (sp in names(species)) {
+  f <- sprintf("data/superclusters/membership/%s/cluster_%d_members.csv", sp, SC[[lab]])
+  g <- read.csv(f, stringsAsFactors = FALSE)$gene_id
+  fv <- fam[[sp]][as.character(g)]; fv <- fv[!is.na(fv)]
+  cls <- ifelse(fv %in% majors, fv, "Others")
+  tb  <- table(factor(cls, levels = c(majors, "Others")))
+  rows[[paste(lab, sp)]] <- data.frame(
+    SC = factor(lab, levels = names(SC)), Species = species[[sp]],
+    Family = names(tb), n = as.integer(tb), total = sum(tb))
+}
+df <- bind_rows(rows) %>% mutate(pct = ifelse(total > 0, 100 * n / total, 0))
+df$Species <- factor(df$Species, levels = unname(species))
+df$Family  <- factor(df$Family, levels = c("Others", "WRKY", "bHLH", "NAC", "MYB", "ERF"))
 
-cols <- c(DEcoexpr_DEpart = "#8A5FC0", DEcoexpr = "#C9A8DD", coexpr_DEpart = "#C8963C", coexpr = "#E0C089")
-p <- ggplot(long, aes(species, n, fill = cat)) +
+n_lab <- unique(df[, c("SC", "Species", "total")])          # transcription factors per species/SC
+pal <- c(ERF = "#EEC200", MYB = "#3B4CB8", NAC = "#9C3A2E",
+         bHLH = "#111111", WRKY = "#4A235A", Others = "#8C8C8C")
+p <- ggplot(df, aes(Species, pct, fill = Family)) +
   geom_col(width = 0.8) +
-  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.1, colour = "grey15") +
-  scale_fill_manual(values = cols, labels = catlab, name = "Category",
-                    breaks = c("coexpr","coexpr_DEpart","DEcoexpr","DEcoexpr_DEpart")) +
-  labs(x = "Species", y = "Number of genes") +
-  theme_minimal(base_size = 13) +
-  theme(legend.title = element_text(face = "bold"), panel.grid.major.x = element_blank())
-ggsave("Figure_S3.pdf", p, width = 11, height = 6.5)
-ggsave("Figure_S3.png", p, width = 11, height = 6.5, dpi = 150)
-print(m[, c("species", catlev)], row.names = FALSE)
+  geom_text(data = n_lab, aes(Species, 100, label = total), inherit.aes = FALSE,
+            vjust = -0.4, size = 2.6, colour = "grey30") +
+  facet_wrap(~SC, ncol = 2) +
+  scale_fill_manual(values = pal, breaks = c(majors, "Others"), name = "TF family") +
+  scale_y_continuous(breaks = c(0, 25, 50, 75, 100), expand = expansion(mult = c(0, 0.09))) +
+  labs(x = NULL, y = "Percentage (%)") +
+  theme_bw(base_size = 12) +
+  theme(panel.grid = element_blank(), strip.text = element_text(face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        strip.background = element_rect(fill = "grey92"))
+
+ggsave("Figure_S3.pdf",  p, width = 9.5, height = 6)
+ggsave("Figure_S3.tiff", p, width = 9.5, height = 6, dpi = 300, compression = "lzw")

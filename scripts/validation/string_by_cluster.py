@@ -2,7 +2,7 @@
 """
 string_by_cluster.py
 
-Breaks the Fig. S5b STRING test down by clique cluster and repeats it without manuscript cluster 2 (the
+Breaks the Fig. S6b STRING test down by clique cluster and repeats it without manuscript cluster 2 (the
 translation / ribosome-biogenesis cluster), to ask whether cluster coherence in STRING holds beyond that cluster.
 
 Same data and settings as string_external_validation.py: STRING v12 A. thaliana co-expression channel, subscore
@@ -15,7 +15,7 @@ labels (cluster sizes kept), seed 1.
 
 Run from a directory holding data/ (the deposit plus this repository's data/), core_clusters.tsv (from
 make_core_clusters.R) and the two STRING files; manuscript cluster numbers are read from `MAP` in
-scripts/GO/make_TableS3.R.
+scripts/GO/make_TableS4.R.
 Outputs: string_by_cluster.tsv (tests 1 and 2), string_within_cluster_pairs.tsv (3)
 """
 import csv, gzip, re
@@ -27,8 +27,8 @@ ALIASES = "3702.protein.aliases.v12.0.txt.gz"
 
 
 def manuscript_map():
-    """analysis cluster -> manuscript cluster, from MAP <- c(`ms` = analysis, ...) in make_TableS3.R."""
-    m = re.search(r"MAP\s*<-\s*c\(([^)]*)\)", open("scripts/GO/make_TableS3.R").read())
+    """analysis cluster -> manuscript cluster, from MAP <- c(`ms` = analysis, ...) in make_TableS4.R."""
+    m = re.search(r"MAP\s*<-\s*c\(([^)]*)\)", open("scripts/GO/make_TableS4.R").read())
     ms2an = {int(k): int(v) for k, v in re.findall(r"`?(\d+)`?\s*=\s*(\d+)", m.group(1))}
     return {v: k for k, v in ms2an.items()}
 

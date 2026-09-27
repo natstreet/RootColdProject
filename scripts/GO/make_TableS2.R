@@ -1,80 +1,62 @@
 #!/usr/bin/env Rscript
-# make_TableS2.R — Table S2: GO (biological-process) enrichment of the co-expressolog clade
-# sets (the Venn regions of Fig. 4A: ABC / AB / BC / A / B), per species, restricted to that
-# species' DEGs.
+# make_TableS2.R — Table S2: gene membership of the four super clusters, per species/ecotype.
+# One worksheet per super cluster (SC_I–SC_IV); within a worksheet, one column per
+# species/ecotype listing the differentially expressed genes assigned to that super cluster in
+# that species (genes whose cold-response profile correlates with the super cluster mean at
+# Pearson r >= 0.7). A final worksheet, "TF_families", lists the transcription factors among the
+# members (all species pooled in one column) with the family each belongs to.
 #
-# Enrichment: topGO, **classic** Fisher's exact test, BH adjustment, padj < 0.05.
-# Co-expressolog threshold: bidirectional adjusted P < THRESHOLD (default 0.1, the value used in
-# the paper). Pass a different value as the first argument.
+# Run from a directory containing the unpacked figshare deposit `data/`.
+# Inputs:
+#   data/superclusters/membership/<species>/cluster_<n>_members.csv   per-species SC membership
+#   data/TranscriptionFactors/TF_<species>.RData                      gene -> TF family
+# Output: Table_S2_supercluster_gene_membership.xlsx
 #
-# Inputs (unpack data.tar.gz from figshare into ./data):
-#   data/ComPlEx/co_expressologs.RData
-#   data/annotation/{Athal_go_ids.tsv, Potra02_go_ids.tsv, Picab02_go_ids.csv}
-#   data/annotation/{bg_col0_ATC.rda, bg_ost0_ATO.rda, bg_aspen_PT.rda, bg_spruce_PA.rda}
-#   data/DEGs/DEGs_{col0,ost0,aspen,spruce}.RData
-# Output:
-#   tables/TableS2_cladeGO_classic_p<thr>.tsv
-#   tables/Table_S2.xlsx   (the supplementary table: Legend sheet + "Table S2" sheet; padj to 4 s.f., p to 3)
-#
-# Usage: Rscript scripts/GO/make_TableS2.R [threshold]     # e.g. 0.1 (default) or 0.05
+# Usage: Rscript scripts/GO/make_TableS2.R
 
-suppressMessages(library(dplyr)); source("scripts/GO/go_table_utils.R")
+suppressPackageStartupMessages({ library(openxlsx) })
 
-thr <- suppressWarnings(as.numeric(commandArgs(trailingOnly = TRUE)[1])); if (is.na(thr)) thr <- 0.1
+SC <- c(SC_I = 6, SC_II = 2, SC_III = 3, SC_IV = 1)          # main-text label -> original number
+species <- c(col0 = "Col-0", ost0 = "Ost-0", birch = "Birch",
+             aspen = "Aspen", pine = "Pine", spruce = "Spruce")
 
-load(Sys.glob("data/*/co_expressologs.RData")[1])
-mk <- function(a, b) apply(cbind(a, b), 1, function(v) paste(sort(v), collapse = "|"))
-co_expressologs$pairkey <- mk(co_expressologs$Species1, co_expressologs$Species2)
-ogset <- function(k, p) unique(co_expressologs$OrthologGroup[co_expressologs$pairkey == k & co_expressologs$MaxpVal < p])
-regions <- function(p) { A <- ogset("col0|ost0", p); B <- ogset("aspen|birch", p); C <- ogset("pine|spruce", p)
-  list(ABC = Reduce(intersect, list(A, B, C)), AB = setdiff(intersect(A, B), C), BC = setdiff(intersect(B, C), A),
-       A = setdiff(A, union(B, C)), B = setdiff(B, union(A, C))) }
-sp_pair <- list(Col0 = "col0|ost0", Ost0 = "col0|ost0", Aspen = "aspen|birch", Spruce = "pine|spruce")
-sp_side <- list(Col0 = "col0", Ost0 = "ost0", Aspen = "aspen", Spruce = "spruce")
-coexpr_genes <- function(species, ogs, p) { pk <- sp_pair[[species]]; side <- sp_side[[species]]
-  d <- co_expressologs[co_expressologs$pairkey == pk & co_expressologs$MaxpVal < p & co_expressologs$OrthologGroup %in% ogs, ]
-  unique(c(d$GeneSpecies1[d$Species1 == side], d$GeneSpecies2[d$Species2 == side])) }
+ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
+famtab <- function(sp){
+  x <- ld(sprintf("data/TranscriptionFactors/TF_%s.RData", if (sp == "ost0") "col0" else sp))
+  if (all(c("Gene_ID","Family") %in% colnames(x)))
+    setNames(as.character(x$Family), as.character(x$Gene_ID))
+  else setNames(as.character(x[[2]]), as.character(x[[1]]))
+}
+fam <- unlist(lapply(names(species), famtab)); fam <- fam[!duplicated(names(fam))]
 
-ld <- function(f, o = NULL) { e <- new.env(); load(f, envir = e); if (is.null(o)) get(ls(e)[1], envir = e) else get(o, e) }
-athal <- readMappings("data/annotation/Athal_go_ids.tsv")[-1]
-potra <- readMappings("data/annotation/Potra02_go_ids.tsv")[-1]
-picab_df <- read.csv("data/annotation/Picab02_go_ids.csv"); picab <- unstack(picab_df[, c("go_id", "external_gene_name")])
-bg_ATC <- ld("data/annotation/bg_col0_ATC.rda"); bg_ATO <- ld("data/annotation/bg_ost0_ATO.rda"); bg_PT <- ld("data/annotation/bg_aspen_PT.rda"); bg_PA <- ld("data/annotation/bg_spruce_PA.rda")
-ANN <- list(Col0 = athal[names(athal) %in% bg_ATC], Ost0 = athal[names(athal) %in% bg_ATO],
-            Aspen = potra[names(potra) %in% bg_PT], Spruce = picab[names(picab) %in% bg_PA])
-DEG <- list(Col0 = ld("data/DEGs/DEGs_col0.RData"), Ost0 = ld("data/DEGs/DEGs_ost0.RData"),
-            Aspen = ld("data/DEGs/DEGs_aspen.RData"), Spruce = ld("data/DEGs/DEGs_spruce.RData"))
+members <- function(sp, n)
+  sort(read.csv(sprintf("data/superclusters/membership/%s/cluster_%d_members.csv", sp, n),
+                stringsAsFactors = FALSE)$gene_id)
 
-run_go <- function(species, gene_set) { g2 <- ANN[[species]]
-  gl <- factor(as.integer(names(g2) %in% gene_set)); names(gl) <- names(g2)
-  if (sum(gl == 1) < 3) return(data.frame())
-  GOdata <- new("topGOdata", ontology = "BP", allGenes = gl, annot = annFUN.gene2GO, gene2GO = g2)
-  res <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
-  go_result(GOdata, res) }
+wb  <- createWorkbook()
+hdr <- createStyle(textDecoration = "bold", border = "bottom")
+tf_seen <- character(0)
+for (lab in names(SC)) {
+  cols <- lapply(names(species), members, n = SC[[lab]]); names(cols) <- unname(species)
+  n <- max(lengths(cols), 1L)
+  df <- as.data.frame(lapply(cols, function(x) c(x, rep(NA_character_, n - length(x)))),
+                      check.names = FALSE, stringsAsFactors = FALSE)
+  addWorksheet(wb, lab); writeData(wb, lab, df, headerStyle = hdr, keepNA = FALSE)
+  setColWidths(wb, lab, cols = seq_along(df), widths = 16); freezePane(wb, lab, firstRow = TRUE)
+  tf_seen <- union(tf_seen, unlist(cols)[unlist(cols) %in% names(fam)])
+}
+# TF_families worksheet: every TF among the members, with its family
+tf <- data.frame(Gene = sort(tf_seen), `TF family` = fam[sort(tf_seen)],
+                 check.names = FALSE, row.names = NULL)
+addWorksheet(wb, "TF_families"); writeData(wb, "TF_families", tf, headerStyle = hdr)
+setColWidths(wb, "TF_families", cols = 1:2, widths = c(16, 14)); freezePane(wb, "TF_families", firstRow = TRUE)
 
-cells <- list(c("Col0","ABC"), c("Aspen","ABC"), c("Col0","AB"), c("Aspen","AB"),
-              c("Aspen","BC"), c("Spruce","BC"), c("Col0","A"), c("Aspen","B"))
-reg <- regions(thr); dir.create("tables", showWarnings = FALSE)
-all <- list()
-cat(sprintf("Table S2 clade GO (classic Fisher), co-expressolog P < %.2f\n", thr))
-for (cl in cells) { sp <- cl[1]; rg <- cl[2]
-  gs <- intersect(coexpr_genes(sp, reg[[rg]], thr), DEG[[sp]])
-  r <- run_go(sp, gs)
-  if (nrow(r)) { r$species <- sp; r$set <- rg; all[[paste(sp, rg)]] <- r }
-  cat(sprintf("  %-11s study=%-4d sig=%-4d top: %s\n", paste(sp, rg), length(gs), nrow(r), if (nrow(r)) r$Term[1] else "-")) }
-out <- do.call(rbind, all)
-f <- sprintf("tables/TableS2_cladeGO_classic_p%02d.tsv", round(thr * 100))
-write.table(out[, c("species","set","GO.ID","Term","Annotated","Significant","classicFisher","padj")],
-            f, sep = "\t", quote = FALSE, row.names = FALSE)
-SETNAME <- c(ABC = "the shared core (ABC)", AB = "the Arabidopsis-broadleaf set (AB)",
-             BC = "the broadleaf-conifer set (BC)", A = "the Arabidopsis-exclusive set (A)",
-             B = "the broadleaf-exclusive set (B)")
-tested <- unique(vapply(cells, `[`, "", 2))
-xl <- out[, c("species","set","GO.ID","Term","Annotated","Significant","Expected","classicFisher","padj")]
-names(xl) <- c("Species","Co-expressolog set","GO.ID","Term","Annotated","Significant","Expected","classicFisher P","padj")
-write_supp_xlsx(xl, "tables/Table_S2.xlsx", "Table S2", sig_cols = c("classicFisher P", "padj"),
-  legend = paste0("Table S2 GO enrichment of the conserved co-expressolog clade sets (co-expressologs at adjusted P < ",
-    thr, ") \u2014 ", paste(SETNAME[tested], collapse = ", "), " \u2014 analysed per species and restricted to that ",
-    "species' differentially expressed genes, each tested against that genotype's own expressed-gene background ",
-    "(topGO classic Fisher's exact test, biological process; padj < 0.05). Sets with no enriched term are not listed."))
-cat("Wrote", f, "and tables/Table_S2.xlsx (", nrow(out), "rows )\n")
+saveWorkbook(wb, "Table_S2_supercluster_gene_membership.xlsx", overwrite = TRUE)
+
+for (lab in names(SC))
+  cat(sprintf("%-6s: %s\n", lab,
+      paste(sprintf("%s=%d", unname(species),
+                    vapply(names(species), function(sp) length(members(sp, SC[[lab]])), integer(1))),
+            collapse = "  ")))
+cat(sprintf("TF_families: %d transcription factors across %d families\n",
+            nrow(tf), length(unique(tf$`TF family`))))

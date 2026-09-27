@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# make_FigS7.py — Figure S7: worked example of resource use, conserved-core orthogroup
+# make_FigS2.py — Figure S2: worked example of resource use, conserved-core orthogroup
 #   OG0000118 (NAC transcription factors, ATAF/NAM clade).
 #   (a) Cold response of the orthogroup's member gene in each genotype across the time
 #       course, as log2 fold change against the matched control; an open ring marks a timepoint
@@ -20,7 +20,7 @@
 #   DE/<species>/DEGs_<species>_C_vs_<timepoint>.txt   per-timepoint DEG lists written by
 #                                         scripts/DE/differential_expression.R (the rings in panel a)
 #
-# Output: Figure_S7.pdf, Figure_S7.png
+# Output: Figure_S2.pdf, Figure_S2.png
 #
 # ORTHOGROUP IDENTIFIERS ARE RUN-SPECIFIC. OG0000118 refers to the orthology in
 # data/orthologs/; it is not comparable with identifiers from any other OrthoFinder run.
@@ -155,9 +155,9 @@ axc.margins(x=0.16)
 axc.set_title("Its local network differs in size;\ndark = transcription factors", fontsize=8)
 axc.text(-0.02, 1.02, "c", transform=axc.transAxes, fontweight="bold", fontsize=10)
 
-fig.savefig("Figure_S7.pdf", bbox_inches="tight")
-fig.savefig("Figure_S7.png", dpi=300, bbox_inches="tight")
-print(f"wrote Figure_S7.pdf/.png for {OG}")
+fig.savefig("Figure_S2.pdf", bbox_inches="tight")
+fig.savefig("Figure_S2.png", dpi=300, bbox_inches="tight")
+print(f"wrote Figure_S2.pdf/.png for {OG}")
 print("  species pairs linked:", len(pairs), "of 15")
 print("  co-expressed genes:", dict(zip(SP, nn)))
 print("  of which transcription factors:", dict(zip(SP, ntf)))

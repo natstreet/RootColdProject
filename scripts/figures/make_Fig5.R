@@ -7,15 +7,15 @@
 # are capped at |z| = 1.5.
 #
 # Each block is captioned with GO terms listed by ID in scripts/figures/Fig5_captions.tsv. Term
-# names are read from the Table S3 output, and the script stops unless each term is significant
-# in that block's cluster(s), so run scripts/GO/make_TableS3.R first.
+# names are read from the Table S4 output, and the script stops unless each term is significant
+# in that block's cluster(s), so run scripts/GO/make_TableS4.R first.
 #
 # Inputs:
 #   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS  116 cliques, one gene per species
 #   data/ComPlEx/cliques/clique_HMcluster_list.rda              clique -> analysis cluster
 #   data/expression/med_expression/<sp>_med.txt.gz             per-timepoint median expression
-#   scripts/GO/make_TableS3.R                                  manuscript -> analysis cluster map
-#   tables/TableS3_cliqueClusterGO_classic.tsv                 GO terms per manuscript cluster
+#   scripts/GO/make_TableS4.R                                  manuscript -> analysis cluster map
+#   tables/TableS4_cliqueClusterGO_classic.tsv                 GO terms per manuscript cluster
 #   scripts/figures/Fig5_captions.tsv                          GO IDs captioning each block
 # Output: Figure5.pdf, Figure5.png
 # Usage:  Rscript scripts/figures/make_Fig5.R
@@ -55,7 +55,7 @@ ana <- hm$Cluster[match(rownames(M), hm$ID)]
 tab <- table(cut, ana)                                                        # must be a one-to-one relabelling
 if (anyNA(ana) || any(rowSums(tab > 0) != 1) || any(colSums(tab > 0) != 1))
   stop("row clustering differs from clique_HMcluster_list.rda")
-mp  <- regmatches(readLines("scripts/GO/make_TableS3.R"), regexpr("MAP <- c\\(.*\\)", readLines("scripts/GO/make_TableS3.R")))
+mp  <- regmatches(readLines("scripts/GO/make_TableS4.R"), regexpr("MAP <- c\\(.*\\)", readLines("scripts/GO/make_TableS4.R")))
 MAP <- eval(parse(text = sub("^MAP <- ", "", mp)))                          # manuscript -> analysis
 man <- as.integer(names(MAP))[match(ana, MAP)]                               # manuscript cluster per row
 block <- c(`1` = 1, `2` = 2, `3` = 3, `4` = 3)[as.character(man)]            # clusters 3 and 4 share a block
@@ -63,14 +63,14 @@ bo  <- block[ord]
 if (any(diff(bo) < 0)) stop("blocks are not contiguous in dendrogram order")
 nb  <- as.integer(table(bo)); cat("Block sizes (clusters 1, 2, 3&4):", paste(nb, collapse = ", "), "\n")
 
-## ---- block captions: GO IDs -> names from Table S3, each required to be significant there ----
-s3  <- read.delim("tables/TableS3_cliqueClusterGO_classic.tsv", check.names = FALSE)
+## ---- block captions: GO IDs -> names from Table S4, each required to be significant there ----
+s3  <- read.delim("tables/TableS4_cliqueClusterGO_classic.tsv", check.names = FALSE)
 cap <- read.delim("scripts/figures/Fig5_captions.tsv", stringsAsFactors = FALSE)
 go_label <- sapply(1:3, function(b) {
   ids <- cap$GO.ID[cap$block == b]; mc <- if (b == 3) c(3, 4) else b
   hit <- s3[s3[["Cluster (manuscript)"]] %in% mc & s3$GO.ID %in% ids, ]
   miss <- setdiff(ids, hit$GO.ID)
-  if (length(miss)) stop("Fig5_captions.tsv: not significant in Table S3 for block ", b, ": ", paste(miss, collapse = ", "))
+  if (length(miss)) stop("Fig5_captions.tsv: not significant in Table S4 for block ", b, ": ", paste(miss, collapse = ", "))
   nm <- hit$Term[match(ids, hit$GO.ID)]
   paste(paste0(toupper(substr(nm, 1, 1)), substring(nm, 2)), collapse = "\n") })
 tag <- c("Cluster 1", "Cluster 2", "Cluster 3&4")

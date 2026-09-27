@@ -123,5 +123,5 @@ pC <- ggplot(Cd, aes(pct, SCr, fill=category)) +
 fig <- (pA | pB | pC) + plot_layout(widths=c(1,1,1.4))
 ggsave("Figure3.pdf", fig, width = 15, height = 9)
 ggsave("Figure3.png", fig, width = 15, height = 9, dpi = 130)
-cat("Panel B counts (should match Table S4 membership):\n")
+cat("Panel B counts (should match Table S2 membership):\n")
 print(B %>% group_by(SC,Species) %>% summarise(total=sum(n),.groups="drop") %>% pivot_wider(names_from=Species,values_from=total))

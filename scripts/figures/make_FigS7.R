@@ -1,4 +1,4 @@
-## Figure S6 — expression profiles of co-expressologs (P<0.1) directly linked to the
+## Figure S7 — expression profiles of co-expressologs (P<0.1) directly linked to the
 ## Arabidopsis CBFs (CBF1 AT4G25490, CBF2 AT4G25470, CBF3 AT4G25480), plotted as median VST.
 ## Reproducible from the deposited data: data/ComPlEx/co_expressologs.RData + data/expression/.
 ## Run from the deposit root (the dir that contains data/).
@@ -81,6 +81,6 @@ p <- ggplot(combined, aes(Timepoint, med, group=gene, color=gene)) +
         axis.title=element_text(size=13), axis.text=element_text(size=11)) +
   labs(x="Cold time course", y="Expression (median VST)")
 
-ggsave("Figure_S6.pdf", p, width=13.5, height=9)
-ggsave("Figure_S6_preview.png", p, width=13.5, height=9, dpi=120, bg="white")
-cat("\nDONE — wrote Figure_S6.pdf + Figure_S6_preview.png\n")
+ggsave("Figure_S7.pdf", p, width=13.5, height=9)
+ggsave("Figure_S7_preview.png", p, width=13.5, height=9, dpi=120, bg="white")
+cat("\nDONE — wrote Figure_S7.pdf + Figure_S7_preview.png\n")

@@ -1,4 +1,4 @@
-# go_table_utils.R — shared by make_TableS1.R, make_TableS2.R and make_TableS3.R.
+# go_table_utils.R — shared by make_TableS1.R, make_TableS3.R and make_TableS4.R.
 #
 # go_result():      the significant terms of one topGO classic Fisher test, with full GO term names (GenTable
 #                   cuts names at 40 characters), the exact p-value and the Benjamini-Hochberg padj. Terms are

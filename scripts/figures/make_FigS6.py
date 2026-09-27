@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# make_FigS5.py — Figure S5: robustness of the conserved co-expression core.
+# make_FigS6.py — Figure S6: robustness of the conserved co-expression core.
 #   (a) Conservation permutation test: the observed number of orthogroups with a co-expressolog in
 #       all 15 comparisons against the label-permutation null.
 #   (b) Cluster coherence in independent data (STRING): observed within-cluster co-expressed gene
@@ -12,7 +12,7 @@
 #              string_null.csv, string_obs.txt   (needs the STRING v12 A. thaliana download)
 # Run those first, then run this from the same directory.
 #
-# Output: Figure_S5.pdf, Figure_S5.png
+# Output: Figure_S6.pdf, Figure_S6.png
 
 import numpy as np, pandas as pd, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
@@ -46,5 +46,5 @@ ax[1].set_xlabel("Within-cluster co-expressed gene pairs\nin STRING (clusters ra
 ax[1].set_ylabel("Permutations", fontsize=11); ax[1].set_xlim(nullB.min() - 20, obsB + 30)
 
 plt.tight_layout()
-plt.savefig("Figure_S5.pdf"); plt.savefig("Figure_S5.png", dpi=150)
-print(f"wrote Figure_S5.pdf/.png ; panel a P={pA:.4g}, panel b P={pB:.4g}, fold={foldB:.1f}")
+plt.savefig("Figure_S6.pdf"); plt.savefig("Figure_S6.png", dpi=150)
+print(f"wrote Figure_S6.pdf/.png ; panel a P={pA:.4g}, panel b P={pB:.4g}, fold={foldB:.1f}")

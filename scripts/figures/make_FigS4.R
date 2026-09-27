@@ -1,46 +1,56 @@
 #!/usr/bin/env Rscript
-# make_FigS4.R — Figure S4: UpSet plot of orthogroup overlaps between the co-expressolog sets of
-# the pairwise species comparisons (MaxpVal < 0.1). Horizontal bars give the number of
-# co-expressolog orthogroups per comparison; the matrix/vertical bars give the intersections.
+# make_FigS4.R — Figure S4: for each species, the number of genes classed as co-expressologs and
+# as differentially expressed (DE) co-expressologs, split by whether the partner gene in the other
+# species is itself differentially expressed. Co-expressologs are taken at MaxpVal < 0.1.
 #
 # Run from a directory containing the unpacked figshare deposit `data/`.
-# Inputs: data/ComPlEx/co_expressologs.RData
-# Output: Figure_S4.pdf, Figure_S4_values.tsv (per comparison: co-expressolog orthogroups, and those found in
-#         that comparison only; and the orthogroups found in every comparison)
+# Inputs: data/ComPlEx/co_expressologs.RData, data/DEGs/DEGs_<species>.RData
+# Output: Figure_S4.pdf, Figure_S4.png
 # Usage:  Rscript scripts/figures/make_FigS4.R
 
-suppressPackageStartupMessages({ library(UpSetR); library(dplyr) })
+suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2) })
 P <- 0.1
+specs <- c("col0","ost0","aspen","birch","spruce","pine")
+labmap <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
+
 ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 co <- ld("data/ComPlEx/co_expressologs.RData")
+DEG <- lapply(specs, function(s) as.character(ld(sprintf("data/DEGs/DEGs_%s.RData", s)))); names(DEG) <- specs
 
-# species display names
-disp <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "Aspen", birch = "Birch", spruce = "Spruce", pine = "Pine")
-co$Species1 <- disp[co$Species1]; co$Species2 <- disp[co$Species2]
+# each co-expressolog edge contributes two (gene, species, partner) rows
+L <- bind_rows(
+  transmute(co, gene = GeneSpecies1, sp = Species1, pg = GeneSpecies2, psp = Species2, MaxpVal),
+  transmute(co, gene = GeneSpecies2, sp = Species2, pg = GeneSpecies1, psp = Species1, MaxpVal)) %>%
+  filter(MaxpVal < P)
 
-co$pair <- apply(cbind(co$Species1, co$Species2), 1, function(v) paste(sort(v), collapse = "_"))
-d <- co %>% filter(MaxpVal < P) %>% distinct(OrthologGroup, pair)
-M <- (as.data.frame.matrix(table(d$OrthologGroup, d$pair) > 0)) * 1
-allp <- colnames(M)
+cat_counts <- function(S){
+  d <- L %>% filter(sp == S)
+  d$isDE   <- d$gene %in% DEG[[S]]
+  d$partDE <- mapply(function(pg, psp) pg %in% DEG[[psp]], d$pg, d$psp)
+  g <- d %>% group_by(gene) %>% summarise(isDE = any(isDE), partDE = any(partDE), .groups = "drop")
+  c(coexpr = sum(!g$isDE & !g$partDE), coexpr_DEpart = sum(!g$isDE & g$partDE),
+    DEcoexpr = sum(g$isDE & !g$partDE), DEcoexpr_DEpart = sum(g$isDE & g$partDE))
+}
+m <- as.data.frame(t(sapply(specs, cat_counts))); m$species <- labmap[rownames(m)]
 
-teal <- "#2A9BAF"; orange <- "#C46E00"
-q <- list(
-  list(query = intersects, params = list("Col-0_Ost-0"),  color = teal,   active = TRUE),
-  list(query = intersects, params = list("Pine_Spruce"),  color = teal,   active = TRUE),
-  list(query = intersects, params = list("Aspen_Birch"),  color = teal,   active = TRUE),
-  list(query = intersects, params = as.list(allp),        color = orange, active = TRUE))
+catlev <- c("DEcoexpr_DEpart","DEcoexpr","coexpr_DEpart","coexpr")
+catlab <- c(DEcoexpr_DEpart = "DE co-expressologs with DE co-expressolog in other species",
+            DEcoexpr        = "DE co-expressologs",
+            coexpr_DEpart   = "co-expressologs with DE co-expressolog in other species",
+            coexpr          = "co-expressologs")
+long <- m %>% pivot_longer(all_of(catlev), names_to = "cat", values_to = "n")
+long$species <- factor(long$species, levels = unname(labmap))
+long$cat <- factor(long$cat, levels = catlev)
 
-pdf("Figure_S4.pdf", width = 11, height = 8, onefile = FALSE)   # one page (UpSetR opens a blank one otherwise)
-upset(M, sets = allp, nintersects = 6, order.by = "freq",
-      mainbar.y.label = "Orthogroup overlap of co-expressologs",
-      sets.x.label = "Co-expressolog orthogroups", text.scale = 1.4,
-      main.bar.color = "grey35", sets.bar.color = "grey50", queries = q)
-dev.off()
-only <- rowSums(M) == 1
-vals <- rbind(data.frame(comparison = allp, quantity = "co-expressolog orthogroups", value = as.integer(colSums(M))),
-              data.frame(comparison = allp, quantity = "co-expressolog orthogroups in this comparison only",
-                         value = as.integer(colSums(M[only, , drop = FALSE]))),
-              data.frame(comparison = "all", quantity = "co-expressolog orthogroups in every comparison",
-                         value = sum(rowSums(M) == length(allp))))
-write.table(vals, "Figure_S4_values.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
-cat("Figure_S4.pdf written;", length(allp), "pairwise comparisons\n")
+cols <- c(DEcoexpr_DEpart = "#8A5FC0", DEcoexpr = "#C9A8DD", coexpr_DEpart = "#C8963C", coexpr = "#E0C089")
+p <- ggplot(long, aes(species, n, fill = cat)) +
+  geom_col(width = 0.8) +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.1, colour = "grey15") +
+  scale_fill_manual(values = cols, labels = catlab, name = "Category",
+                    breaks = c("coexpr","coexpr_DEpart","DEcoexpr","DEcoexpr_DEpart")) +
+  labs(x = "Species", y = "Number of genes") +
+  theme_minimal(base_size = 13) +
+  theme(legend.title = element_text(face = "bold"), panel.grid.major.x = element_blank())
+ggsave("Figure_S4.pdf", p, width = 11, height = 6.5)
+ggsave("Figure_S4.png", p, width = 11, height = 6.5, dpi = 150)
+print(m[, c("species", catlev)], row.names = FALSE)

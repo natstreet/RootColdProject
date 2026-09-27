@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # make_core_clusters.R — the Col-0 member and heatmap cluster of each conserved-core clique, the input of
-# string_external_validation.py (Fig. S5b).
+# string_external_validation.py (Fig. S6b).
 #
 # Inputs (run from a directory containing the unpacked figshare deposit `data/`):
 #   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS  116 cliques, one gene per species

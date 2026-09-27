@@ -1,13 +1,13 @@
-# Conserved-core validation and Figure S5
+# Conserved-core validation and Figure S6
 
 Two independent robustness tests of the conserved co-expression core, and the script that plots
-them as Figure S5.
+them as Figure S6.
 
-- `conservation_null_test.py` — degree-preserving permutation test (Figure S5a).
-- `string_external_validation.py` — cluster coherence in STRING v12 (Figure S5b).
-- `../figures/make_FigS5.py` — plots the two null distributions produced by the scripts above.
+- `conservation_null_test.py` — degree-preserving permutation test (Figure S6a).
+- `string_external_validation.py` — cluster coherence in STRING v12 (Figure S6b).
+- `../figures/make_FigS6.py` — plots the two null distributions produced by the scripts above.
 
-Unlike the other figures, Figure S5 is **not** regenerable from the figshare deposit with a single
+Unlike the other figures, Figure S6 is **not** regenerable from the figshare deposit with a single
 command: panel (a) needs the per-species co-expression networks, and panel (b) needs an external
 STRING download. Both are scripted; the steps are below.
 
@@ -57,10 +57,10 @@ Inputs it reads from the working directory:
 
 Then: `python string_external_validation.py` → writes `string_null.csv`, `string_obs.txt`.
 
-## Figure S5
+## Figure S6
 
 With the four output files present:
 
 ```
-python ../figures/make_FigS5.py     # writes Figure_S5.pdf / .png
+python ../figures/make_FigS6.py     # writes Figure_S6.pdf / .png
 ```

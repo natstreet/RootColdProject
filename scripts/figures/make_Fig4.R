@@ -5,11 +5,11 @@
 #       at MaxpVal < 0.1. Areas are computed from the data, not hard-coded.
 #   (B) GO (biological-process) enrichment of three Venn regions (the ten terms with the smallest P): the shared
 #       core ABC and the Arabidopsis–broadleaf AB set (Arabidopsis genes), and the broadleaf–conifer BC set (aspen
-#       genes). The terms and P-values are those of Table S2 (topGO classic Fisher's exact test), read from the table
-#       make_TableS2.R writes, so the panel and the table agree.
+#       genes). The terms and P-values are those of Table S3 (topGO classic Fisher's exact test), read from the table
+#       make_TableS3.R writes, so the panel and the table agree.
 #
-# Run from a directory containing the unpacked figshare deposit `data/`, after scripts/GO/make_TableS2.R.
-# Inputs: data/ComPlEx/co_expressologs.RData, tables/TableS2_cladeGO_classic_p10.tsv
+# Run from a directory containing the unpacked figshare deposit `data/`, after scripts/GO/make_TableS3.R.
+# Inputs: data/ComPlEx/co_expressologs.RData, tables/TableS3_cladeGO_classic_p10.tsv
 # Output: Figure4.pdf, Figure4.png (300 dpi), Figure4_venn_regions.tsv (set totals, the seven exclusive Venn regions,
 #         and the share of the Arabidopsis and broadleaf sets that is conifer-conserved), Figure4b_values.tsv (the
 #         plotted terms: panel, GO ID, term, genes, classic Fisher P, -log10 P, padj)
@@ -51,8 +51,8 @@ reg <- rbind(reg, data.frame(
   value = c(v[["AC only"]] + ABC, v[["BC only"]] + ABC, round(shareA, 4), round(shareB, 4), round(shareB / shareA, 4))))
 write.table(reg, "Figure4_venn_regions.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
 
-# ── panel B: GO dot-plots from the Table S2 results (classic Fisher) ─────────
-go <- read.delim("tables/TableS2_cladeGO_classic_p10.tsv", stringsAsFactors = FALSE, quote = "")
+# ── panel B: GO dot-plots from the Table S3 results (classic Fisher) ─────────
+go <- read.delim("tables/TableS3_cladeGO_classic_p10.tsv", stringsAsFactors = FALSE, quote = "")
 go$scores <- -log10(go$classicFisher)
 pan <- c("ABC (Arabidopsis)"="Col0 ABC", "AB (Arabidopsis)"="Col0 AB", "BC (aspen)"="Aspen BC")
 plotted <- list()

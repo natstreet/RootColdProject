@@ -9,7 +9,7 @@ member classes in the text.
 
 Inputs (deposit, data/open/): gene_index.tsv, conserved_core.tsv, orthogroup_annotation.tsv.
 Cluster numbers: conserved_core.tsv uses the analysis numbering; the manuscript numbering
-is analysis {1:4, 2:1, 3:3, 4:2}, as in scripts/GO/make_TableS3.R.
+is analysis {1:4, 2:1, 3:3, 4:2}, as in scripts/GO/make_TableS4.R.
 Fold changes are the deposit's log2FoldChange (DESeq2 MLE, not shrunken).
 
     python3 cluster_profiles.py <deposit data/open dir> <output dir>

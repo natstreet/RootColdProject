@@ -2,12 +2,12 @@
 # export_go_tables.R — the GO enrichment tables of the data deposit (data/open/), written from the supplementary
 # tables so that the two agree row for row and value for value.
 #
-# Run make_TableS1.R, make_TableS2.R and make_TableS3.R first; this script reads their workbooks.
+# Run make_TableS1.R, make_TableS3.R and make_TableS4.R first; this script reads their workbooks.
 #
 # Inputs:
 #   tables/Table_S1.xlsx   GO enrichment of the commonly differentially expressed orthogroups
-#   tables/Table_S2.xlsx   GO enrichment of the conserved co-expressolog clade sets
-#   tables/Table_S3.xlsx   GO enrichment of the conserved-core clique clusters (manuscript numbering)
+#   tables/Table_S3.xlsx   GO enrichment of the conserved co-expressolog clade sets
+#   tables/Table_S4.xlsx   GO enrichment of the conserved-core clique clusters (manuscript numbering)
 # Outputs (tab-separated, one header row):
 #   <outdir>/go_enrichment_common_degs.tsv
 #   <outdir>/go_enrichment_conserved_sets.tsv

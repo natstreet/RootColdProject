@@ -22,7 +22,7 @@ independent data, and shows conserved promoter cis-motifs.
 ## Data
 The scripts read their inputs from a local `data/` directory. Most of it is not held in this
 repository and is obtained as below; the one exception is the small per-species super cluster
-membership used by Figure S2 and Table S4, which is included directly under
+membership used by Figure S3 and Table S2, which is included directly under
 `data/superclusters/membership/`. Obtain the rest as follows:
 
 - **Processed data** (per-species VST expression matrices, sample metadata, DEG tables,
@@ -56,7 +56,7 @@ membership used by Figure S2 and Table S4, which is included directly under
 scripts/ComPlEx/     Comparative co-expression pipeline and conserved-core analysis
 scripts/networks/    Per-species whole-genome co-expression networks of the resource
 scripts/DE/          Differential expression
-scripts/GO/          GO enrichment (Tables S1-S3)
+scripts/GO/          GO enrichment (Tables S1, S3, S4) and supercluster membership (Table S2)
 scripts/annotation/  GO-enrichment backgrounds (expressed genes per species)
 scripts/figures/     Figure producers
 scripts/validation/  Analyses supporting the conserved core
