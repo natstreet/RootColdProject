@@ -33,14 +33,14 @@ wr(transmute(s1, species = "col0", go_id = GO.ID, term = Term, annotated = Annot
              expected = Expected, p_classic_fisher = `classicFisher P`, padj),
    "go_enrichment_common_degs.tsv")
 
-s2 <- read_table(2)
-wr(transmute(s2, species = genotype(Species), conserved_set = `Co-expressolog set`, go_id = GO.ID, term = Term,
+s3 <- read_table(3)
+wr(transmute(s3, species = genotype(Species), conserved_set = `Co-expressolog set`, go_id = GO.ID, term = Term,
              annotated = Annotated, significant = Significant, expected = Expected,
              p_classic_fisher = `classicFisher P`, padj),
    "go_enrichment_conserved_sets.tsv")
 
-s3 <- read_table(3)
-wr(transmute(s3, species = genotype(Species), cluster = `Cluster (manuscript)`, analysis_cluster, go_id = GO.ID,
+s4 <- read_table(4)
+wr(transmute(s4, species = genotype(Species), cluster = `Cluster (manuscript)`, analysis_cluster, go_id = GO.ID,
              term = Term, annotated = Annotated, significant = Significant, expected = Expected,
              p_classic_fisher = classicFisher, padj, score = scores),
    "go_enrichment_clusters.tsv")
