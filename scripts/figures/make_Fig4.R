@@ -80,8 +80,8 @@ Bs <- Map(function(k,t,c) subplot(k,t,col=c), pan, names(pan), cols)
 PB <- plot_grid(plotlist=Bs, ncol=1, align="v")
 
 fig <- plot_grid(PA, PB, ncol=1, labels=c("(a)","(b)"), label_size=16, rel_heights=c(0.85,1.7))
-ggsave("Figure4.pdf", fig, width=8, height=12)
-ggsave("Figure4.png", fig, width=8, height=12, dpi=300)
+ggsave("Figure4.pdf", fig, width=8, height=12, bg = "white")
+ggsave("Figure4.png", fig, width=8, height=12, dpi=300, bg = "white")
 write.table(do.call(rbind, plotted), "Figure4b_values.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
 cat(sprintf("Venn areas: A=%d B=%d C=%d  ABC=%d\n", length(A), length(B), length(C),
             length(Reduce(intersect,list(A,B,C)))))

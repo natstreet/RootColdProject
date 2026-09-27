@@ -163,6 +163,6 @@ fig <- ggdraw() +
   draw_plot(pC, x = 0, y = 0, width = 1, height = 0.5) +
   draw_plot(pD, x = 0.47, y = 0.36, width = 0.53, height = 0.13) +
   draw_plot_label(c("a", "b", "c", "d"), x = c(0, 0.45, 0, 0.45), y = c(1, 1, 0.5, 0.5), size = 16)
-ggsave("Figure1.pdf", fig, width = 13, height = 12)
-ggsave("Figure1.png", fig, width = 13, height = 12, dpi = 300)
+ggsave("Figure1.pdf", fig, width = 13, height = 12, bg = "white")
+ggsave("Figure1.png", fig, width = 13, height = 12, dpi = 300, bg = "white")
 cat("\nWrote Figure1.pdf / Figure1.png\n")

@@ -63,5 +63,5 @@ p <- ggplot(df, aes(Species, pct, fill = Family)) +
         axis.text.x = element_text(angle = 45, hjust = 1),
         strip.background = element_rect(fill = "grey92"))
 
-ggsave("Figure_S3.pdf",  p, width = 9.5, height = 6)
-ggsave("Figure_S3.tiff", p, width = 9.5, height = 6, dpi = 300, compression = "lzw")
+ggsave("Figure_S3.pdf",  p, width = 9.5, height = 6, bg = "white")
+ggsave("Figure_S3.tiff", p, width = 9.5, height = 6, dpi = 300, compression = "lzw", bg = "white")

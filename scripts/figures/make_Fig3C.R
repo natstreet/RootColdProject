@@ -86,6 +86,6 @@ p <- ggplot(D, aes(pct, SC, fill = category)) +
         axis.text.y = element_text(face = "bold", colour = "black"), axis.ticks.y = element_blank(),
         strip.text = element_text(face = "bold", hjust = 0), strip.background = element_blank(),
         legend.position = "right")
-ggsave("figures/Figure3C.png", p, width = 8, height = 6, dpi = 120)
+ggsave("figures/Figure3C.png", p, width = 8, height = 6, dpi = 120, bg = "white")
 cat("Wrote figures/Figure3C.png and figures/Fig3C_values.csv\n")
 print(reshape(D, idvar = c("SC","type"), timevar = "category", direction = "wide"), row.names = FALSE)

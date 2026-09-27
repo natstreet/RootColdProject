@@ -97,6 +97,6 @@ p <- ggplot(summ, aes(Condition, m, colour = Species, group = Species)) +
   theme(panel.grid.minor = element_blank(), strip.background = element_rect(fill = "grey92"),
         strip.text = element_text(face = "bold"), axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave("Figure6.pdf", p, width = 13, height = 6)
-ggsave("Figure6.png", p, width = 13, height = 6, dpi = 300)
+ggsave("Figure6.pdf", p, width = 13, height = 6, bg = "white")
+ggsave("Figure6.png", p, width = 13, height = 6, dpi = 300, bg = "white")
 cat("TFs plotted:", nlevels(d$TF), "| orthogroups:", paste(levels(d$TF), collapse=", "), "\n")

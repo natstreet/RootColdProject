@@ -51,6 +51,6 @@ B <- ggplot(data.frame(x = nullB), aes(x)) +
        title = sprintf("Cluster coherence in independent data (%.1f-fold; P = %.4g)", foldB, pB)) + th
 
 fig <- A | B
-ggsave("Figure_S6.pdf", fig, width = 12.5, height = 4.6)
-ggsave("Figure_S6.png", fig, width = 12.5, height = 4.6, dpi = 300)
+ggsave("Figure_S6.pdf", fig, width = 12.5, height = 4.6, bg = "white")
+ggsave("Figure_S6.png", fig, width = 12.5, height = 4.6, dpi = 300, bg = "white")
 cat(sprintf("wrote Figure_S6.pdf/.png ; panel a P=%.4g, panel b P=%.4g, fold=%.1f\n", pA, pB, foldB))

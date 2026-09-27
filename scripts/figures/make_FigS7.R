@@ -81,6 +81,6 @@ p <- ggplot(combined, aes(Timepoint, med, group=gene, color=gene)) +
         axis.title=element_text(size=13), axis.text=element_text(size=11)) +
   labs(x="Cold time course", y="Expression (median VST)")
 
-ggsave("Figure_S7.pdf", p, width=13.5, height=9)
+ggsave("Figure_S7.pdf", p, width=13.5, height=9, bg = "white")
 ggsave("Figure_S7_preview.png", p, width=13.5, height=9, dpi=120, bg="white")
 cat("\nDONE — wrote Figure_S7.pdf + Figure_S7_preview.png\n")

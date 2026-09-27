@@ -120,8 +120,8 @@ C <- ggplot(pc, aes(y = species)) +
        title = "Genes co-expressed with each member;\ndark = transcription factors") + th
 
 fig <- A / (B | C) + plot_layout(heights = c(1, 0.95))
-ggsave("Figure_S2.pdf", fig, width = 7.2, height = 5.4)
-ggsave("Figure_S2.png", fig, width = 7.2, height = 5.4, dpi = 300)
+ggsave("Figure_S2.pdf", fig, width = 7.2, height = 5.4, bg = "white")
+ggsave("Figure_S2.png", fig, width = 7.2, height = 5.4, dpi = 300, bg = "white")
 
 vals <- rbind(
   data.frame(panel = "a", species = as.character(pa$species), quantity = paste0("log2FC_", pa$timepoint),

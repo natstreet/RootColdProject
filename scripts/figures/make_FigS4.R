@@ -51,6 +51,6 @@ p <- ggplot(long, aes(species, n, fill = cat)) +
   labs(x = "Species", y = "Number of genes") +
   theme_minimal(base_size = 13) +
   theme(legend.title = element_text(face = "bold"), panel.grid.major.x = element_blank())
-ggsave("Figure_S4.pdf", p, width = 11, height = 6.5)
-ggsave("Figure_S4.png", p, width = 11, height = 6.5, dpi = 150)
+ggsave("Figure_S4.pdf", p, width = 11, height = 6.5, bg = "white")
+ggsave("Figure_S4.png", p, width = 11, height = 6.5, dpi = 150, bg = "white")
 print(m[, c("species", catlev)], row.names = FALSE)
