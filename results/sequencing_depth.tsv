@@ -1,4 +1,4 @@
 batch	samples	runs	median_read_pairs_per_sample	read_lengths	ena_instrument_models	header_instrument_prefix
 HiSeq 2500	15	30	17527174	126+126	Illumina HiSeq 2000	HWI-D
-NGI NovaSeq 6000	18	19	97242825.0	151+151	Illumina HiSeq 2000	A
-Novogene NovaSeq 6000	100	106	47554162.0	150+150	Illumina HiSeq 2500	A
+NGI NovaSeq 6000	18	19	97242825	151+151	Illumina HiSeq 2000	A
+Novogene NovaSeq 6000	100	106	47554162	150+150	Illumina HiSeq 2500	A

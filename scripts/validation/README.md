@@ -4,8 +4,8 @@ Two independent robustness tests of the conserved co-expression core, and the sc
 them as Figure S6.
 
 - `conservation_null_test.py` — degree-preserving permutation test (Figure S6a).
-- `string_external_validation.py` — cluster coherence in STRING v12 (Figure S6b).
-- `../figures/make_FigS6.py` — plots the two null distributions produced by the scripts above.
+- `string_external_validation.R` — cluster coherence in STRING v12 (Figure S6b).
+- `../figures/make_FigS6.R` — plots the two null distributions produced by the scripts above.
 
 Unlike the other figures, Figure S6 is **not** regenerable from the figshare deposit with a single
 command: panel (a) needs the per-species co-expression networks, and panel (b) needs an external
@@ -35,7 +35,7 @@ Inputs it reads from the working directory:
 Then: `python conservation_null_test.py` → writes `conservation_null_null.csv`,
 `conservation_null_obs.txt`.
 
-## Panel (b) — `string_external_validation.py`
+## Panel (b) — `string_external_validation.R`
 
 Inputs it reads from the working directory:
 
@@ -55,12 +55,12 @@ Inputs it reads from the working directory:
   write.xlsx(cc[, c("Col0","Cluster")], "cliques.xlsx")
   ```
 
-Then: `python string_external_validation.py` → writes `string_null.csv`, `string_obs.txt`.
+Then: `Rscript string_external_validation.R` → writes `string_null.csv`, `string_obs.txt`.
 
 ## Figure S6
 
 With the four output files present:
 
 ```
-python ../figures/make_FigS6.py     # writes Figure_S6.pdf / .png
+Rscript ../figures/make_FigS6.R     # writes Figure_S6.pdf / .png
 ```

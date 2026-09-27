@@ -81,7 +81,7 @@ ComPlEx networks.
 
 `scripts/validation/`:
 - `conservation_null_test.py` -- permutation null test for the conserved core.
-- `string_external_validation.py` -- within-cluster co-expression test in STRING v12.
+- `string_external_validation.R` -- within-cluster co-expression test in STRING v12.
 - `independent_replication.py` -- replication of the core in independent data.
 - `cis_motif_conservation.py`, `run_spruce_pine_cismotif.py` -- cross-species promoter cis-motif
   conservation test.

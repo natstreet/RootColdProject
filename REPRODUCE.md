@@ -21,7 +21,8 @@ supplementary tables from the processed data deposited on figshare
 
 Outputs are written to the working directory. R package requirements: `DESeq2`,
 `matrixStats`, `topGO`, `GO.db`, `ggplot2`, `ggtext`, `corrplot`, `dplyr`, `tidyr`,
-`pheatmap`, `patchwork`, `UpSetR`, `readr`, `openxlsx`.
+`pheatmap`, `patchwork`, `cowplot`, `ggplotify`, `VennDiagram`, `UpSetR`, `readr`, `readxl`, `writexl`,
+`data.table` and `curl`.
 
 Some small derived inputs are provided in this repository rather than in the figshare deposit:
 the median-expression tables (`expression/med_expression/`), the gene→orthogroup maps
@@ -53,11 +54,11 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S4 output and `scripts/figures/Fig5_captions.tsv` (block captions, by GO ID) |
 | Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/` |
 | Fig. S1 | `scripts/figures/make_FigS1.R` | `superclusters/merged_super_clusters_means.RData`, `superclusters/SC_mapping.csv` |
-| Fig. S2 | `scripts/figures/make_FigS2.py` | `open/{conserved_core,gene_index,co_expressologs,transcription_factors}.tsv`, `networks/network_*_hrr100.tsv` — **deposit v4 or later**; `DE/<species>/` from `differential_expression.R` |
+| Fig. S2 | `scripts/figures/make_FigS2.R` | `open/{conserved_core,gene_index,co_expressologs,transcription_factors}.tsv`, `networks/network_*_hrr100.tsv` — **deposit v4 or later**; `DE/<species>/` from `differential_expression.R` |
 | Fig. S3 | `scripts/figures/make_FigS3.R` | `superclusters/membership/`, `TranscriptionFactors/` |
 | Fig. S4 | `scripts/figures/make_FigS4.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
 | Fig. S5 | `scripts/figures/make_FigS5.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S5_values.tsv` |
-| Fig. S6 | `scripts/figures/make_FigS6.py` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.py` (panel b; **STRING download, see note**) |
+| Fig. S6 | `scripts/figures/make_FigS6.R` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.R` (panel b; **STRING download, see note**) |
 | Fig. S7 | `scripts/figures/make_FigS7.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
 | Table S1 (`Table_S1.xlsx`) | `scripts/GO/make_TableS1.R` (with `go_table_utils.R`) | `DEGs/og_summary.RData`, `DEGs/DEGs_col0.RData`, `*/Orthogroups_20240613.tsv`, `annotation/Athal_go_ids.tsv`, `annotation/bg_col0_ATC.rda` |
 | Table S2 (`Table_S2.xlsx`) | `scripts/GO/make_TableS2.R` | `superclusters/membership/` |
@@ -69,12 +70,12 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | TF clique responses (Discussion) | `scripts/analysis/tf_clique_directions.R` | `dds/`, `expression/`, `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `annotation/gene_aliases_20140331.txt`; output `results/tf_clique_directions.tsv` |
 | Orthogroups split into several HOGs (Methods) | `scripts/analysis/orthogroup_hog_split.R` | `ComPlEx/Orthogroups_20240613.tsv`, `ComPlEx/Phylogenetic_Hierarchical_Orthogroups_N0.tsv.gz` (in this repository; N0.tsv of the same OrthoFinder run, from github.com/tallgran/conifer-JasonHill); output `results/orthogroup_hog_split.tsv` |
 | Complete cliques per core orthogroup (Methods) | `scripts/analysis/complete_cliques_per_orthogroup.R` | `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`; outputs `results/complete_cliques_per_orthogroup.tsv`, `results/complete_cliques_summary.tsv` |
-| Cluster profiles (Results, clusters 1–2) | `scripts/analysis/cluster_profiles.py` | `open/{gene_index,conserved_core,orthogroup_annotation}.tsv` — **deposit v4 or later**; outputs in `results/cluster_profiles/` |
+| Cluster profiles (Results, clusters 1–2) | `scripts/analysis/cluster_profiles.R` | `open/{gene_index,conserved_core,orthogroup_annotation}.tsv` — **deposit v4 or later**; outputs in `results/cluster_profiles/` |
 | Common DEG orthogroups: count per gene-to-orthogroup map, and share with ≥ 20 genes (Results) | `scripts/validation/common_orthogroups.R` | `DEGs/og_summary.RData`, `DEGs/DEGs_*.RData`, `*/Orthogroups_20240613.tsv`, `ComPlEx/gene2OG/`, `open/gene_orthogroup_map.tsv` (deposit v4 or later; optional); output `results/common_orthogroups.tsv` |
 | Col-0 DEGs that are also Ost-0 DEGs (Results) | `scripts/validation/ecotype_deg_overlap.R` | `DEGs/per_timepoint_DEG_lists/{col0,ost0}/`, `DEGs/DEGs_{col0,ost0}.RData`; output `results/ecotype_deg_overlap.tsv` |
 | Co-expressolog comparisons per orthogroup (Results; run with `0.1 OG0000037 OG0001369`) | `scripts/validation/orthogroup_coexpressolog_comparisons.R` | `ComPlEx/co_expressologs.RData`, `open/orthogroup_annotation.tsv` — **deposit v4 or later**; output `results/orthogroup_coexpressolog_comparisons.tsv` |
-| Family-size-aware null for the conserved core (Results) | `scripts/validation/conservation_sizeaware_null.py` | `open/co_expressologs.tsv` — **deposit v4 or later**, `*/Orthogroups_20240613.tsv`; outputs `results/conservation_sizeaware_{null.csv,summary.tsv}` |
-| ENA runs, sequencing depth and platform per sample (Methods; deposit `samples.tsv`) | `scripts/deposit/sample_ena_runs.py` | `open/samples.tsv`, `quantification/{sample_name_map,lane_map}.tsv` — **deposit v4 or later**; ENA portal API (network); outputs `results/{sample_ena_runs,ena_run_metadata,sequencing_depth}.tsv` |
+| Family-size-aware null for the conserved core (Results) | `scripts/validation/conservation_sizeaware_null.R` | `open/co_expressologs.tsv` — **deposit v4 or later**, `*/Orthogroups_20240613.tsv`; outputs `results/conservation_sizeaware_{null.csv,summary.tsv}` |
+| ENA runs, sequencing depth and platform per sample (Methods; deposit `samples.tsv`) | `scripts/deposit/sample_ena_runs.R` | `open/samples.tsv`, `quantification/{sample_name_map,lane_map}.tsv` — **deposit v4 or later**; ENA portal API (network); outputs `results/{sample_ena_runs,ena_run_metadata,sequencing_depth}.tsv` |
 | Per-gene DE results (fold change, padj against no change, DEG call) | `scripts/DE/differential_expression.R` | as for DEGs; output `DE/de_results.tsv` |
 
 The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each
@@ -88,7 +89,7 @@ against versions 1–3.
 Figure S6, panel a, comes from `scripts/validation/conservation_label_permutation.R` (deposit only).
 Panel b needs the STRING v12 *A. thaliana* download (`3702.protein.links.detailed.v12.0.txt.gz` and
 `3702.protein.aliases.v12.0.txt.gz` from string-db.org): run `make_core_clusters.R`, then
-`string_external_validation.py`, then `make_FigS6.py` plots both. `string_by_cluster.py` (same inputs)
+`string_external_validation.R`, then `make_FigS6.R` plots both. `string_by_cluster.R` (same inputs)
 breaks the panel b test down by cluster and repeats it without manuscript cluster 2
 (`results/string_by_cluster.tsv`, `results/string_within_cluster_pairs.tsv`). (`conservation_null_test.py` is a
 separate network-rewiring test and is not what Figure S6 shows.)
