@@ -9,7 +9,7 @@
 
 files <- list.files("scripts", pattern = "[.](R|Rmd|py|html)$", recursive = TRUE, full.names = TRUE)
 files <- files[basename(files) != "genotype_colours.R" & basename(files) != "check_genotype_colours.R"]
-pat <- "[\"'`]?(col-?0|ost-?0|aspen|birch|spruce|pine)[\"'`]?\\s*[=:]\\s*[\"']#[0-9A-Fa-f]{6}"
+pat <- "[\"'`]?(col-?0|ost-?0|aspen|birch|spruce|pine|cherry|lodgepole)[\"'`]?\\s*[=:]\\s*[\"']#[0-9A-Fa-f]{6}"
 bad <- character(0)
 for (f in files) {
   l <- readLines(f, warn = FALSE); h <- grep(pat, l, ignore.case = TRUE, perl = TRUE)
