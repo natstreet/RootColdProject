@@ -6,7 +6,7 @@
 # bidirectional hypergeometric test for co-expression-neighbourhood overlap
 # (Benjamini-Hochberg FDR). Writes one
 #   data/ComPlEx/PairwiseComparisons/comparison-<sp1>-<sp2>-abspearsonMR0.03-table.RData
-# Set species1_name / species2_name below and run once for each of the 15 pairs:
+# Set species1_name / species2_name below (or give them as two arguments) and run once for each of the 15 pairs:
 #   col0-ost0  col0-aspen  col0-birch  col0-spruce  col0-pine
 #              ost0-aspen  ost0-birch  ost0-spruce  ost0-pine
 #                          aspen-birch aspen-spruce aspen-pine
@@ -37,6 +37,11 @@ species2_name <- "ost0"
 #species2_name <- "pine"
 
 run_version <- "2"
+
+# The pair can also be given on the command line (e.g. Rscript ComPlEx.R aspen birch), overriding the lines above,
+# so the 15 pairs can run as one batch array.
+cli <- commandArgs(trailingOnly = TRUE)
+if (length(cli) >= 2) { species1_name <- cli[1]; species2_name <- cli[2] }
 
 # OrthoFinder orthogroups (raw input, not part of the deposit). The derived
 # per-pair orthologue table is cached below as data/ComPlEx/orthologs-<sp1>-<sp2>.RData,
