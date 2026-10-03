@@ -20,8 +20,8 @@ suppressMessages(library(data.table))
 THRESHOLD <- 400; N_PERM <- 5000; SEED <- 1
 LINKS <- "3702.protein.links.detailed.v12.0.txt.gz"; ALIASES <- "3702.protein.aliases.v12.0.txt.gz"
 
-src <- readLines("scripts/GO/make_TableS4.R")
-MAP <- eval(parse(text = sub("^MAP <- ", "", regmatches(src, regexpr("MAP <- c\\(.*\\)", src)))))  # manuscript -> analysis
+mm <- read.delim("data/ComPlEx/cliques/manuscript_cluster_map.tsv")               # scripts/ComPlEx/manuscript_cluster_map.R
+MAP <- setNames(mm$analysis_cluster, mm$manuscript_cluster)                                # manuscript -> analysis
 an2ms <- setNames(as.integer(names(MAP)), MAP)
 
 al <- fread(cmd = paste("gzip -dc", shQuote(ALIASES)), sep = "\t", header = FALSE, skip = 1, select = 1:2,

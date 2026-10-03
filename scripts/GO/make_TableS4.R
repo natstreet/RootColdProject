@@ -69,7 +69,8 @@ run_go <- function(sp, genes) {
 }
 
 ## manuscript cluster -> analysis cluster
-MAP <- c(`1` = 2, `2` = 4, `3` = 3, `4` = 1)
+mm <- read.delim("data/ComPlEx/cliques/manuscript_cluster_map.tsv")               # scripts/ComPlEx/manuscript_cluster_map.R
+MAP <- setNames(mm$analysis_cluster, mm$manuscript_cluster)                                # manuscript -> analysis
 out <- list()
 cat("Table S4 clique-cluster GO (classic Fisher, padj<0.05)\n")
 for (mc in names(MAP)) for (sp in names(LAB)) {

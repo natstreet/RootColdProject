@@ -16,8 +16,8 @@
 open <- commandArgs(trailingOnly = TRUE)[1]
 stopifnot(!is.na(open), dir.exists(open))
 
-src <- readLines("scripts/GO/make_TableS4.R")
-MAP <- eval(parse(text = sub("^MAP <- ", "", regmatches(src, regexpr("MAP <- c\\(.*\\)", src)))))  # manuscript -> analysis
+mm <- read.delim("data/ComPlEx/cliques/manuscript_cluster_map.tsv")               # scripts/ComPlEx/manuscript_cluster_map.R
+MAP <- setNames(mm$analysis_cluster, mm$manuscript_cluster)                                # manuscript -> analysis
 stopifnot(length(MAP) == 4, setequal(MAP, 1:4))
 to_ms <- function(a) {
   a <- trimws(a); out <- rep("", length(a)); k <- a != ""

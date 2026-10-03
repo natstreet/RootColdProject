@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # clique_clusters.R — the four clusters of the conserved-core cliques (analysis numbering): the Figure 5 matrix
 # (clique_matrix.R) clustered with Ward.D2 on Euclidean distance and cut into four, rows in dendrogram order.
-# The manuscript numbers these clusters differently: MAP in scripts/GO/make_TableS4.R.
+# The manuscript numbers these clusters differently: data/ComPlEx/cliques/manuscript_cluster_map.tsv (manuscript_cluster_map.R).
 #
 # Inputs: data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS (from core_cliques.R),
 #         data/expression/med_expression/<sp>_med.txt.gz

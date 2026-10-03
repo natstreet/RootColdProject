@@ -41,8 +41,8 @@ ana <- hm$Cluster[match(rownames(M), hm$ID)]
 tab <- table(cut, ana)                                                        # must be a one-to-one relabelling
 if (anyNA(ana) || any(rowSums(tab > 0) != 1) || any(colSums(tab > 0) != 1))
   stop("row clustering differs from clique_HMcluster_list.rda")
-mp  <- regmatches(readLines("scripts/GO/make_TableS4.R"), regexpr("MAP <- c\\(.*\\)", readLines("scripts/GO/make_TableS4.R")))
-MAP <- eval(parse(text = sub("^MAP <- ", "", mp)))                          # manuscript -> analysis
+mm <- read.delim("data/ComPlEx/cliques/manuscript_cluster_map.tsv")               # scripts/ComPlEx/manuscript_cluster_map.R
+MAP <- setNames(mm$analysis_cluster, mm$manuscript_cluster)                                # manuscript -> analysis
 man <- as.integer(names(MAP))[match(ana, MAP)]                               # manuscript cluster per row
 block <- c(`1` = 1, `2` = 2, `3` = 3, `4` = 3)[as.character(man)]            # clusters 3 and 4 share a block
 bo  <- block[ord]

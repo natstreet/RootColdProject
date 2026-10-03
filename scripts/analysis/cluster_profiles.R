@@ -17,8 +17,8 @@
 a <- commandArgs(trailingOnly = TRUE); OPEN <- a[1]; OUT <- a[2]
 stopifnot(!is.na(OPEN), !is.na(OUT)); dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 SP <- c("col0", "ost0", "aspen", "birch", "spruce", "pine"); TPS <- c("6h", "24h", "3d", "10d")
-src <- readLines("scripts/GO/make_TableS4.R")
-MAP <- eval(parse(text = sub("^MAP <- ", "", regmatches(src, regexpr("MAP <- c\\(.*\\)", src)))))  # manuscript -> analysis
+mm <- read.delim("data/ComPlEx/cliques/manuscript_cluster_map.tsv")               # scripts/ComPlEx/manuscript_cluster_map.R
+MAP <- setNames(mm$analysis_cluster, mm$manuscript_cluster)                                # manuscript -> analysis
 rd <- function(f) read.delim(file.path(OPEN, f), stringsAsFactors = FALSE, quote = "", check.names = FALSE)
 
 gi <- rd("gene_index.tsv"); core <- rd("conserved_core.tsv"); ann <- rd("orthogroup_annotation.tsv")
