@@ -3,13 +3,12 @@
 # cold-stress experiments, with every sequencing run of every sample included.
 #
 # Counts per species:
-#   Col-0, aspen, birch, Norway spruce: the deposited DESeq2 objects, unchanged (they already sum every run).
+#   Col-0, aspen, birch, Norway spruce, Scots pine: the deposited DESeq2 objects, unchanged (they already sum every
+#     run, except pine sample 112, which has only run S2: its second run, S9, was not quantified with the study's
+#     pine pipeline, whose reference index was not kept).
 #   Ost-0: the deposited object, with sample OstR1001 given both of its sequencing runs: each run's salmon read
 #     counts summed per gene and rounded, then added over runs (the convention of the other samples, which the
 #     script checks by reproducing their deposited counts).
-#   Scots pine: the nf-core/rnaseq salmon gene counts (data/counts/pine_nfcore; reference and settings in its
-#     params and versions files), each count rounded per run and added over a sample's runs, on the genes of the
-#     deposited pine object; sample information and design from the deposited object.
 # Co-expression input matrices: DESeq2 variance-stabilising transformation (blind = TRUE) minus the matrix's
 # smallest value, as scripts/ComPlEx/Network_Generation_setup.R; columns named as in data/expression/sample_names.tsv.
 #
@@ -36,8 +35,8 @@ sample_counts <- function(sample, genes) {
 }
 
 objects <- list()
-for (s in c("col0", "aspen", "birch", "spruce")) {
-  f <- c(col0 = "dds_col0_soil.rda", aspen = "dds_Pt_new.rda", birch = "dds_Bp_new.rda", spruce = "dds_Pa.rda")[[s]]
+for (s in c("col0", "aspen", "birch", "spruce", "pine")) {
+  f <- c(col0 = "dds_col0_soil.rda", aspen = "dds_Pt_new.rda", birch = "dds_Bp_new.rda", spruce = "dds_Pa.rda", pine = "dds_Ps.rda")[[s]]
   objects[[s]] <- list(file = f, dds = load_dds(f))
 }
 
@@ -52,22 +51,6 @@ cat(sprintf("Ost-0 OstR1001: %d runs; deposited %.0f reads, both runs %.0f reads
 m[, "OstR1001"] <- new1001; storage.mode(m) <- "integer"
 d2 <- DESeqDataSetFromMatrix(m, colData(d), design(d))
 objects$ost0 <- list(file = "dds_ost0_soil.rda", dds = d2)
-
-# Scots pine: nf-core salmon gene counts, runs added per sample
-dp <- load_dds("dds_Ps.rda")
-nf <- fread("data/counts/pine_nfcore/salmon.merged.gene_counts.tsv")
-nfm <- as.matrix(nf[, -(1:2)]); rownames(nfm) <- nf$gene_id
-genes <- rownames(dp); miss <- setdiff(genes, rownames(nfm))
-pm <- sapply(colnames(dp), function(id) {
-  cols <- grep(paste0("^P21452_", id, "_S[0-9]+$"), colnames(nfm), value = TRUE)
-  if (!length(cols)) stop("pine sample ", id, ": no nf-core run")
-  x <- rowSums(round(nfm[intersect(genes, rownames(nfm)), cols, drop = FALSE])); y <- setNames(numeric(length(genes)), genes)
-  y[names(x)] <- x; y })
-storage.mode(pm) <- "integer"
-nruns <- sapply(colnames(dp), function(id) length(grep(paste0("^P21452_", id, "_S[0-9]+$"), colnames(nfm))))
-cat(sprintf("pine: %d samples (%s with two runs); %d of %d genes absent from the nf-core table (set to 0)\n",
-            ncol(pm), paste(names(nruns)[nruns > 1], collapse = ", "), length(miss), length(genes)))
-objects$pine <- list(file = "dds_Ps.rda", dds = DESeqDataSetFromMatrix(pm, colData(dp), design(dp)))
 
 species_file <- c(col0 = "col0", ost0 = "ost0", aspen = "aspen", birch = "birch", spruce = "spruce", pine = "pine")
 for (s in names(objects)) {
