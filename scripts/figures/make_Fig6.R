@@ -8,8 +8,8 @@
 #
 # Run from a directory containing the unpacked figshare deposit `data/`.
 # Inputs:
-#   data/annotation/gene_aliases_20140331.txt              Arabidopsis symbol -> gene ID
-#   data/ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS  Arabidopsis gene -> orthogroup
+#   scripts/analysis/tf_cliques.R (the transcription-factor cliques: >= 5 of 6 members predicted TFs, and their
+#   labels), which reads data/TranscriptionFactors/ and data/annotation/gene_aliases_20140331.txt
 #   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS orthogroup -> per-species clique member
 #   data/expression/<species>_root_cold_stress_expression.txt  per-sample VST
 #   data/DEGs/DEGs_<species>.RData                         per-species DEG sets (for the stars)
@@ -19,8 +19,8 @@
 
 suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2) })
 
-symbols <- c("ANAC018","bZIP61","HSFB2A","KAN3","LBD11","LBD13","MYB87","WRKY48")  # panel order
-disp    <- c(ANAC018 = "ANAC018/ANAC002", WRKY48 = "WRKY48/WRKY23")  # NAC/WRKY: Ost-0 member differs from Col-0
+source("scripts/analysis/tf_cliques.R")
+TFC <- tf_cliques()                       # the transcription-factor cliques of the core, labelled, in panel order
 species <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
 pre     <- c(col0="Col", ost0="Ost", aspen="Pt", birch="Bp", spruce="Pa", pine="Ps")
 cond    <- c("01"="Control","02"="6h","03"="24h","04"="3d","05"="10d")
@@ -28,15 +28,6 @@ source("scripts/figures/genotype_colours.R")
 pal     <- setNames(GENOTYPE_COLOURS[names(species)], species)   # the shared genotype palette, by display name
 ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 
-# symbol -> Arabidopsis gene ID
-al  <- read.delim("data/annotation/gene_aliases_20140331.txt", stringsAsFactors = FALSE)
-sym2id <- function(s){ i <- which(toupper(al$symbol) == toupper(s)); if (!length(i)) NA else al$locus_name[i[1]] }
-id2sym <- function(g){ i <- which(al$locus_name == g); if (!length(i)) g else al$symbol[i[1]] }
-seed <- setNames(vapply(symbols, sym2id, character(1)), symbols)
-
-# clique table -> orthogroup of each seed gene
-cl <- readRDS("data/ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS")
-og_of <- function(gid){ h <- cl[cl$GeneSpecies1 == gid | cl$GeneSpecies2 == gid, "OrthoGroup", drop = TRUE]; if (!length(h)) NA else h[1] }
 # the selected conserved clique: one member gene per species for each orthogroup
 cgsel <- as.data.frame(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS"))
 members <- function(og){                                   # species -> that species' clique member
@@ -53,10 +44,9 @@ EXP <- lapply(names(species), function(sp)
 names(EXP) <- names(species)
 
 rows <- list(); stars <- list()
-for (s in symbols) {
-  og <- og_of(seed[[s]]); if (is.na(og)) next
+for (k in seq_len(nrow(TFC))) {
+  og <- TFC$OrthoGroup[k]; s <- lab <- TFC$tf[k]           # panel label (dual where Ost-0 member differs)
   mem <- members(og)
-  lab <- if (s %in% names(disp)) disp[[s]] else s         # panel label (dual where Ost-0 member differs)
   for (sp in names(species)) {
     g <- intersect(mem[[sp]], rownames(EXP[[sp]])); if (!length(g)) next
     v <- colMeans(EXP[[sp]][g, , drop = FALSE], na.rm = TRUE)                          # the clique member
@@ -99,4 +89,5 @@ p <- ggplot(summ, aes(Condition, m, colour = Species, group = Species)) +
 
 ggsave("Figure6.pdf", p, width = 13, height = 6, bg = "white")
 ggsave("Figure6.png", p, width = 13, height = 6, dpi = 300, bg = "white")
+if (nlevels(d$TF) != nrow(TFC)) stop("plotted ", nlevels(d$TF), " of ", nrow(TFC), " transcription-factor cliques")
 cat("TFs plotted:", nlevels(d$TF), "| orthogroups:", paste(levels(d$TF), collapse=", "), "\n")

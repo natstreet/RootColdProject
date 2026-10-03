@@ -1,9 +1,8 @@
 #!/usr/bin/env Rscript
-# tf_clique_directions.R — cold response of each member of the eight transcription-factor cliques of
+# tf_clique_directions.R — cold response of each member of the transcription-factor cliques of
 # Fig. 6, as tested in the Methods, for the expression claims in the Discussion.
 #
-# For each Fig. 6 transcription factor (the symbols listed in scripts/figures/make_Fig6.R), the clique is
-# the conserved-core clique whose Col-0 or Ost-0 member is that symbol's locus. For each of its six members:
+# For each Fig. 6 transcription-factor clique (scripts/analysis/tf_cliques.R), for each of its six members:
 #   * per cold timepoint, DESeq2 log2 fold change and adjusted P from the same Wald test as
 #     scripts/DE/differential_expression.R (lfcThreshold = 0, default independent filtering), and the
 #     Methods DEG call (padj <= 0.05 and |log2FC| >= 1), with its direction;
@@ -14,27 +13,19 @@
 # data/):
 #   data/dds/dds_<species>.rda, data/expression/<species>_root_cold_stress_expression.txt,
 #   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS, data/annotation/gene_aliases_20140331.txt,
-#   scripts/figures/make_Fig6.R (the transcription-factor symbols)
+#   scripts/analysis/tf_cliques.R (the transcription-factor cliques)
 # Output: tf_clique_directions.tsv
 # Usage:  Rscript scripts/analysis/tf_clique_directions.R
 
 suppressMessages(library(DESeq2))
 
-src <- readLines("scripts/figures/make_Fig6.R")
-symbols <- eval(parse(text = sub(".*<-", "", grep("^symbols\\s*<-", src, value = TRUE)[1])))
+source("scripts/analysis/tf_cliques.R")
 al  <- read.delim("data/annotation/gene_aliases_20140331.txt", stringsAsFactors = FALSE)
-cg  <- as.data.frame(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS"))
 SP  <- c(col0 = "dds_col0_soil", ost0 = "dds_ost0_soil", aspen = "dds_Pt_new", birch = "dds_Bp_new",
          spruce = "dds_Pa", pine = "dds_Ps")
 getdds <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
-
-# the clique of each symbol: the conserved-core clique whose Col-0 or Ost-0 member is the symbol's locus
-cl <- do.call(rbind, lapply(symbols, function(s) {
-  loci <- unique(al$locus_name[toupper(al$symbol) == toupper(s)])
-  r <- cg[cg$col0 %in% loci | cg$ost0 %in% loci, ]
-  if (nrow(r) != 1) stop("symbol ", s, ": expected one clique, found ", nrow(r))
-  data.frame(tf = s, OrthoGroup = r$OrthoGroup, r[, names(SP)], check.names = FALSE)
-}))
+cl <- tf_cliques()                     # the Fig. 6 transcription-factor cliques (tf = panel label)
+symbols <- cl$tf
 sym_of <- function(g) { i <- which(al$locus_name == g); if (length(i)) al$symbol[i[1]] else "" }
 
 out <- list()
