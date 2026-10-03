@@ -130,20 +130,20 @@ hrr_edges_and_thresholds <- function(R, genes, hrr_max, densities, block = BLOCK
       ti  <- c(ti, sel[, 2])
       rs  <- c(rs, Cs[sel])
       rt  <- c(rt, Ct[sel])
-      mrv <- c(mrv, sqrt(Rb[sel] * Rbt[sel]))
+      mrv <- c(mrv, sqrt(Cs[sel] * Ct[sel]))          # mutual rank on co-expression ranks (1 = strongest)
     }
     # sample of the strictly-upper triangle of MR, for the density thresholds only
     rowid <- matrix(rep(from:to, times = n), nrow = nb)
     colid <- matrix(rep(seq_len(n), each = nb), nrow = nb)
     idx <- which(rowid < colid)
-    v <- sqrt(Rb[idx] * Rbt[idx])
+    v <- sqrt(Cs[idx] * Ct[idx])
     if (keep_frac < 1) v <- v[stats::runif(length(v)) < keep_frac]
     pool[[length(pool) + 1L]] <- v
     rm(Rb, Rbt, Cs, Ct, HRR, sel, rowid, colid, idx, v)
   }
   allv <- unlist(pool, use.names = FALSE)
-  thr  <- vapply(densities, function(dn)
-                 unname(stats::quantile(allv, 1 - dn, names = FALSE)), numeric(1))
+  thr  <- vapply(densities, function(dn)                 # strongest dn of pairs = smallest mutual ranks
+                 unname(stats::quantile(allv, dn, names = FALSE)), numeric(1))
   # each undirected edge appears twice (i->j and j->i); keep one copy
   keep <- si < ti
   list(edges = data.frame(source = genes[si[keep]], target = genes[ti[keep]],
