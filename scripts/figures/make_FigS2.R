@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
-# make_FigS2.R — Figure S2: worked example of resource use, conserved-core orthogroup OG0000118 (NAC transcription
-# factors, ATAF/NAM clade).
+# make_FigS2.R — Figure S2: worked example of resource use, one conserved-core orthogroup (given as the first
+# argument; the authors' choice of example).
 #   (a) Cold response of the orthogroup's member gene in each genotype across the time course, as log2 fold change
 #       against the matched control; an open ring marks a timepoint at which it is differentially expressed (adjusted
 #       P <= 0.05 and |log2FC| >= 1). The panel title is built from those DEG calls.
@@ -8,23 +8,24 @@
 #   (c) Number of genes co-expressed with each member in that species' whole-genome co-expression network, with the
 #       transcription-factor subset overlaid.
 #
-# Inputs, all from the figshare deposit (version 4 or later; the open-format tables and the per-species networks were
-# introduced in version 4). Run from the directory that contains data/ :
-#   data/open/conserved_core.tsv          the 116 conserved-core orthogroups
-#   data/open/gene_index.tsv              per-gene fold changes
-#   data/open/co_expressologs.tsv         co-expressolog pairs, used for panel (b)
-#   data/open/transcription_factors.tsv   TF assignments, used for panel (c)
-#   data/networks/network_<species>_hrr100.tsv   per-species co-expression networks
-#   DE/<species>/DEGs_<species>_C_vs_<timepoint>.txt   per-timepoint DEG lists written by
-#                                         scripts/DE/differential_expression.R (the rings in panel a)
+# Inputs (repository root):
+#   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS   the conserved-core cliques (one gene per genotype)
+#   DE/de_results.tsv                     per-gene fold changes and DEG calls (scripts/DE/differential_expression.R)
+#   data/ComPlEx/co_expressologs.RData    co-expressolog pairs, panel (b) (scripts/ComPlEx/coexpressolog_tables.R)
+#   data/TranscriptionFactors/TF_<species>.RData   TF predictions, panel (c) (Ost-0 uses the Arabidopsis list)
+#   <network dir>/network_<species>_hrr100.tsv     per-species co-expression networks
+#                                         (scripts/networks/build_species_networks.R; default data/networks)
 # Output: Figure_S2.pdf, Figure_S2.png (300 dpi), Figure_S2_values.tsv (the plotted values)
+# Usage:  Rscript scripts/figures/make_FigS2.R <orthogroup> [network dir]
 #
-# ORTHOGROUP IDENTIFIERS ARE RUN-SPECIFIC. OG0000118 refers to the orthology in data/orthologs/; it is not comparable
+# ORTHOGROUP IDENTIFIERS ARE RUN-SPECIFIC. They refer to the orthology in data/orthologs/ and are not comparable
 # with identifiers from any other OrthoFinder run.
 
 suppressPackageStartupMessages({ library(ggplot2); library(patchwork) })
 
-OG <- "OG0000118"
+args <- commandArgs(trailingOnly = TRUE)
+if (!length(args)) stop("usage: Rscript scripts/figures/make_FigS2.R <orthogroup> [network dir]")
+OG <- args[1]; NETDIR <- if (length(args) > 1) args[2] else "data/networks"
 SP <- c("col0", "ost0", "aspen", "birch", "spruce", "pine")
 LAB <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "aspen", birch = "birch", spruce = "spruce", pine = "pine")
 source("scripts/figures/genotype_colours.R")
@@ -32,26 +33,25 @@ COL <- GENOTYPE_COLOURS                                                  # the s
 TPS <- c("6h", "24h", "3d", "10d"); TPLAB <- c("6 h", "24 h", "3 d", "10 d")
 GREY <- "#666666"
 rd <- function(f) read.delim(f, stringsAsFactors = FALSE, quote = "", check.names = FALSE)
+ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
+strip <- function(x) sub("[.][0-9]+$", "", as.character(x))
 
-core <- rd("data/open/conserved_core.tsv"); gi <- rd("data/open/gene_index.tsv")
-coex <- rd("data/open/co_expressologs.tsv"); tf <- rd("data/open/transcription_factors.tsv")
-row <- core[core$OrthoGroup == OG, ]; stopifnot(nrow(row) == 1)
+core <- as.data.frame(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS"))
+de <- rd("DE/de_results.tsv"); coex <- ld("data/ComPlEx/co_expressologs.RData")
+tf <- list()
+for (s in c("col0", "aspen", "birch", "spruce", "pine")) { x <- ld(sprintf("data/TranscriptionFactors/TF_%s.RData", s))
+  tf[[s]] <- unique(c(strip(x[[1]]), strip(x[[2]]))) }
+tf$ost0 <- tf$col0
+row <- core[core$OrthoGroup == OG, ]
+if (nrow(row) != 1) stop(OG, " is not a conserved-core orthogroup")
 mem <- unlist(row[SP]); mem <- mem[!is.na(mem) & nzchar(mem)]
-tfset <- paste(tf$species, tf$gene)
-
-# Differentially expressed at a timepoint as defined in the Methods (Wald test against no change, adjusted P <= 0.05
-# and |log2FC| >= 1): membership of that timepoint's DEG list from differential_expression.R.
-is_deg <- function(sp, gene, tp) {
-  f <- list.files(file.path("DE", sp), pattern = sprintf("^DEGs_%s_C_vs_%s", sp, tp), full.names = TRUE)
-  if (length(f) != 1) stop("expected one DEG list for ", sp, " ", tp, " in DE/", sp)
-  gene %in% scan(f, what = "", quiet = TRUE)
-}
 
 # panel (a) values
 pa <- do.call(rbind, lapply(names(mem), function(s) {
-  r <- gi[gi$species == s & gi$gene == mem[[s]], ]; stopifnot(nrow(r) == 1)
-  data.frame(species = s, gene = mem[[s]], timepoint = TPS, x = seq_along(TPS),
-             lfc = unlist(r[paste0("lfc_", TPS)]), deg = vapply(TPS, function(t) is_deg(s, mem[[s]], t), TRUE))
+  r <- de[de$species == s & de$gene == mem[[s]], ]
+  r <- r[match(TPS, r$timepoint), ]
+  if (anyNA(r$gene)) stop("fold changes missing for ", s, " ", mem[[s]])
+  data.frame(species = s, gene = mem[[s]], timepoint = TPS, x = seq_along(TPS), lfc = r$log2FoldChange, deg = r$deg)
 }))
 pa$species <- factor(pa$species, SP)
 
@@ -75,10 +75,10 @@ edges <- data.frame(x = pos$x[match(pairs[, 1], SP)], y = pos$y[match(pairs[, 1]
 
 # panel (c): network neighbours and the TF subset
 pc <- do.call(rbind, lapply(names(mem), function(s) {
-  n <- rd(sprintf("data/networks/network_%s_hrr100.tsv", s)); g <- mem[[s]]
+  n <- rd(file.path(NETDIR, sprintf("network_%s_hrr100.tsv", s))); g <- mem[[s]]
   sub <- n[n$source == g | n$target == g, ]
   partner <- ifelse(sub$source == g, sub$target, sub$source)
-  data.frame(species = s, co_expressed = nrow(sub), transcription_factors = sum(paste(s, partner) %in% tfset))
+  data.frame(species = s, co_expressed = nrow(sub), transcription_factors = sum(strip(partner) %in% tf[[s]]))
 }))
 pc$species <- factor(pc$species, rev(SP))
 
