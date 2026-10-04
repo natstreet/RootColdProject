@@ -1,87 +1,113 @@
 #!/usr/bin/env Rscript
-# make_FigS2.R — Figure S2: worked example of resource use, one conserved-core orthogroup (given as the first
-# argument; the authors' choice of example).
-#   (a) Cold response of the orthogroup's member gene in each genotype across the time course, as log2 fold change
-#       against the matched control; an open ring marks a timepoint at which it is differentially expressed (adjusted
-#       P <= 0.05 and |log2FC| >= 1). The panel title is built from those DEG calls.
-#   (b) The six members and their co-expressolog relationships between species.
-#   (c) Number of genes co-expressed with each member in that species' whole-genome co-expression network, with the
-#       transcription-factor subset overlaid.
+# make_FigS2.R — Figure S2: worked example of one conserved-core clique (orthogroup given as the first argument; the
+# authors' choice of example) and its conserved co-expression neighbourhood.
+#   (a) Cold response of the clique member in each genotype, as log2 fold change against the matched control; an open
+#       ring marks a time point at which the member is differentially expressed (adjusted P <= 0.05, |log2FC| >= 1).
+#   (b) Per genotype, the expression over the time course (median per condition, z-scored per gene) of the member's
+#       conserved neighbours: genes in the overlap of its ComPlEx neighbourhood with that of the other member in at
+#       least MIN_PAIRS of its five pairwise comparisons (scripts/analysis/core_module_directions.R). Neighbours are
+#       coloured by the sign of their correlation with the member over all samples (ComPlEx uses |r|, so both occur);
+#       the member is the bold black line and the dashed lines are the mean profiles of the two groups.
+#   (c) GO enrichment (biological process) of the Col-0 member's conserved neighbours, with the Arabidopsis
+#       annotation: topGO classic Fisher test, Benjamini-Hochberg adjustment, padj < 0.05, as in Tables S1-S4. The
+#       background is the Col-0 genes that could be conserved neighbours: genes passing ComPlEx's expression filters
+#       with an orthologue in at least MIN_PAIRS of the five other genotypes (scripts/ComPlEx/ComPlEx.R).
 #
 # Inputs (repository root):
-#   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS   the conserved-core cliques (one gene per genotype)
-#   DE/de_results.tsv                     per-gene fold changes and DEG calls (scripts/DE/differential_expression.R)
-#   data/ComPlEx/co_expressologs.RData    co-expressolog pairs, panel (b) (scripts/ComPlEx/coexpressolog_tables.R)
-#   data/TranscriptionFactors/TF_<species>.RData   TF predictions, panel (c) (Ost-0 uses the Arabidopsis list)
-#   <network dir>/network_<species>_hrr100.tsv     per-species co-expression networks
-#                                         (scripts/networks/build_species_networks.R; default data/networks)
-# Output: Figure_S2.pdf, Figure_S2.png (300 dpi), Figure_S2_values.tsv (the plotted values)
-# Usage:  Rscript scripts/figures/make_FigS2.R <orthogroup> [network dir]
+#   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS   the conserved-core cliques
+#   DE/de_results.tsv                         fold changes and DEG calls (scripts/DE/differential_expression.R)
+#   tables/core_conserved_neighbours.tsv.gz   conserved neighbours and their correlation with the member
+#                                             (scripts/analysis/core_module_directions.R; its MIN_PAIRS is used here)
+#   data/expression/med_expression/<sp>_med.txt.gz         median expression per condition
+#   data/expression/<sp>_root_cold_stress_expression.txt   ComPlEx input matrices (GO background)
+#   data/ComPlEx/orthologs-<sp1>-<sp2>.RData                ComPlEx orthologue pairs (GO background)
+#   data/annotation/Athal_go_ids.tsv, data/annotation/gene_aliases_20140331.txt
+# Output: Figure_S2.pdf, Figure_S2.png (300 dpi), Figure_S2_values.tsv (plotted values), Figure_S2_GO.tsv (all
+#   significant terms)
+# Usage:  Rscript scripts/figures/make_FigS2.R <orthogroup>
 #
 # ORTHOGROUP IDENTIFIERS ARE RUN-SPECIFIC. They refer to the orthology in data/orthologs/ and are not comparable
 # with identifiers from any other OrthoFinder run.
 
-suppressPackageStartupMessages({ library(ggplot2); library(patchwork) })
+suppressPackageStartupMessages({ library(ggplot2); library(patchwork); library(data.table) })
+source("scripts/GO/go_table_utils.R")
 
 args <- commandArgs(trailingOnly = TRUE)
-if (!length(args)) stop("usage: Rscript scripts/figures/make_FigS2.R <orthogroup> [network dir]")
-OG <- args[1]; NETDIR <- if (length(args) > 1) args[2] else "data/networks"
+if (!length(args)) stop("usage: Rscript scripts/figures/make_FigS2.R <orthogroup>")
+OG <- args[1]
 SP <- c("col0", "ost0", "aspen", "birch", "spruce", "pine")
 LAB <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "aspen", birch = "birch", spruce = "spruce", pine = "pine")
 source("scripts/figures/genotype_colours.R")
 COL <- GENOTYPE_COLOURS                                                  # the shared genotype palette
 TPS <- c("6h", "24h", "3d", "10d"); TPLAB <- c("6 h", "24 h", "3 d", "10 d")
-GREY <- "#666666"
-rd <- function(f) read.delim(f, stringsAsFactors = FALSE, quote = "", check.names = FALSE)
+CONDLAB <- c("control", TPLAB)
+POS <- "#8C8C8C"; NEG <- "#E69F00"; GREY <- "#666666"     # grey / Okabe-Ito orange: distinct from the genotype palette
+N_TERMS <- 10                                                             # GO terms drawn in panel c
 ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 strip <- function(x) sub("[.][0-9]+$", "", as.character(x))
 
 core <- as.data.frame(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS"))
-de <- rd("DE/de_results.tsv"); coex <- ld("data/ComPlEx/co_expressologs.RData")
-tf <- list()
-for (s in c("col0", "aspen", "birch", "spruce", "pine")) { x <- ld(sprintf("data/TranscriptionFactors/TF_%s.RData", s))
-  tf[[s]] <- unique(c(strip(x[[1]]), strip(x[[2]]))) }
-tf$ost0 <- tf$col0
 row <- core[core$OrthoGroup == OG, ]
 if (nrow(row) != 1) stop(OG, " is not a conserved-core orthogroup")
-mem <- unlist(row[SP]); mem <- mem[!is.na(mem) & nzchar(mem)]
+mem <- unlist(row[SP])
+al <- read.delim("data/annotation/gene_aliases_20140331.txt", colClasses = "character")
+sym <- al$symbol[toupper(al$locus_name) == strip(mem[["col0"]])]
+label <- if (length(sym) && nzchar(sym[1])) sym[1] else strip(mem[["col0"]])
 
-# panel (a) values
-pa <- do.call(rbind, lapply(names(mem), function(s) {
-  r <- de[de$species == s & de$gene == mem[[s]], ]
-  r <- r[match(TPS, r$timepoint), ]
+## ---- (a) fold changes of the members ----
+de <- fread("DE/de_results.tsv")
+pa <- rbindlist(lapply(SP, function(s) {
+  r <- de[species == s & gene == mem[[s]]][match(TPS, timepoint)]
   if (anyNA(r$gene)) stop("fold changes missing for ", s, " ", mem[[s]])
-  data.frame(species = s, gene = mem[[s]], timepoint = TPS, x = seq_along(TPS), lfc = r$log2FoldChange, deg = r$deg)
+  data.table(species = s, gene = mem[[s]], timepoint = TPS, x = seq_along(TPS), lfc = r$log2FoldChange, deg = r$deg)
 }))
-pa$species <- factor(pa$species, SP)
+pa[, species := factor(species, SP)]
 
-# title from the DEG calls: each differentially expressed genotype, by the sign of its DEG fold changes
-join <- function(x) if (length(x) == 1) x else paste(paste(x[-length(x)], collapse = ", "), "and", x[length(x)])
-dirs <- list()
-for (s in SP) {
-  v <- pa$lfc[pa$species == s & pa$deg & !is.na(pa$lfc)]
-  if (length(v)) { k <- if (max(v) < 0) "repressed" else if (min(v) > 0) "induced" else "changed"; dirs[[k]] <- c(dirs[[k]], LAB[[s]]) }
+## ---- (b) conserved neighbours ----
+cn <- fread("tables/core_conserved_neighbours.tsv.gz")[OrthoGroup == OG]
+MIN_PAIRS <- unique(cn$min_pairs); stopifnot(length(MIN_PAIRS) == 1)
+if (!setequal(cn$species, SP)) stop("conserved neighbours missing for ", paste(setdiff(SP, cn$species), collapse = ", "))
+z <- function(m) { m <- t(scale(t(m))); m[is.na(m)] <- 0; m }
+pb <- rbindlist(lapply(SP, function(s) {
+  x <- fread(sprintf("data/expression/med_expression/%s_med.txt.gz", s))
+  m <- as.matrix(x[, -1]); rownames(m) <- x[[1]]
+  if (ncol(m) != 5) stop(s, ": expected five conditions in the median expression table")
+  c_s <- cn[species == s]
+  g <- c(mem[[s]], c_s$neighbour); if (!all(g %in% rownames(m))) stop(s, ": genes missing from median expression")
+  zm <- z(m[g, , drop = FALSE])
+  data.table(species = s, gene = rep(g, each = 5), x = rep(1:5, length(g)), value = as.vector(t(zm)),
+             role = rep(c("member", ifelse(c_s$r > 0, "positive", "negative")), each = 5))
+}))
+pb[, species := factor(species, SP)]
+cnt <- cn[, .(pos = sum(r > 0), neg = sum(r < 0)), by = species]
+strip_lab <- setNames(sprintf("%s: %d positive, %d negative", LAB[cnt$species], cnt$pos, cnt$neg), cnt$species)
+mean_lines <- pb[role != "member", .(value = mean(value)), by = .(species, role, x)]
+
+## ---- (c) GO enrichment of the Col-0 member's conserved neighbours ----
+expressed <- function(sp) {                                   # ComPlEx.R's expression filters
+  x <- read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", sp))
+  m <- as.matrix(x[, -1]); rownames(m) <- x[[1]]
+  m <- m[matrixStats::rowSds(m) > 0 & matrixStats::rowCounts(m != 0) >= 3, , drop = FALSE]
+  rownames(m)[rowMeans(m) > 1.0]
 }
-ttl <- paste(vapply(names(dirs), function(k) paste(k, "in", join(dirs[[k]])), ""), collapse = "; ")
-ttl <- paste0(toupper(substr(ttl, 1, 1)), substring(ttl, 2))
+e_col0 <- expressed("col0")
+nb_ortho <- table(unlist(lapply(setdiff(SP, "col0"), function(t) {            # orthologue in t, both expressed
+  o <- ld(sprintf("data/ComPlEx/orthologs-col0-%s.RData", t)); e_t <- expressed(t)
+  unique(o$Species1[o$Species1 %in% e_col0 & o$Species2 %in% e_t]) })))
+bg <- names(nb_ortho)[nb_ortho >= MIN_PAIRS]
+study <- cn[species == "col0", neighbour]
+if (!all(study %in% bg)) stop("conserved neighbours outside the GO background")
+g2go <- read_go_mapping("data/annotation/Athal_go_ids.tsv")
+g2 <- g2go[names(g2go) %in% strip(bg)]
+gl <- factor(as.integer(names(g2) %in% strip(study)), levels = 0:1); names(gl) <- names(g2)
+GOdata <- suppressMessages(new("topGOdata", ontology = "BP", allGenes = gl, annot = annFUN.gene2GO, gene2GO = g2))
+res <- suppressMessages(runTest(GOdata, algorithm = "classic", statistic = "fisher"))
+sig <- go_result(GOdata, res)
+fwrite(sig, "Figure_S2_GO.tsv", sep = "\t")
+pc <- head(sig, N_TERMS)
+pc$Term <- factor(pc$Term, rev(pc$Term))
 
-# panel (b): species pairs linked by a co-expressolog between the six members
-sel <- coex[coex$OrthologGroup == OG & coex$GeneSpecies1 %in% mem & coex$GeneSpecies2 %in% mem, ]
-pairs <- unique(t(apply(sel[, c("Species1", "Species2")], 1, sort)))
-ang <- (seq(90, 450, length.out = 7)[-7]) * pi / 180
-pos <- data.frame(species = factor(SP, SP), x = cos(ang), y = sin(ang))
-edges <- data.frame(x = pos$x[match(pairs[, 1], SP)], y = pos$y[match(pairs[, 1], SP)],
-                    xend = pos$x[match(pairs[, 2], SP)], yend = pos$y[match(pairs[, 2], SP)])
-
-# panel (c): network neighbours and the TF subset
-pc <- do.call(rbind, lapply(names(mem), function(s) {
-  n <- rd(file.path(NETDIR, sprintf("network_%s_hrr100.tsv", s))); g <- mem[[s]]
-  sub <- n[n$source == g | n$target == g, ]
-  partner <- ifelse(sub$source == g, sub$target, sub$source)
-  data.frame(species = s, co_expressed = nrow(sub), transcription_factors = sum(strip(partner) %in% tf[[s]]))
-}))
-pc$species <- factor(pc$species, rev(SP))
-
+## ---- drawing ----
 th <- theme_classic(base_size = 8) +
   theme(axis.text = element_text(size = 6, colour = "black"), plot.title = element_text(size = 8, hjust = 0.5),
         axis.line = element_line(linewidth = 0.4), axis.ticks = element_line(linewidth = 0.4),
@@ -90,47 +116,54 @@ th <- theme_classic(base_size = 8) +
 A <- ggplot(pa, aes(x, lfc, colour = species)) +
   geom_hline(yintercept = 0, colour = GREY, linewidth = 0.4) +
   geom_line(linewidth = 0.8, na.rm = TRUE) + geom_point(size = 1.6, na.rm = TRUE) +
-  geom_point(data = pa[pa$deg & !is.na(pa$lfc), ], shape = 21, size = 4, stroke = 0.7, fill = NA, show.legend = FALSE) +
+  geom_point(data = pa[deg & !is.na(lfc)], shape = 21, size = 4, stroke = 0.7, fill = NA, show.legend = FALSE) +
   annotate("text", x = -Inf, y = Inf, hjust = -0.02, vjust = 1.2, size = 2.1, colour = GREY,
-           label = "'open ring: differentially expressed (adjusted'~italic(P)<=0.05*','~abs(log[2]*FC)>=1*')'", parse = TRUE) +
+           label = "'ring: DE (adjusted'~italic(P)<=0.05*','~abs(log[2]*FC)>=1*')'", parse = TRUE) +
   scale_colour_manual(values = COL, labels = LAB, name = NULL) +
   scale_x_continuous(breaks = seq_along(TPS), labels = TPLAB, expand = expansion(mult = 0.06)) +
   scale_y_continuous(breaks = function(l) seq(ceiling(l[1]), floor(l[2]), 1), expand = expansion(mult = 0.1)) +
-  labs(x = NULL, y = expression(log[2]~fold~change~vs~control), title = ttl, tag = "a") + th +
+  labs(x = NULL, y = expression(log[2]~fold~change~vs~control), tag = "a",
+       title = sprintf("%s clique members (%s)", label, OG)) + th +
   theme(legend.position = "bottom", legend.text = element_text(size = 7), legend.key.width = unit(10, "pt"),
         legend.margin = margin(0, 0, 0, 0)) +
   guides(colour = guide_legend(nrow = 1, override.aes = list(linewidth = 0.8)))
 
-B <- ggplot() +
-  geom_segment(data = edges, aes(x, y, xend = xend, yend = yend), colour = "#BBBBBB", linewidth = 0.45) +
-  geom_point(data = pos, aes(x, y, colour = species), size = 6, show.legend = FALSE) +
-  geom_text(data = pos, aes(x * 1.5, y * 1.5, label = LAB[as.character(species)]), size = 2.1) +
-  scale_colour_manual(values = COL) + coord_equal(xlim = c(-1.85, 1.85), ylim = c(-1.7, 1.7)) +
-  labs(title = sprintf("Co-expressologs between the members:\n%d of 15 species pairs linked", nrow(pairs)), tag = "b") +
-  theme_void(base_size = 8) + theme(plot.title = element_text(size = 8, hjust = 0.5),
-                                    plot.tag = element_text(face = "bold", size = 10))
+B <- ggplot(pb[role != "member"], aes(x, value, group = gene, colour = role)) +
+  geom_line(linewidth = 0.2, alpha = 0.25) +
+  geom_line(data = mean_lines, aes(x, value, group = role, colour = role), linewidth = 0.8, linetype = "22",
+            inherit.aes = FALSE) +
+  geom_line(data = pb[role == "member"], colour = "black", linewidth = 1.1) +
+  facet_wrap(~ species, nrow = 2, labeller = labeller(species = strip_lab)) +
+  scale_colour_manual(values = c(positive = POS, negative = NEG), name = NULL,
+                      labels = c(positive = "positively correlated with the member",
+                                 negative = "negatively correlated with the member")) +
+  scale_x_continuous(breaks = 1:5, labels = CONDLAB, expand = expansion(mult = 0.04)) +
+  labs(x = NULL, y = "expression (z-score of condition medians)", tag = "b",
+       title = sprintf("Conserved neighbours of each member (in the overlap in at least %d of 5 comparisons); black: member; dashed: group means",
+                       MIN_PAIRS)) +
+  th + theme(strip.background = element_blank(), strip.text = element_text(size = 7), panel.spacing.x = unit(14, "pt"),
+             legend.position = "bottom", legend.text = element_text(size = 7))
 
-C <- ggplot(pc, aes(y = species)) +
-  geom_col(aes(x = co_expressed, fill = species), width = 0.62, show.legend = FALSE) +
-  geom_col(aes(x = transcription_factors), fill = "#333333", width = 0.26) +
-  geom_text(aes(x = co_expressed + 2, label = co_expressed), hjust = 0, size = 2.1) +
-  scale_fill_manual(values = COL) + scale_y_discrete(labels = LAB) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.16))) +
-  labs(x = "co-expressed genes", y = NULL, tag = "c",
-       title = "Genes co-expressed with each member;\ndark = transcription factors") + th
+C <- ggplot(pc, aes(-log10(padj), Term)) +
+  geom_col(fill = COL[["col0"]], width = 0.65) +
+  geom_text(aes(label = sprintf("%d/%d", Significant, Annotated)), hjust = -0.1, size = 2.1) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.18))) +
+  labs(x = expression(-log[10]~adjusted~italic(P)), y = NULL, tag = "c",
+       title = sprintf("GO (BP) of the Col-0 member's %d conserved neighbours\nlabels: neighbours / background genes with the term",
+                       length(study))) + th + theme(plot.title.position = "plot")
 
-fig <- A / (B | C) + plot_layout(heights = c(1, 0.95))
-ggsave("Figure_S2.pdf", fig, width = 7.2, height = 5.4, bg = "white")
-ggsave("Figure_S2.png", fig, width = 7.2, height = 5.4, dpi = 300, bg = "white")
+fig <- (A | C) / B + plot_layout(heights = c(0.85, 1.25))
+ggsave("Figure_S2.pdf", fig, width = 7.2, height = 7.4, bg = "white")
+ggsave("Figure_S2.png", fig, width = 7.2, height = 7.4, dpi = 300, bg = "white")
 
 vals <- rbind(
-  data.frame(panel = "a", species = as.character(pa$species), quantity = paste0("log2FC_", pa$timepoint),
-             value = pa$lfc, deg = pa$deg),
-  data.frame(panel = "b", species = NA, quantity = "species_pairs_linked", value = nrow(pairs), deg = NA),
-  data.frame(panel = "c", species = as.character(pc$species), quantity = "co_expressed_genes", value = pc$co_expressed, deg = NA),
-  data.frame(panel = "c", species = as.character(pc$species), quantity = "of_which_TFs", value = pc$transcription_factors, deg = NA))
-write.table(vals, "Figure_S2_values.tsv", sep = "\t", quote = FALSE, row.names = FALSE, na = "")
-cat(sprintf("wrote Figure_S2.pdf/.png for %s\n  species pairs linked: %d of 15\n", OG, nrow(pairs)))
-cat("  co-expressed genes:", paste(sprintf("%s=%d", pc$species, pc$co_expressed), collapse = " "), "\n")
-cat("  of which transcription factors:", paste(sprintf("%s=%d", pc$species, pc$transcription_factors), collapse = " "), "\n")
-cat("  title:", ttl, "\n")
+  data.table(panel = "a", species = as.character(pa$species), quantity = paste0("log2FC_", pa$timepoint),
+             value = pa$lfc, note = ifelse(pa$deg, "DE", "")),
+  data.table(panel = "b", species = cnt$species, quantity = "conserved_neighbours_positive", value = cnt$pos, note = ""),
+  data.table(panel = "b", species = cnt$species, quantity = "conserved_neighbours_negative", value = cnt$neg, note = ""),
+  data.table(panel = "c", species = "col0", quantity = paste("padj", pc$GO.ID), value = pc$padj, note = as.character(pc$Term)))
+fwrite(vals, "Figure_S2_values.tsv", sep = "\t")
+cat(sprintf("wrote Figure_S2.pdf/.png for %s (%s); conserved neighbours in >= %d of 5 comparisons\n", OG, label, MIN_PAIRS))
+print(cnt)
+cat(sprintf("GO: %d of %d background genes are study genes with GO; %d significant terms; top: %s\n",
+            sum(gl == 1), length(gl), nrow(sig), paste(head(sig$Term, 3), collapse = "; ")))
