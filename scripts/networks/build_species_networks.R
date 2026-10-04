@@ -109,6 +109,9 @@ hrr_edges_and_thresholds <- function(R, genes, hrr_max, densities, block = BLOCK
   n <- nrow(R)
   # co-expression rank: 1 for the strongest partner. R holds ascending ranks of |r|
   # including the self-comparison (|r| = 1, hence rank n), so rank_coexp = n - R.
+  # Partners at |r| = 1 tie with the self-comparison and share its averaged rank; they
+  # take n - R + 0.5, the average of their ranks with the self-comparison left out
+  # (a single such partner gets rank 1).
   set.seed(1L)
   keep_frac <- min(1, 3e7 / (n * (n - 1) / 2))
   pool <- vector("list", 0L)
@@ -119,8 +122,9 @@ hrr_edges_and_thresholds <- function(R, genes, hrr_max, densities, block = BLOCK
     nb  <- to - from + 1L
     Rb  <- R[from:to, , drop = FALSE]          # ascending ranks, rows of this block
     Rbt <- t(R[, from:to, drop = FALSE])       # the reciprocal ranks
-    Cs  <- n - Rb                               # 1 = strongest, for the block's rows
-    Ct  <- n - Rbt                              # reciprocal co-expression rank
+    self_b <- R[cbind(from:to, from:to)]        # each row's self-comparison rank
+    Cs  <- n - Rb + 0.5 * (Rb == self_b)         # 1 = strongest, for the block's rows
+    Ct  <- n - Rbt + 0.5 * (Rbt == rep(diag(R)[seq_len(n)], each = nb))   # reciprocal co-expression rank
     HRR <- pmax(Cs, Ct)
     # remove self-edges: gene i's own column within its row
     for (i in seq_len(nb)) HRR[i, from + i - 1L] <- NA_integer_
