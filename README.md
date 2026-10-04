@@ -71,11 +71,13 @@ Pearson correlation on the genes with an orthologue in that pair and keeps the t
 and the co-expressolog table (`Genelists.Rmd`). `submit_ComPlEx_cold.sh` submits `ComPlEx.R` through
 `RunR.sh` on a Slurm cluster; adapt both to your environment.
 
-`scripts/networks/build_species_networks.R` -- the per-species whole-genome co-expression networks
-provided with the resource (`data/networks/network_<species>_hrr100.tsv`): absolute Pearson
-correlation, ranked per gene, with an edge kept where the highest reciprocal rank is at most 100.
-These are for exploring a gene's co-expression neighbourhood and are separate from the pairwise
-ComPlEx networks.
+`scripts/networks/build_coexpression_network.R` -- the per-species whole-genome co-expression networks
+provided with the resource (`data/networks/network_<species>_hrr100.tsv`), built from raw counts
+(`export_network_inputs.R`): genes with at least 1 CPM in at least k samples (k = the smallest replicated
+group, at least 3), TMM normalisation, jackknifed Pearson correlation ranked per gene, and an edge kept where
+the highest reciprocal rank is at most 100. The method and its R commands are described in
+`docs/coexpression_networks.md`. These networks are for exploring a gene's co-expression neighbourhood and are
+separate from the pairwise ComPlEx networks.
 
 `scripts/validation/` -- the tests and counts behind the conserved-core results: the label-permutation and
 family-size-aware nulls, the STRING cluster-coherence test (Fig. S6) and the counts quoted in the Results. Each is
@@ -87,7 +89,7 @@ listed with its inputs and outputs in `REPRODUCE.md`.
    OrthoFinder (as in Rodriguez et al. 2026, *Nat. Commun.* 17, doi:10.1038/s41467-026-75624-2).
 2. Compute the 15 pairwise co-expressolog comparisons (`scripts/ComPlEx/ComPlEx.R`), which build
    each pair's mutual-rank networks (top 3 % of edges), and the per-species whole-genome networks of
-   the resource (`scripts/networks/build_species_networks.R`).
+   the resource (`scripts/networks/export_network_inputs.R`, then `build_coexpression_network.R`).
 3. Extract cliques and the conserved core (`cliques_step1.R`, `cliques_step2.R`).
 4. Produce the figures, tables and numbers of the article from the deposited data: `REPRODUCE.md` lists every
    producer with its inputs and outputs.

@@ -55,7 +55,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S4 output and `scripts/figures/Fig5_captions.tsv` (block captions, by GO ID) |
 | Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/` |
 | Fig. S1 | `scripts/figures/make_FigS1.R` | `superclusters/merged_super_clusters_means.RData`, `superclusters/SC_mapping.csv` |
-| Fig. S2 | `scripts/figures/make_FigS2.R` | `open/{conserved_core,gene_index,co_expressologs,transcription_factors}.tsv`, `networks/network_*_hrr100.tsv` — **deposit v4 or later**; `DE/<species>/` from `differential_expression.R` |
+| Fig. S2 | `scripts/figures/make_FigS2.R <orthogroup>` | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R` |
 | Fig. S3 | `scripts/figures/make_FigS3.R` | `superclusters/membership/`, `TranscriptionFactors/` |
 | Fig. S4 | `scripts/figures/make_FigS4.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
 | Fig. S5 | `scripts/figures/make_FigS5.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S5_values.tsv` |
@@ -67,7 +67,7 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Table S4 (`Table_S4.xlsx`) | `scripts/GO/make_TableS4.R` (with `go_table_utils.R`) | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
 | DEGs (Fig. 1 / Fig. 2) | `scripts/DE/differential_expression.R` | `dds/dds_{col0_soil,ost0_soil,Pt_new,Bp_new,Pa,Ps}.rda` |
 | GO backgrounds | `scripts/annotation/make_backgrounds.R` | `expression/<sp>_root_cold_stress_expression.txt` |
-| Species networks | `scripts/networks/build_species_networks.R` | `expression/<sp>_root_cold_stress_expression.txt` |
+| Species networks | `scripts/networks/export_network_inputs.R`, then `scripts/networks/build_coexpression_network.R` per species (method: `docs/coexpression_networks.md`) | `dds/` |
 | TF clique responses (Discussion) | `scripts/analysis/tf_clique_directions.R` | `dds/`, `expression/`, `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `annotation/gene_aliases_20140331.txt`; output `results/tf_clique_directions.tsv` |
 | Orthogroups split into several HOGs (Methods) | `scripts/analysis/orthogroup_hog_split.R` | `ComPlEx/Orthogroups_20240613.tsv`, `ComPlEx/Phylogenetic_Hierarchical_Orthogroups_N0.tsv.gz` (in this repository; N0.tsv of the same OrthoFinder run, from github.com/tallgran/conifer-JasonHill); output `results/orthogroup_hog_split.tsv` |
 | Complete cliques per core orthogroup (Methods) | `scripts/analysis/complete_cliques_per_orthogroup.R` | `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`; outputs `results/complete_cliques_per_orthogroup.tsv`, `results/complete_cliques_summary.tsv` |
@@ -113,9 +113,6 @@ The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene un
 species — every gene with nonzero VST expression across the cold time-course samples.
 `scripts/annotation/make_backgrounds.R` regenerates them from the deposited expression tables.
 
-Figure S2 reads the open-format tables in `data/open/` and the per-species co-expression networks
-in `data/networks/`, both introduced in **version 4** of the figshare deposit. It will not run
-against versions 1–3.
 
 Figure S6, panel a, comes from `scripts/validation/conservation_label_permutation.R` (deposit only).
 Panel b needs the STRING v12 *A. thaliana* download (`3702.protein.links.detailed.v12.0.txt.gz` and
