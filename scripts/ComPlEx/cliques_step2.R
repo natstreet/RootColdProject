@@ -1,3 +1,9 @@
+# SUPERSEDED (2026-10-05). Kept for the record only; not part of the analysis and not run by any producer.
+# The conserved core is made by scripts/ComPlEx/complete_cliques.R, core_cliques.R and clique_clusters.R (REPRODUCE.md).
+# It was written to select cliques from the output of the superseded cliques_step1.R (Max.p.val < 0.05, a hand-made
+# list of large orthogroups left out, at most 5,500 maximal cliques per orthogroup); core_cliques.R does that
+# selection in the analysis.
+#
 # **Step 3: identifying cliques**
 #   Note that the two previous steps can be skipped if already run (and hopefully saved).
 

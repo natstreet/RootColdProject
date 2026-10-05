@@ -12,7 +12,7 @@
 #   data/ComPlEx/PairwiseComparisons/comparison-<a>-<b>-abspearsonMR0.03-table.RData   the 15 ComPlEx tables
 # Output: data/ComPlEx/ones_and_zeros_all.RData (object ones_and_zeros_all: a data frame of integers, one row per
 #         orthogroup named by its ID, one column per comparison "<a>-<b>"), or the path given as the first argument.
-# Read by: scripts/ComPlEx/cliques_step1.R, scripts/ComPlEx/cliques_step2.R
+# Read by: scripts/ComPlEx/cliques_step1.R, scripts/ComPlEx/cliques_step2.R (both superseded; kept for the record)
 # Usage:  Rscript scripts/ComPlEx/ones_and_zeros.R [output.RData]
 
 args <- commandArgs(trailingOnly = TRUE)

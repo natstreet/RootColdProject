@@ -1,3 +1,9 @@
+# SUPERSEDED (2026-10-05). Kept for the record only; not part of the analysis and not run by any producer.
+# The conserved core is made by scripts/ComPlEx/complete_cliques.R, core_cliques.R and clique_clusters.R (REPRODUCE.md).
+# This script differs from them: it uses co-expressologs at Max.p.val < 0.05 (the analysis uses < 0.1), it leaves out
+# a hand-made list of large orthogroups (the analysis excludes none) and it caps the maximal cliques per
+# orthogroup at 5,500 (the analysis enumerates all).
+#
 # Clique extraction, step 1 (author: Elena van Zalen)
 #
 # From the co-expressologs across the 15 pairwise comparisons, keep orthogroups
