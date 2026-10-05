@@ -4,6 +4,9 @@ This note describes how the per-species co-expression networks hosted in PlantGe
 how the counts are normalised, how gene pairs are scored and how the network is cut. Each step is given with the R
 code that performs it. The full script is `scripts/networks/build_coexpression_network.R`.
 
+Each experiment has two networks, built by the same steps: a positive network, linking genes whose expression rises
+and falls together, and a negative network, linking genes whose expression changes in opposite directions.
+
 ## Input
 
 The method works on one experiment at a time. It needs two tables:
@@ -99,13 +102,16 @@ Values are rounded to ten decimal places so that values equal up to floating-poi
 
 ## Step 4. Ranks and highest reciprocal rank
 
-Within each gene's row, its partners are ranked by the jackknifed correlation, strongest positive first (rank 1).
-Ties take the average rank and the gene itself is left out. Negative correlations rank last, so the network describes
-positive co-expression.
+Within each gene's row, its partners are ranked by the jackknifed correlation. Ties take the average rank and the gene
+itself is left out. For the positive network the strongest positive partner ranks first; for the negative network the
+strongest negative partner ranks first. Each network keeps only edges of its own sign, so the two networks are
+separate layers with their own ranks.
 
 ```r
 jk[cbind(seq_along(b), b)] <- NA                       # the gene itself
-R <- rowRanks(-jk, ties.method = "average")            # 1 = strongest partner
+sgn <- 1                                               # 1 for the positive network, -1 for the negative network
+R <- rowRanks(-sgn * jk, ties.method = "average")      # 1 = strongest partner of that sign
+keep <- R <= 100 & sgn * jk > 0                        # partners of the network's sign only
 ```
 
 Two genes are linked when each is among the other's top partners. The highest reciprocal rank (HRR; Mutwil et al.,
@@ -114,7 +120,7 @@ both ranks must be at most 100, only each gene's top 100 partners need to be sto
 mutual rank, sqrt(R[i, j] × R[j, i]) (Obayashi and Kinoshita, 2009).
 
 ```r
-top <- which(R <= 100, arr.ind = TRUE)                 # per block: each gene's partners within rank 100
+top <- which(keep, arr.ind = TRUE)                     # per block: each gene's partners within rank 100
 d <- data.table(i = b[top[, 1]], j = top[, 2], rank = R[top])
 # after all blocks: keep pairs found in both directions
 e <- merge(d[i < j], d[i > j, .(i = j, j = i, rank_back = rank)], by = c("i", "j"))
@@ -126,7 +132,8 @@ density slider does this.
 
 ## Output
 
-One row per edge:
+One file per network (`network_<name>_hrr100.tsv` for the positive network, `network_<name>_neg_hrr100.tsv` for the
+negative network), with one row per edge:
 
 | column | meaning |
 |---|---|
@@ -134,7 +141,7 @@ One row per edge:
 | rank_source_to_target, rank_target_to_source | each gene's rank of the other (1 = strongest) |
 | hrr | highest reciprocal rank, the larger of the two ranks |
 | mr | mutual rank, the geometric mean of the two ranks |
-| jackknife_r | the jackknifed correlation used for ranking |
+| jackknife_r | the jackknifed correlation used for ranking (negative in the negative network) |
 | pearson_r | the ordinary Pearson correlation of the same normalised values, for reference |
 
 A summary line records the number of samples and groups, k, the genes before and after the filter, the number of
@@ -158,6 +165,32 @@ more than half of its variance in one sample. The main results were as follows.
   upper-quartile normalisation differed little in GO recovery. Pearson correlation gave more stable networks than
   Spearman.
 
+## Why separate positive and negative networks
+
+Negative co-expression can be biologically informative, for example between a repressor and its targets or between
+processes that are switched in opposite directions. Two ways of including it were compared.
+
+- One network ranked by the absolute jackknifed correlation, so that positive and negative partners compete for the
+  same top 100. In the 20 experiments this left the noise filtering unchanged (median 0 noise genes among the 30
+  hubs), but stability was lower in all 20 experiments (median 0.37 against 0.41) and the conservation of
+  neighbourhoods between species was lower in all 8 species pairs tested (2.6 against 3.7 times chance).
+- Each network was then checked against STRING v12 for *A. thaliana* (Col-0 roots), using experimental and curated
+  database evidence, which does not come from expression. A gene and its positive partners were linked 13.8 times
+  more often than random gene pairs. A gene and its negative partners were linked less often than random (0.7
+  times), as expected, since STRING records genes that act together rather than genes regulated in opposite
+  directions. However, the negative partners of a gene were linked among themselves 4.9 times more often than random,
+  so they form coherent opposite modules. Mixing both signs in one network gave partner sets slightly less coherent
+  than the positive network alone (8.2 against 9.2 times random).
+
+The positive network is therefore the main network, and the negative network is a separate layer of opposite-direction
+modules. Keeping them apart preserves the quality of the positive network while making negative co-expression
+available.
+
+This applies to the per-species networks. Cross-species comparisons with ComPlEx (Netotea et al., 2014) use absolute
+correlation within much larger neighbourhoods. A pilot on one species pair (aspen and birch) found that neighbourhoods
+mixing both signs were the most coherent in STRING for that purpose, so the ComPlEx analysis keeps absolute
+correlation.
+
 ## Practical points
 
 - The jackknife multiplies the computation by the number of samples. The 20 PlantGenIE networks (16,000 to 31,000
@@ -166,7 +199,8 @@ more than half of its variance in one sample. The main results were as follows.
   connected genes, and hubs are better compared by the sum or mean of their HRR values.
 - The group table should describe the experimental design, because it sets k. If an experiment has no replicated
   groups, k is three.
-- Edges with jackknife_r of zero can occur for genes with few strong partners. They rank below every positive partner.
+- A gene with few partners of one sign has fewer than 100 candidate partners in that network. Pairs with a
+  jackknifed correlation of zero are in neither network.
 - Networks from different experiments are comparable in their ranks (HRR, mutual rank), not in their correlation
   values.
 
@@ -174,6 +208,7 @@ more than half of its variance in one sample. The main results were as follows.
 
 ```sh
 Rscript scripts/networks/build_coexpression_network.R counts.tsv groups.tsv network_name [HRR_MAX=100] [exclude=s1;s2]
+Rscript scripts/networks/build_coexpression_network.R counts.tsv groups.tsv network_name_neg sign=negative
 ```
 
 The script needs R with the data.table, edgeR and matrixStats packages.
@@ -189,6 +224,10 @@ coexpression networks from RNA-seq data. Genome Biology, 23, 1. https://doi.org/
 Mutwil, M., Usadel, B., Schütte, M., Loraine, A., Ebenhöh, O., & Persson, S. (2010). Assembly of an interactive
 correlation network for the Arabidopsis genome using a novel heuristic clustering algorithm. Plant Physiology,
 152(1), 29-43. https://doi.org/10.1104/pp.109.145318
+
+Netotea, S., Sundell, D., Street, N. R., & Hvidsten, T. R. (2014). ComPlEx: conservation and divergence of
+co-expression networks in A. thaliana, Populus and O. sativa. BMC Genomics, 15, 106.
+https://doi.org/10.1186/1471-2164-15-106
 
 Obayashi, T., & Kinoshita, K. (2009). Rank of correlation coefficient as a comparable measure for biological
 significance of gene coexpression. DNA Research, 16(5), 249-260. https://doi.org/10.1093/dnares/dsp016
