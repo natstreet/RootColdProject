@@ -14,7 +14,12 @@
 #          Athaliana_167_TAIR10.annotation_info.txt.gz, data/expression/<genotype>_root_cold_stress_expression.txt,
 #          data/ComPlEx/cliques/conserved_genes_COMPLETE_wider.RDS
 # Outputs: <prefix>_per_orthogroup.tsv  orthogroup, expressed_genes, complete_cliques, hog_consistent_cliques,
-#                                       hogs (number of HOGs holding its expressed genes), largest_hog_genes
+#                                       hogs (number of HOGs holding its expressed genes), largest_hog_genes,
+#                                       consistent_hogs (HOGs holding a consistent clique) and largest_consistent_hog_genes
+#                                       (expressed genes of the largest of those: whether size remains a problem)
+#          <prefix>_tf_cliques.tsv      for each transcription-factor clique of the current core (tf_cliques.R, at least
+#                                       5 of 6 members predicted TFs): its consistent cliques, how many keep at least
+#                                       5 TF members, and the members of the best such clique (lowest MeanCliqueSum)
 #          <prefix>_summary.tsv         counts
 # Usage (repository root): Rscript scripts/analysis/hog_clique_consistency.R <HOG table> <output prefix>
 suppressPackageStartupMessages(library(data.table))
@@ -63,9 +68,37 @@ per <- w[, .(complete_cliques = .N, hog_consistent_cliques = sum(one_hog)), by =
 hs <- e[, .(genes = .N), by = .(OG, HOG)][, .(expressed_genes = sum(genes), hogs = .N, largest_hog_genes = max(genes)),
                                          by = .(orthogroup = OG)]
 per <- merge(per, hs, by = "orthogroup", all.x = TRUE)
-setcolorder(per, c("orthogroup", "expressed_genes", "complete_cliques", "hog_consistent_cliques", "hogs", "largest_hog_genes"))
+hsize <- e[, .(hog_genes = .N), by = HOG]
+w[, hog := H$col0]
+ch <- w[one_hog == TRUE, .(consistent_hogs = uniqueN(hog), largest_consistent_hog_genes = max(hsize$hog_genes[match(unique(hog), hsize$HOG)])),
+        by = .(orthogroup = OrthoGroup)]
+per <- merge(per, ch, by = "orthogroup", all.x = TRUE)
+per[is.na(consistent_hogs), consistent_hogs := 0L]
+setcolorder(per, c("orthogroup", "expressed_genes", "complete_cliques", "hog_consistent_cliques", "hogs", "largest_hog_genes",
+                   "consistent_hogs", "largest_consistent_hog_genes"))
 setorder(per, -expressed_genes, orthogroup)
 fwrite(per, paste0(prefix, "_per_orthogroup.tsv"), sep = "\t")
+
+# transcription-factor cliques: the same predicted-TF sets as tf_cliques.R
+source("scripts/analysis/tf_cliques.R")
+tfc <- as.data.table(tf_cliques())
+strip <- function(x) sub("[.][0-9]+$", "", as.character(x))
+TF <- list()
+for (s in c("col0", "aspen", "birch", "spruce", "pine")) {
+  en <- new.env(); load(sprintf("data/TranscriptionFactors/TF_%s.RData", s), envir = en); x <- get(ls(en)[1], en)
+  TF[[s]] <- unique(c(strip(x[[1]]), strip(x[[2]])))
+}
+TF$ost0 <- TF$col0
+w[, n_tf := Reduce(`+`, lapply(G, function(x) strip(w[[x]]) %in% TF[[x]]))]
+tfr <- rbindlist(lapply(seq_len(nrow(tfc)), function(k) {
+  o <- tfc$OrthoGroup[k]; x <- w[OrthoGroup == o]
+  ok <- x[one_hog == TRUE & n_tf >= 5][order(MeanCliqueSum)]
+  data.table(tf = tfc$tf[k], orthogroup = o, complete_cliques = nrow(x), hog_consistent_cliques = sum(x$one_hog),
+             consistent_with_5_tf = nrow(ok),
+             best_members = if (nrow(ok)) paste(unlist(ok[1, ..G]), collapse = ", ") else "")
+}))
+fwrite(tfr, paste0(prefix, "_tf_cliques.tsv"), sep = "\t")
+print(tfr[, .(tf, orthogroup, complete_cliques, hog_consistent_cliques, consistent_with_5_tf)], row.names = FALSE)
 summ <- data.table(quantity = c("hog_table", "expressed_genes_with_a_hog", "expressed_genes", "orthogroups_with_complete_clique",
                                 "orthogroups_with_hog_consistent_clique", "complete_cliques", "hog_consistent_cliques"),
                    value = c(basename(hog_file), sum(expr %in% long$gene), length(expr), nrow(per),
