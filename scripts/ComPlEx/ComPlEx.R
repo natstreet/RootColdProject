@@ -56,6 +56,7 @@ density_thr <- 0.03
 randomize <- "no" # yes no
 
 if (length(cli) >= 3) { cor_sign <- cli[3]; stopifnot(cor_sign %in% c("abs", "pos", "neg")) }
+if (length(cli) >= 4) { randomize <- cli[4]; stopifnot(randomize %in% c("yes", "no")) }   # yes: gene labels shuffled (null)
 
 # For test-runs
 test_run <- "no" # "yes" "no"
@@ -266,6 +267,7 @@ start_time <- proc.time()
 
 if (!file.exists(comparison_RData)) {
   if (randomize == "yes") {
+    set.seed(1)
     species1_expr$Genes <-
       sample(species1_expr$Genes, nrow(species1_expr), FALSE)
     species2_expr$Genes <-
