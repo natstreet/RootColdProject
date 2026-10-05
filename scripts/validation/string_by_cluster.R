@@ -1,13 +1,12 @@
 #!/usr/bin/env Rscript
-# string_by_cluster.R — the Fig. S6b STRING test broken down by clique cluster, and repeated without manuscript
-# cluster 2 (the translation / ribosome-biogenesis cluster), to ask whether cluster coherence in STRING holds beyond
-# that cluster.
+# string_by_cluster.R — the Fig. S6b STRING test broken down by clique cluster, and repeated without the cluster that
+# carries the most within-cluster pairs, to ask whether cluster coherence in STRING holds beyond that cluster.
 #
 # Same data and settings as string_external_validation.R: STRING v12 A. thaliana co-expression channel, subscore
 # >= 400, each gene pair counted once, core genes that have at least one such link, 5,000 permutations of cluster
 # labels (cluster sizes kept), seed 1.
 #   1. per cluster, from the full permutation: observed and null-mean within-cluster pairs, empirical P
-#   2. manuscript cluster 2 excluded: the same test on the remaining genes
+#   2. the cluster with the most observed within-cluster pairs excluded: the same test on the remaining genes
 #   3. the within-cluster pairs of every cluster, with Arabidopsis gene symbols
 #
 # Run from a directory holding data/ (the deposit plus this repository's data/), core_clusters.tsv (from
@@ -62,11 +61,13 @@ r <- perm_test(g2c, core)
 rows <- list(row("all clusters", "all", length(g2c), nrow(core), r$obs[1], r$null[1, ]))
 for (i in seq_along(r$ks))
   rows[[length(rows) + 1]] <- row("all clusters, per cluster", r$ks[i], r$size[i], "", r$obs[i + 1], r$null[i + 1, ])
-g2c_x <- g2c[g2c != 2]; core_x <- core[a %in% names(g2c_x) & b %in% names(g2c_x)]
+top <- r$ks[which.max(r$obs[-1])]                                    # the cluster carrying the most within pairs
+g2c_x <- g2c[g2c != top]; core_x <- core[a %in% names(g2c_x) & b %in% names(g2c_x)]
 r <- perm_test(g2c_x, core_x)
-rows[[length(rows) + 1]] <- row("cluster 2 excluded", "1,3,4", length(g2c_x), nrow(core_x), r$obs[1], r$null[1, ])
+lab_x <- sprintf("cluster %d excluded", top)
+rows[[length(rows) + 1]] <- row(lab_x, paste(r$ks, collapse = ","), length(g2c_x), nrow(core_x), r$obs[1], r$null[1, ])
 for (i in seq_along(r$ks))
-  rows[[length(rows) + 1]] <- row("cluster 2 excluded, genes per cluster", r$ks[i], r$size[i], "", r$obs[i + 1],
+  rows[[length(rows) + 1]] <- row(paste0(lab_x, ", genes per cluster"), r$ks[i], r$size[i], "", r$obs[i + 1],
                                   r$null[i + 1, ], fold = FALSE)
 out <- do.call(rbind, rows)
 write.table(out, "string_by_cluster.tsv", sep = "\t", quote = FALSE, row.names = FALSE)

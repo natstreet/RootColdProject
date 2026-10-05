@@ -29,11 +29,12 @@
 #                                     Orthogroups from data/ComPlEx/orthologs-<sp1>-<sp2>.RData (the ComPlEx orthology).
 # Usage:  Rscript scripts/analysis/core_module_directions.R [MIN_PAIRS, default 3]
 suppressPackageStartupMessages(library(data.table))
+gzread <- function(f) fread(cmd = paste("gzip -dc", shQuote(f)))   # gzipped tables without R.utils
 a <- commandArgs(trailingOnly = TRUE); MIN_PAIRS <- if (length(a)) as.integer(a[1]) else 3L
 SP <- c("col0", "ost0", "aspen", "birch", "spruce", "pine"); TPS <- c("6h", "24h", "3d", "10d")
 ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 
-nb <- rbindlist(lapply(list.files("data/ComPlEx/core_neighbourhoods", "[.]tsv[.]gz$", full.names = TRUE), fread))
+nb <- rbindlist(lapply(list.files("data/ComPlEx/core_neighbourhoods", "[.]tsv[.]gz$", full.names = TRUE), gzread))
 if (uniqueN(nb[, .(OrthoGroup, species)]) != 132 * 6 || nb[, uniqueN(species), by = .(OrthoGroup)][, any(V1 != 6)])
   stop("core_neighbourhoods: expected all 15 species pairs for every core clique")
 cn <- nb[overlap == TRUE, .(n_pairs = .N), by = .(OrthoGroup, species, member, neighbour)][n_pairs >= MIN_PAIRS]

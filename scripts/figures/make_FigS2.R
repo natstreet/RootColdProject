@@ -30,6 +30,7 @@
 # with identifiers from any other OrthoFinder run.
 
 suppressPackageStartupMessages({ library(ggplot2); library(patchwork); library(data.table) })
+gzread <- function(f) fread(cmd = paste("gzip -dc", shQuote(f)))   # gzipped tables without R.utils
 source("scripts/GO/go_table_utils.R")
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -64,12 +65,12 @@ pa <- rbindlist(lapply(SP, function(s) {
 pa[, species := factor(species, SP)]
 
 ## ---- (b) conserved neighbours ----
-cn <- fread("tables/core_conserved_neighbours.tsv.gz")[OrthoGroup == OG]
+cn <- gzread("tables/core_conserved_neighbours.tsv.gz")[OrthoGroup == OG]
 MIN_PAIRS <- unique(cn$min_pairs); stopifnot(length(MIN_PAIRS) == 1)
 if (!setequal(cn$species, SP)) stop("conserved neighbours missing for ", paste(setdiff(SP, cn$species), collapse = ", "))
 z <- function(m) { m <- t(scale(t(m))); m[is.na(m)] <- 0; m }
 pb <- rbindlist(lapply(SP, function(s) {
-  x <- fread(sprintf("data/expression/med_expression/%s_med.txt.gz", s))
+  x <- gzread(sprintf("data/expression/med_expression/%s_med.txt.gz", s))
   m <- as.matrix(x[, -1]); rownames(m) <- x[[1]]
   if (ncol(m) != 5) stop(s, ": expected five conditions in the median expression table")
   c_s <- cn[species == s]

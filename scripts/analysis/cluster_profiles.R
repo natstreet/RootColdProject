@@ -6,13 +6,13 @@
 # least two-fold. Also lists cluster 2's members with their Arabidopsis annotation, which is the basis for naming the
 # member classes in the text.
 #
-# Inputs (deposit, data/open/): gene_index.tsv, conserved_core.tsv, orthogroup_annotation.tsv.
-# Cluster numbers: conserved_core.tsv's Cluster is the analysis numbering; the manuscript numbering is MAP in
-# scripts/GO/make_TableS4.R, read from there.
-# Fold changes are the deposit's log2FoldChange (DESeq2 MLE, not shrunken).
+# Inputs (repository root): data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS and clique_HMcluster_list.rda
+# (core cliques and their analysis clusters), data/ComPlEx/cliques/manuscript_cluster_map.tsv (manuscript numbering),
+# DE/de_results.tsv (scripts/DE/differential_expression.R: log2 fold change, DESeq2 MLE, not shrunken), and
+# <open dir>/orthogroup_annotation.tsv (Arabidopsis annotation of the orthogroups).
 # Outputs: <out>/cluster_profiles.tsv, <out>/cluster2_members.tsv
 #
-# Usage: Rscript scripts/analysis/cluster_profiles.R <deposit data/open dir> <output dir>
+# Usage: Rscript scripts/analysis/cluster_profiles.R <dir with orthogroup_annotation.tsv> <output dir>
 
 a <- commandArgs(trailingOnly = TRUE); OPEN <- a[1]; OUT <- a[2]
 stopifnot(!is.na(OPEN), !is.na(OUT)); dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
@@ -21,7 +21,14 @@ mm <- read.delim("data/ComPlEx/cliques/manuscript_cluster_map.tsv")             
 MAP <- setNames(mm$analysis_cluster, mm$manuscript_cluster)                                # manuscript -> analysis
 rd <- function(f) read.delim(file.path(OPEN, f), stringsAsFactors = FALSE, quote = "", check.names = FALSE)
 
-gi <- rd("gene_index.tsv"); core <- rd("conserved_core.tsv"); ann <- rd("orthogroup_annotation.tsv")
+ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
+core <- as.data.frame(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS"))
+hm <- ld("data/ComPlEx/cliques/clique_HMcluster_list.rda"); core$Cluster <- hm$Cluster[match(core$cliqueID, hm$ID)]
+ann <- rd("orthogroup_annotation.tsv")
+de <- read.delim("DE/de_results.tsv", stringsAsFactors = FALSE)
+gi <- reshape(de[, c("species", "gene", "timepoint", "log2FoldChange")], idvar = c("species", "gene"),
+              timevar = "timepoint", direction = "wide")
+names(gi) <- sub("^log2FoldChange\\.", "lfc_", names(gi))
 core$ms_cluster <- as.integer(names(MAP))[match(core$Cluster, MAP)]
 stopifnot(!anyNA(core$ms_cluster))
 cat("orthogroups per manuscript cluster:", paste(sprintf("%s=%d", names(table(core$ms_cluster)), table(core$ms_cluster)),
