@@ -14,7 +14,9 @@
 #   5. Ranks: within each gene's row, partners ranked by the jackknifed correlation (ties averaged; the gene itself
 #      excluded). With sign=positive (default) the strongest positive partner ranks 1; with sign=negative the strongest
 #      negative partner ranks 1. Each network keeps only edges of its own sign, so the positive and the negative
-#      network are two separate layers, each with its own ranks.
+#      network are two separate layers, each with its own ranks. With sign=absolute, partners are ranked by the
+#      absolute jackknifed correlation and both signs share one network (edges with a jackknifed correlation of zero
+#      are left out).
 #   6. Edges: a pair is linked when its highest reciprocal rank, HRR = max(rank i->j, rank j->i), is at most HRR_MAX
 #      (default 100) and its jackknifed correlation has the network's sign. Each edge carries both ranks, HRR, the mutual rank sqrt(rank i->j * rank j->i), the jackknifed
 #      correlation and the ordinary Pearson correlation of the same normalised values.
@@ -24,15 +26,16 @@
 # Output: <out>.tsv  source, target, rank_source_to_target, rank_target_to_source, hrr, mr, jackknife_r, pearson_r
 #         <out>.summary.tsv  one line: samples, k, genes before and after the filter, edges, degree summary
 # Usage:  Rscript build_coexpression_network.R <counts.tsv> <groups.tsv> <out prefix> [HRR_MAX=100] [exclude=a;b]
-#                                              [sign=positive|negative]
+#                                              [sign=positive|negative|absolute]
 suppressMessages({ library(data.table); library(edgeR); library(matrixStats) })
 a <- commandArgs(trailingOnly = TRUE)
 COUNTS <- a[1]; GROUPS <- a[2]; OUT <- a[3]
 opt <- list(HRR_MAX = "100", exclude = "", block = "500", sign = "positive")
 for (x in a[-(1:3)]) { kv <- strsplit(x, "=", fixed = TRUE)[[1]]; if (!kv[1] %in% names(opt)) stop("unknown option ", x); opt[[kv[1]]] <- kv[2] }
 HRR_MAX <- as.integer(opt$HRR_MAX); BLOCK <- as.integer(opt$block)
-if (!opt$sign %in% c("positive", "negative")) stop("sign must be positive or negative")
-SGN <- if (opt$sign == "positive") 1 else -1
+if (!opt$sign %in% c("positive", "negative", "absolute")) stop("sign must be positive, negative or absolute")
+SGN <- if (opt$sign == "negative") -1 else 1
+ABS <- opt$sign == "absolute"
 CPM_MIN <- 1
 
 ## ---- 1. counts and samples ----
@@ -78,8 +81,9 @@ for (from in seq(1L, n, by = BLOCK)) {
   }
   jk <- round(ifelse(lo > 0, lo, ifelse(hi < 0, hi, 0)), 10); rm(lo, hi, Cxy, r)
   jk[cbind(seq_along(b), b)] <- NA
-  R <- rowRanks(-SGN * jk, ties.method = "average")      # 1 = strongest partner of the network's sign
-  w <- which(R <= HRR_MAX & SGN * jk > 0, arr.ind = TRUE)
+  sc <- if (ABS) abs(jk) else SGN * jk                    # higher = stronger partner for this network
+  R <- rowRanks(-sc, ties.method = "average")            # 1 = strongest partner
+  w <- which(R <= HRR_MAX & sc > 0, arr.ind = TRUE)
   top_i <- c(top_i, b[w[, 1]]); top_j <- c(top_j, w[, 2]); top_r <- c(top_r, R[w]); top_jk <- c(top_jk, jk[w])
   top_p <- c(top_p, rowSums(Z[b[w[, 1]], , drop = FALSE] * Z[w[, 2], , drop = FALSE]))
   rm(jk, R, w)
