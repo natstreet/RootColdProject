@@ -96,6 +96,10 @@ before `make_Fig1.R`, `make_TableS1.R` and `common_orthogroups.R`. Each writes i
 the path given as its first argument. `scripts/tests/test_rebuilt_objects.R` runs the four into a temporary folder
 and checks that each result is identical to the copy under `data/`.
 
+`scripts/tests/check_hardcoded_results.py <value table>` searches the code for result values written as literals
+(a result must be read from its producer's output). Its value table is the output of `scripts/analysis/value_changes.R`;
+constants inspected and found not to be results are listed, with reasons, in `scripts/tests/hardcoded_allow.tsv`.
+
 The size of each core orthogroup (expressed genes), its number of complete cliques, and the probability that an
 orthogroup of its size is conserved in all 15 comparisons come from `scripts/validation/orthogroup_size_flag.R`
 (`results/orthogroup_size_flag.tsv`, with the fitted model in `results/orthogroup_size_model.tsv`).
