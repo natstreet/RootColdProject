@@ -50,10 +50,12 @@ ortholog_group_file <- read_parquet("data/orthologs/orthologs.parquet")
 
 # Parameters
 cor_method <- "pearson" # pearson spearman
-cor_sign <- "abs" # abs
+cor_sign <- "abs" # abs (published); pos or neg for a sign-separated comparison (third command-line argument)
 norm_method <- "MR" # CLR MR
 density_thr <- 0.03
 randomize <- "no" # yes no
+
+if (length(cli) >= 3) { cor_sign <- cli[3]; stopifnot(cor_sign %in% c("abs", "pos", "neg")) }
 
 # For test-runs
 test_run <- "no" # "yes" "no"
@@ -277,6 +279,10 @@ if (!file.exists(comparison_RData)) {
   dimnames(species2_net) <- list(species2_expr$Genes, species2_expr$Genes)                 
   
   
+  if (cor_sign == "neg") {                   # strongest negative correlation ranks highest
+    species1_net <- -species1_net
+    species2_net <- -species2_net
+  }
   if (cor_sign == "abs") {
     species1_net <- abs(species1_net)
     species2_net <- abs(species2_net)
