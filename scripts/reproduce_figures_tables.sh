@@ -20,6 +20,7 @@ run Fig1                  $R scripts/figures/make_Fig1.R
 run Fig2                  $R scripts/figures/make_Fig2.R
 run Fig4                  $R scripts/figures/make_Fig4.R
 run Fig5                  $R scripts/figures/make_Fig5.R Fig5_caption_candidates.tsv   # proposed terms; the final caption table is NRS's choice
+run size_flag             $R scripts/validation/orthogroup_size_flag.R
 run Fig6                  $R scripts/figures/make_Fig6.R
 run FigS4                 $R scripts/figures/make_FigS4.R
 run FigS5                 $R scripts/figures/make_FigS5.R
@@ -27,8 +28,8 @@ run FigS7                 $R scripts/figures/make_FigS7.R
 run tf_clique_directions  $RD scripts/analysis/tf_clique_directions.R
 run core_response         $R scripts/analysis/core_response_patterns.R
 run core_modules          $R scripts/analysis/core_module_directions.R 3
-run FigS2                 $R scripts/figures/make_FigS2.R OG0000166
-run worked_example        $R scripts/analysis/worked_example_table.R OG0000166 results/worked_example_OG0000166.tsv
+run FigS2                 $R scripts/figures/make_FigS2.R OG0002696          # worked example: AtFBS1 (NRS, 2026-10-05)
+run worked_example        $R scripts/analysis/worked_example_table.R OG0002696 results/worked_example_OG0002696.tsv
 run cluster_profiles      $R scripts/analysis/cluster_profiles.R data/open results/cluster_profiles
 run label_permutation     $R scripts/validation/conservation_label_permutation.R
 run sizeaware_null        $R scripts/validation/conservation_sizeaware_null.R

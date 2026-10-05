@@ -13,6 +13,8 @@
 #   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS orthogroup -> per-species clique member
 #   data/expression/<species>_root_cold_stress_expression.txt  per-sample VST
 #   data/DEGs/DEGs_<species>.RData                         per-species DEG sets (for the stars)
+#   results/orthogroup_size_flag.tsv (scripts/validation/orthogroup_size_flag.R): each panel's label carries its
+#   orthogroup's number of expressed genes (NRS, 2026-10-05)
 # Output: Figure6.pdf, Figure6.png
 #
 # Usage: Rscript scripts/figures/make_Fig6.R
@@ -43,9 +45,12 @@ EXP <- lapply(names(species), function(sp)
   read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", sp), check.names = FALSE, row.names = 1))
 names(EXP) <- names(species)
 
+SIZE <- read.delim("results/orthogroup_size_flag.tsv")
+if (!all(TFC$OrthoGroup %in% SIZE$OrthoGroup)) stop("a transcription-factor clique has no size flag")
 rows <- list(); stars <- list()
 for (k in seq_len(nrow(TFC))) {
-  og <- TFC$OrthoGroup[k]; s <- lab <- TFC$tf[k]           # panel label (dual where Ost-0 member differs)
+  og <- TFC$OrthoGroup[k]; s <- TFC$tf[k]                  # TF symbol (dual where Ost-0 member differs)
+  lab <- sprintf("%s (%d genes)", s, SIZE$expressed_genes[SIZE$OrthoGroup == og])   # panel label
   mem <- members(og)
   for (sp in names(species)) {
     g <- intersect(mem[[sp]], rownames(EXP[[sp]])); if (!length(g)) next

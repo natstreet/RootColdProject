@@ -5,9 +5,10 @@
 #
 # This is the method of completeCliques.R in the analysis repository the published objects came from
 # (ColdStressRoots, R/ComPlEx_and_Processing/completeCliques.R, 2025-11-17), with paths made relative and its results
-# collected by index rather than appended (same order). Kept as it was, including two details that shape the
-# published objects: orthogroups need at least three co-expressolog pairs, the eight largest orthogroups are left out
-# (discard list), and MeanCliqueSum is the mean Max.p.val over the clique's six genes, each gene taking the Max.p.val
+# collected by index rather than appended (same order). Every orthogroup is searched: the original left out eight
+# large orthogroups by a hand-made list, which is removed here (NRS, 2026-10-05); orthogroup size is reported as a flag
+# instead (scripts/validation/orthogroup_size_flag.R). Every maximal clique is enumerated, with no cap. Kept as it was:
+# orthogroups need at least three co-expressolog pairs, and MeanCliqueSum is the mean Max.p.val over the clique's six genes, each gene taking the Max.p.val
 # of its first listed pair in the clique (dplyr::distinct keeps the first row per gene). Cliques with exactly equal
 # MeanCliqueSum are ordered by clique number (the original left their order to row order, so the conserved-core
 # step, which takes the first, could pick either; this reproduces the published pick in 115 of 116 orthogroups).
@@ -23,11 +24,9 @@ out <- if (length(a)) a[1] else "data/ComPlEx/cliques"
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 load("data/ComPlEx/all_expressed_genes.RData")                                     # expr_genes
 
-discard_list <- c("OG0000000", "OG0000001", "OG0000003", "OG0000004", "OG0000006", "OG0000008", "OG0000013", "OG0000014")
 pval <- 0.1
 co_expressologs <- expr_genes %>%
   dplyr::rename(OrthoGroup = OrthologGroup) %>%
-  dplyr::filter(!(OrthoGroup %in% discard_list)) %>%
   dplyr::filter(MaxpVal < pval) %>%
   dplyr::group_by(OrthoGroup) %>%
   dplyr::mutate(OG_size = n()) %>%

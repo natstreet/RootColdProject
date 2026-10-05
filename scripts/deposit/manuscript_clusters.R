@@ -8,7 +8,7 @@
 # Edits in place, leaving every other column byte for byte as it was:
 #   <open>/conserved_core.tsv   adds ManuscriptCluster after Cluster (analysis numbering)
 #   <open>/gene_index.tsv       adds core_cluster_manuscript after core_cluster (analysis numbering; empty for
-#                               genes outside the conserved core)
+#                               genes outside the conserved core); skipped when the directory has no gene_index.tsv
 # Stops if a table already has the column, or if a cluster number has no manuscript counterpart.
 #
 # Usage: Rscript scripts/deposit/manuscript_clusters.R <deposit data/open dir>
@@ -39,4 +39,5 @@ add_after <- function(file, after, new) {
 }
 
 add_after("conserved_core.tsv", "Cluster", "ManuscriptCluster")
-add_after("gene_index.tsv", "core_cluster", "core_cluster_manuscript")
+if (file.exists(file.path(open, "gene_index.tsv"))) add_after("gene_index.tsv", "core_cluster", "core_cluster_manuscript") else
+  cat("gene_index.tsv: not in", open, "- skipped\n")

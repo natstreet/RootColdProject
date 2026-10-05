@@ -35,7 +35,9 @@ SP <- c("col0", "ost0", "aspen", "birch", "spruce", "pine"); TPS <- c("6h", "24h
 ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 
 nb <- rbindlist(lapply(list.files("data/ComPlEx/core_neighbourhoods", "[.]tsv[.]gz$", full.names = TRUE), gzread))
-if (uniqueN(nb[, .(OrthoGroup, species)]) != 132 * 6 || nb[, uniqueN(species), by = .(OrthoGroup)][, any(V1 != 6)])
+CORE <- unique(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS")$OrthoGroup)
+if (!setequal(unique(nb$OrthoGroup), CORE) || uniqueN(nb[, .(OrthoGroup, species)]) != length(CORE) * 6 ||
+    nb[, uniqueN(species), by = .(OrthoGroup)][, any(V1 != 6)])
   stop("core_neighbourhoods: expected all 15 species pairs for every core clique")
 cn <- nb[overlap == TRUE, .(n_pairs = .N), by = .(OrthoGroup, species, member, neighbour)][n_pairs >= MIN_PAIRS]
 cn[, min_pairs := MIN_PAIRS]

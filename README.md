@@ -21,16 +21,14 @@ independent data, and shows conserved promoter cis-motifs.
 
 ## Data
 The scripts read their inputs from a local `data/` directory. Most of it is not held in this
-repository and is obtained as below; the one exception is the small per-species super cluster
-membership used by Figure S3 and Table S2, which is included directly under
-`data/superclusters/membership/`. Obtain the rest as follows:
+repository and is obtained as follows:
 
 - **Processed data** (per-species VST expression matrices, sample metadata, DEG tables,
   transcription-factor lists, ComPlEx outputs and clique definitions, functional annotation,
   the OrthoFinder orthogroup table): SciLifeLab figshare, https://figshare.scilifelab.se/
   (DOI:10.17044/scilifelab.32747586). Download `data.tar.gz` and unpack it; it expands to a
   `data/` directory containing `expression/`, `metadata/`, `DEGs/`, `TranscriptionFactors/`,
-  `annotation/`, `orthologs/`, `ComPlEx/` and `superclusters/`.
+  `annotation/`, `orthologs/` and `ComPlEx/`.
   The `ComPlEx/` step can be re-run either from the cached per-pair orthologue
   tables (`ComPlEx/orthologs-*.RData`) or, from scratch, from `orthologs/orthologs.parquet`
   together with `annotation/gene_aliases_20140331.txt`. *Arabidopsis* annotation is derived
@@ -56,7 +54,7 @@ membership used by Figure S3 and Table S2, which is included directly under
 scripts/ComPlEx/     Comparative co-expression pipeline and conserved-core analysis
 scripts/networks/    Per-species whole-genome co-expression networks of the resource
 scripts/DE/          Differential expression
-scripts/GO/          GO enrichment (Tables S1, S3, S4) and supercluster membership (Table S2)
+scripts/GO/          GO enrichment (Tables S1, S3, S4)
 scripts/annotation/  GO-enrichment backgrounds (expressed genes per species)
 scripts/figures/     Figure producers
 scripts/validation/  Analyses supporting the conserved core
@@ -67,7 +65,7 @@ data/                Not included; download from figshare and unpack here (see D
 `scripts/ComPlEx/` -- the ComPlEx co-expression workflow (Netotea et al. 2014): variance-stabilising
 data preparation (`Network_Generation_setup.R`), the 15 pairwise co-expressolog comparisons
 (`ComPlEx.R`, run once per species pair; for each pair it builds mutual-rank networks from absolute
-Pearson correlation on the genes with an orthologue in that pair and keeps the top 3 % of edges), extraction of cliques and the conserved core (`cliques_step1.R`, `cliques_step2.R`),
+Pearson correlation on the genes with an orthologue in that pair and keeps the top 3 % of edges), extraction of the complete cliques and the conserved core (`complete_cliques.R`, `core_cliques.R`, `clique_clusters.R`),
 and the co-expressolog table (`Genelists.Rmd`). `submit_ComPlEx_cold.sh` submits `ComPlEx.R` through
 `RunR.sh` on a Slurm cluster; adapt both to your environment.
 
@@ -90,7 +88,7 @@ listed with its inputs and outputs in `REPRODUCE.md`.
 2. Compute the 15 pairwise co-expressolog comparisons (`scripts/ComPlEx/ComPlEx.R`), which build
    each pair's mutual-rank networks (top 3 % of edges), and the per-species whole-genome networks of
    the resource (`scripts/networks/export_network_inputs.R`, then `build_coexpression_network.R`).
-3. Extract cliques and the conserved core (`cliques_step1.R`, `cliques_step2.R`).
+3. Extract the complete cliques and the conserved core (`complete_cliques.R`, `core_cliques.R`, `clique_clusters.R`).
 4. Produce the figures, tables and numbers of the article from the deposited data: `REPRODUCE.md` lists every
    producer with its inputs and outputs.
 

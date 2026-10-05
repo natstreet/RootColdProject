@@ -1,7 +1,4 @@
 /data/*
-!/data/superclusters/
-/data/superclusters/*
-!/data/superclusters/membership/
 !/data/expression/
 /data/expression/*
 !/data/expression/med_expression/
@@ -38,5 +35,3 @@ __pycache__/
 !/data/DEGs/per_timepoint_DEG_lists/*/
 /data/DEGs/per_timepoint_DEG_lists/*/*
 !/data/DEGs/per_timepoint_DEG_lists/*/*_p0.05_lfc0.txt
-!/data/superclusters/SC_mapping.csv
-!/data/superclusters/merged_super_clusters_means.RData

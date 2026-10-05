@@ -28,10 +28,7 @@ Some small derived inputs are provided in this repository rather than in the fig
 the median-expression tables (`expression/med_expression/`), the gene→orthogroup maps
 (`ComPlEx/gene2OG/`), the per-species GO backgrounds (`annotation/bg_*.rda`), the Arabidopsis gene
 aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
-(`DEGs/og_summary.RData`, from `scripts/DE/og_summary.R`), the per-timepoint DEG lists (`DEGs/per_timepoint_DEG_lists/`), the
-super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
-`superclusters/merged_super_clusters_means.RData`) and the super-cluster memberships
-(`superclusters/membership/`). Unpacking the deposit alongside them gives a complete `data/` tree.
+(`DEGs/og_summary.RData`, from `scripts/DE/og_summary.R`), and the per-timepoint DEG lists (`DEGs/per_timepoint_DEG_lists/`). Unpacking the deposit alongside them gives a complete `data/` tree.
 
 ## Definitions used throughout
 
@@ -40,8 +37,6 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
   (`DEGs_*.RData`) are the DEGs used throughout the paper.
 - **GO enrichment:** topGO, classic Fisher's exact test, biological process,
   Benjamini–Hochberg adjustment, padj < 0.05 (Tables S1, S3 and S4).
-- **Super clusters:** main-text labels SC_I–SC_IV map to the original super cluster numbers
-  SC_I = 6, SC_II = 2, SC_III = 3, SC_IV = 1 (`superclusters/SC_mapping.csv`).
 
 ## Producer map
 
@@ -50,19 +45,15 @@ super-cluster mapping and mean profiles (`superclusters/SC_mapping.csv`,
 | Genotype colours (every figure that colours by genotype; the deposit explorer) | `scripts/figures/genotype_colours.R` (writes `genotype_colours.json`); `check_genotype_colours.R` fails if a producer defines its own | none |
 | Fig. 1 | `scripts/figures/make_Fig1.R` | `expression/med_expression/`, `ComPlEx/gene2OG/`, `annotation/bg_*`, `DEGs/`; panel values in `results/Figure1_panel_values.tsv` |
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
-| Fig. 3 | `scripts/figures/make_Fig3.R` | `superclusters/membership/`, `expression/`, `superclusters/DEGs_TFs/`, `*/Orthogroups_20240613.tsv`, `superclusters/SC_mapping.csv`, `TranscriptionFactors/` |
 | Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/co_expressologs.RData`; panel b from the Table S3 output (`tables/TableS3_cladeGO_classic_p10.tsv`); Venn regions in `results/Figure4_venn_regions.tsv`, panel b values in `results/Figure4b_values.tsv` |
 | Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S4 output and `scripts/figures/Fig5_captions.tsv` (block captions, by GO ID) |
 | Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/` |
-| Fig. S1 | `scripts/figures/make_FigS1.R` | `superclusters/merged_super_clusters_means.RData`, `superclusters/SC_mapping.csv` |
 | Fig. S2 | `scripts/figures/make_FigS2.R <orthogroup>` | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R` |
-| Fig. S3 | `scripts/figures/make_FigS3.R` | `superclusters/membership/`, `TranscriptionFactors/` |
 | Fig. S4 | `scripts/figures/make_FigS4.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
 | Fig. S5 | `scripts/figures/make_FigS5.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S5_values.tsv` |
 | Fig. S6 | `scripts/figures/make_FigS6.R` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.R` (panel b; **STRING download, see note**) |
 | Fig. S7 | `scripts/figures/make_FigS7.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
 | Table S1 (`Table_S1.xlsx`) | `scripts/GO/make_TableS1.R` (with `go_table_utils.R`) | `DEGs/og_summary.RData`, `DEGs/DEGs_col0.RData`, `*/Orthogroups_20240613.tsv`, `annotation/Athal_go_ids.tsv`, `annotation/bg_col0_ATC.rda` |
-| Table S2 (`Table_S2.xlsx`) | `scripts/GO/make_TableS2.R` | `superclusters/membership/` |
 | Table S3 (`Table_S3.xlsx`) | `scripts/GO/make_TableS3.R` (with `go_table_utils.R`) | `ComPlEx/co_expressologs.RData`, `annotation/{go_ids,bg_*}`, `DEGs/DEGs_*.RData` |
 | Table S4 (`Table_S4.xlsx`) | `scripts/GO/make_TableS4.R` (with `go_table_utils.R`) | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
 | DEGs (Fig. 1 / Fig. 2) | `scripts/DE/differential_expression.R` | `dds/dds_{col0_soil,ost0_soil,Pt_new,Bp_new,Pa,Ps}.rda` |
@@ -94,20 +85,20 @@ expression data, and are needed only to rebuild those objects:
 | `ComPlEx/PairwiseComparisons/` (the 15 pairwise co-expressolog comparisons) | `scripts/ComPlEx/ComPlEx.R`, one run per species pair, submitted with `scripts/ComPlEx/submit_ComPlEx_cold.sh` (which uses `RunR.sh`) |
 | `ComPlEx/co_expressologs.RData`, `ComPlEx/all_expressed_genes.RData` | `scripts/ComPlEx/Genelists.Rmd` |
 | `ComPlEx/ones_and_zeros_all.RData` (per orthogroup and comparison, whether ComPlEx tested a gene pair) | `scripts/ComPlEx/ones_and_zeros.R` |
-| `ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS` (maximal cliques per orthogroup) | `scripts/ComPlEx/cliques_step1.R` |
-| conserved-clique selection | `scripts/ComPlEx/cliques_step2.R` |
+| `ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS`, `conserved_genes_COMPLETE_wider.RDS` (every complete clique of every orthogroup; no orthogroup excluded, no cap) | `scripts/ComPlEx/complete_cliques.R` |
 | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS` (the conserved core: one complete clique per orthogroup) | `scripts/ComPlEx/core_cliques.R` |
 | `ComPlEx/cliques/clique_HMcluster_list.rda` (the four clique clusters, analysis numbering) | `scripts/ComPlEx/clique_clusters.R` (with `clique_matrix.R`, shared with `make_Fig5.R`) |
 | `DEGs/og_summary.RData` (per orthogroup, the genotypes with a gene and with a DEG) | `scripts/DE/og_summary.R` |
 
-Run them in this order: `ones_and_zeros.R` before `cliques_step1.R` and `cliques_step2.R`; `core_cliques.R`, then
+Run them in this order: `ones_and_zeros.R` and `complete_cliques.R`; `core_cliques.R`, then
 `clique_clusters.R`, before `make_TableS4.R`, `make_Fig5.R`, `make_Fig6.R` and `make_core_clusters.R`; `og_summary.R`
 before `make_Fig1.R`, `make_TableS1.R` and `common_orthogroups.R`. Each writes its object to the path above, or to
 the path given as its first argument. `scripts/tests/test_rebuilt_objects.R` runs the four into a temporary folder
 and checks that each result is identical to the copy under `data/`.
 
-`ComPlEx/cliques/conserved_genes_COMPLETE_wider.RDS`, the complete cliques from which `core_cliques.R` selects, has
-no producer script in this repository; it comes from the clique enumeration.
+The size of each core orthogroup (expressed genes), its number of complete cliques, and the probability that an
+orthogroup of its size is conserved in all 15 comparisons come from `scripts/validation/orthogroup_size_flag.R`
+(`results/orthogroup_size_flag.tsv`, with the fitted model in `results/orthogroup_size_model.tsv`).
 
 The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each
 species — every gene with nonzero VST expression across the cold time-course samples.
@@ -134,11 +125,3 @@ each DEG through the same gene→orthogroup maps and using the per-orthogroup `o
 (categories: DEG across all six species / in some / species-specific / singletons) — and reproduces
 the published counts exactly.
 
-The twelve cross-species super clusters drawn on Figure S1 are the groups obtained by hierarchical
-clustering (Ward's method, on 1 − Pearson r) of the 36 per-species cluster-mean profiles, with the
-tree cut into twelve; they are numbered 1–12 in dendrogram order, the numbering of the membership
-files, and `superclusters/SC_mapping.csv` names the four discussed in the main text. Figure S3 and Table S2 draw on the
-per-species, per-ecotype gene membership of each super cluster in `superclusters/membership/`
-(the differentially expressed genes assigned to a super cluster in a species, i.e. those whose
-cold-response profile correlates with the super cluster mean at r ≥ 0.7); this membership is
-included in the repository and is also provided as Supplementary Table S2.
