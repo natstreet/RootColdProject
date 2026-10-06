@@ -20,7 +20,7 @@
 #          <prefix>_tf_cliques.tsv      for each transcription-factor clique of the current core (tf_cliques.R, at least
 #                                       5 of 6 members predicted TFs): its consistent cliques, how many keep at least
 #                                       5 TF members, and the members of the best such clique (lowest MeanCliqueSum)
-#          <prefix>_summary.tsv         counts
+#          <prefix>_summary.tsv         counts (including cliques with a member that has no HOG at this node)
 # Usage (repository root): Rscript scripts/analysis/hog_clique_consistency.R <HOG table> <output prefix>
 suppressPackageStartupMessages(library(data.table))
 a <- commandArgs(trailingOnly = TRUE)
@@ -40,8 +40,14 @@ sp_all <- intersect(setdiff(names(og), "OG"), names(h))
 ca <- og[, c(list(OG = OG), lapply(.SD, ngenes)), .SDcols = sp_all]
 cb <- h[, lapply(.SD, function(v) sum(ngenes(v))), by = OG, .SDcols = sp_all]
 m <- merge(ca, cb, by = "OG", suffixes = c(".og", ".hog"))
-same <- all(sapply(sp_all, function(s) all(m[[paste0(s, ".og")]] == m[[paste0(s, ".hog")]])))
-if (!same || nrow(cb) > nrow(ca)) stop("the HOG table is not from the same OrthoFinder run as Orthogroups_20240613.tsv")
+# At the root (N0) every orthogroup gene is in a HOG, so the counts must be equal. At a deeper node OrthoFinder leaves
+# out the genes it cannot place below the root, so the HOG genes must be a subset: never more per orthogroup and
+# species, and no orthogroup id unknown to the table.
+equal <- all(sapply(sp_all, function(s) all(m[[paste0(s, ".og")]] == m[[paste0(s, ".hog")]])))
+subset <- all(sapply(sp_all, function(s) all(m[[paste0(s, ".hog")]] <= m[[paste0(s, ".og")]]))) && all(cb$OG %in% ca$OG)
+root <- grepl("(^|[^0-9])N0([^0-9]|$)", basename(hog_file))
+if (!(if (root) equal else subset)) stop("the HOG table is not from the same OrthoFinder run as Orthogroups_20240613.tsv")
+cover <- sapply(sp_all, function(s) sum(m[[paste0(s, ".hog")]]) / sum(m[[paste0(s, ".og")]]))
 
 pac <- fread(cmd = "gzip -dc data/annotation/Athaliana_167_TAIR10.annotation_info.txt.gz", select = 1:2,
              col.names = c("pac", "locus"), colClasses = "character")
@@ -61,10 +67,14 @@ e <- long[gene %in% expr]
 w <- as.data.table(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_wider.RDS"))
 hm <- setNames(e$HOG, e$gene)
 H <- as.data.table(lapply(G, function(x) unname(hm[w[[x]]]))); setnames(H, G)
+# A member with no HOG at this node cannot be shown to be orthologous to the others here, so its clique counts as not
+# HOG-consistent; such cliques are counted and reported, not hidden (at N0 every member has a HOG).
 unmapped <- H[, Reduce(`|`, lapply(.SD, is.na))]
-if (any(unmapped)) stop(sum(unmapped), " complete cliques have a member with no HOG")
 w[, one_hog := H[, col0 == ost0 & col0 == aspen & col0 == birch & col0 == spruce & col0 == pine]]
-per <- w[, .(complete_cliques = .N, hog_consistent_cliques = sum(one_hog)), by = .(orthogroup = OrthoGroup)]
+w[is.na(one_hog), one_hog := FALSE]
+w[, member_without_hog := unmapped]
+per <- w[, .(complete_cliques = .N, hog_consistent_cliques = sum(one_hog), cliques_with_unplaced_member = sum(member_without_hog)),
+         by = .(orthogroup = OrthoGroup)]
 hs <- e[, .(genes = .N), by = .(OG, HOG)][, .(expressed_genes = sum(genes), hogs = .N, largest_hog_genes = max(genes)),
                                          by = .(orthogroup = OG)]
 per <- merge(per, hs, by = "orthogroup", all.x = TRUE)
@@ -74,8 +84,8 @@ ch <- w[one_hog == TRUE, .(consistent_hogs = uniqueN(hog), largest_consistent_ho
         by = .(orthogroup = OrthoGroup)]
 per <- merge(per, ch, by = "orthogroup", all.x = TRUE)
 per[is.na(consistent_hogs), consistent_hogs := 0L]
-setcolorder(per, c("orthogroup", "expressed_genes", "complete_cliques", "hog_consistent_cliques", "hogs", "largest_hog_genes",
-                   "consistent_hogs", "largest_consistent_hog_genes"))
+setcolorder(per, c("orthogroup", "expressed_genes", "complete_cliques", "hog_consistent_cliques", "cliques_with_unplaced_member",
+                   "hogs", "largest_hog_genes", "consistent_hogs", "largest_consistent_hog_genes"))
 setorder(per, -expressed_genes, orthogroup)
 fwrite(per, paste0(prefix, "_per_orthogroup.tsv"), sep = "\t")
 
@@ -99,9 +109,12 @@ tfr <- rbindlist(lapply(seq_len(nrow(tfc)), function(k) {
 }))
 fwrite(tfr, paste0(prefix, "_tf_cliques.tsv"), sep = "\t")
 print(tfr[, .(tf, orthogroup, complete_cliques, hog_consistent_cliques, consistent_with_5_tf)], row.names = FALSE)
-summ <- data.table(quantity = c("hog_table", "expressed_genes_with_a_hog", "expressed_genes", "orthogroups_with_complete_clique",
-                                "orthogroups_with_hog_consistent_clique", "complete_cliques", "hog_consistent_cliques"),
-                   value = c(basename(hog_file), sum(expr %in% long$gene), length(expr), nrow(per),
-                             sum(per$hog_consistent_cliques > 0), nrow(w), sum(w$one_hog)))
+summ <- data.table(quantity = c("hog_table", "same_run_check", "expressed_genes_with_a_hog", "expressed_genes", "orthogroups_with_complete_clique",
+                                "orthogroups_with_hog_consistent_clique", "complete_cliques", "hog_consistent_cliques",
+                                "cliques_with_unplaced_member"),
+                   value = c(basename(hog_file), if (root) "counts equal (root)" else
+                               sprintf("subset; study species' orthogroup genes kept: %s", paste(sprintf("%s %.2f%%",
+                                 names(SP), 100 * cover[names(SP)]), collapse = ", ")), sum(expr %in% long$gene), length(expr), nrow(per),
+                             sum(per$hog_consistent_cliques > 0), nrow(w), sum(w$one_hog), sum(w$member_without_hog)))
 fwrite(summ, paste0(prefix, "_summary.tsv"), sep = "\t")
 print(summ, row.names = FALSE)
