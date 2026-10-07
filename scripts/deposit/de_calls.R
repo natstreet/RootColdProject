@@ -8,7 +8,7 @@
 #
 # Edits in place (every other column unchanged):
 #   <open>/differential_expression.tsv  adds padj_lfc0 (null of no change) and is_deg, after padj
-#   <open>/gene_index.tsv               responds_to_cold = DEG at any timepoint; n_timepoints_significant = number of
+#   <open>/gene_index.tsv (if present)  responds_to_cold = DEG at any timepoint; n_timepoints_significant = number of
 #                                       timepoints at which it is a DEG; adds padj_lfc0_6h ... padj_lfc0_10d after padj_10d
 # Stops unless: every (species, gene, timepoint) row is matched, the fold changes agree with the deposited ones, and
 # each genotype's DEG union equals the published set in data/DEGs/DEGs_<species>.RData.
@@ -48,8 +48,10 @@ i <- match("padj", names(de))
 de <- cbind(de[, 1:i], padj_lfc0 = res$padj[m], is_deg = res$deg[m], de[, -(1:i), drop = FALSE])
 wr(de, p); cat("differential_expression.tsv: padj_lfc0 and is_deg added,", nrow(de), "rows\n")
 
-## gene_index.tsv
-p <- file.path(open, "gene_index.tsv"); gi <- rd(p)
+## gene_index.tsv (skipped when the directory has none: gene_index.R then builds it from these calls)
+p <- file.path(open, "gene_index.tsv")
+if (!file.exists(p)) { cat("gene_index.tsv: not in", open, "- skipped\n"); quit(save = "no") }
+gi <- rd(p)
 if ("padj_lfc0_6h" %in% names(gi)) stop("gene_index.tsv already has padj_lfc0 columns")
 for (tp in TPS) {
   r <- res[res$timepoint == tp, ]; k <- match(paste(gi$species, gi$gene), paste(r$species, r$gene))
