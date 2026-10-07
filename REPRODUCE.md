@@ -75,6 +75,7 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 | Deposit ENA runs per sample (`open/samples.tsv`) | `scripts/deposit/sample_runs_columns.R` | `results/sample_ena_runs.tsv` |
 | Deposit open tables from the analysis objects (`open/{co_expressologs,conserved_core,pairwise_comparisons,orthogroup_annotation,gene_orthogroup_map,conserved_vs_specific_genes,differential_expression,transcription_factors}.tsv`) | `scripts/deposit/export_open_formats.R` (also shipped in the deposit) | `ComPlEx/`, `DEGs/`, `TranscriptionFactors/`, `orthologs/orthologs.parquet` |
 | Deposit size rule and orthology class (`open/conserved_core.tsv` last columns; `open/conserved_core_flagged.tsv`) | `scripts/deposit/core_size_columns.R` | `results/orthogroup_size_rule.tsv`, `results/orthology_class.tsv`, `ComPlEx/cliques/conserved_genes_COMPLETE_filtered_flagged.RDS` |
+| Deposit flag of core members without network edges (`members_without_network_edges` in `open/conserved_core.tsv` and `open/conserved_core_flagged.tsv`) | `scripts/deposit/core_network_flag.R` | `networks/network_<sp>_hrr100.tsv`, `_neg_hrr100.tsv` |
 | Deposit sample table, design columns (`open/samples.tsv`) | `scripts/deposit/samples_table.R` | the expression-matrix column names |
 | Deposit core network for Cytoscape (`open/conserved_core_network.sif`) | `scripts/deposit/core_network_sif.R` | `open/co_expressologs.tsv`, `open/conserved_core.tsv` |
 | Deposit gene index (`open/gene_index.tsv`) | `scripts/deposit/gene_index.R` | the other open tables |
