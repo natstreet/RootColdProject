@@ -21,11 +21,13 @@
 #                                       5 of 6 members predicted TFs): its consistent cliques, how many keep at least
 #                                       5 TF members, and the members of the best such clique (lowest MeanCliqueSum)
 #          <prefix>_summary.tsv         counts (including cliques with a member that has no HOG at this node)
-# Usage (repository root): Rscript scripts/analysis/hog_clique_consistency.R <HOG table> <output prefix>
+# Usage (repository root): Rscript scripts/analysis/hog_clique_consistency.R <HOG table> <output prefix> [raw Orthogroups.tsv]
+# Below the root, OrthoFinder can place genes that the root-level table left unplaced (and Orthogroups_20240613.tsv
+# lists only placed genes); given OrthoFinder's raw Orthogroups/Orthogroups.tsv, the subset check uses it instead.
 suppressPackageStartupMessages(library(data.table))
 a <- commandArgs(trailingOnly = TRUE)
-if (length(a) < 2) stop("usage: hog_clique_consistency.R <HOG table> <output prefix>")
-hog_file <- a[1]; prefix <- a[2]
+if (length(a) < 2) stop("usage: hog_clique_consistency.R <HOG table> <output prefix> [raw Orthogroups.tsv]")
+hog_file <- a[1]; prefix <- a[2]; raw_og <- if (length(a) > 2) a[3] else NA
 rdz <- function(f) if (grepl("[.]gz$", f)) fread(cmd = paste("gzip -dc", shQuote(f))) else fread(f)
 SP <- c(Arabidopsis_thaliana = "arabidopsis", Betula_pendula = "birch", Picea_abies = "spruce",
         Pinus_sylvestris = "pine", Populus_tremula = "aspen")
@@ -46,6 +48,14 @@ m <- merge(ca, cb, by = "OG", suffixes = c(".og", ".hog"))
 equal <- all(sapply(sp_all, function(s) all(m[[paste0(s, ".og")]] == m[[paste0(s, ".hog")]])))
 subset <- all(sapply(sp_all, function(s) all(m[[paste0(s, ".hog")]] <= m[[paste0(s, ".og")]]))) && all(cb$OG %in% ca$OG)
 root <- grepl("(^|[^0-9])N0([^0-9]|$)", basename(hog_file))
+if (!root && !is.na(raw_og)) {                            # gene-level subset of OrthoFinder's raw orthogroups
+  ro <- fread(raw_og, colClasses = "character"); setnames(ro, 1, "OG")
+  sp_raw <- intersect(setdiff(names(ro), "OG"), names(h))
+  gl <- function(d, id) rbindlist(lapply(sp_raw, function(s) { g <- strsplit(as.character(d[[s]]), ", ", fixed = TRUE)
+    data.table(OG = rep(d[[id]], lengths(g)), gene = unlist(g)) }))[!is.na(gene) & gene != ""]
+  rl <- gl(ro, "OG"); hl <- gl(h, "OG")
+  subset <- nrow(hl[!rl, on = .(OG, gene)]) == 0
+}
 if (!(if (root) equal else subset)) stop("the HOG table is not from the same OrthoFinder run as Orthogroups_20240613.tsv")
 cover <- sapply(sp_all, function(s) sum(m[[paste0(s, ".hog")]]) / sum(m[[paste0(s, ".og")]]))
 
@@ -113,7 +123,7 @@ summ <- data.table(quantity = c("hog_table", "same_run_check", "expressed_genes_
                                 "orthogroups_with_hog_consistent_clique", "complete_cliques", "hog_consistent_cliques",
                                 "cliques_with_unplaced_member"),
                    value = c(basename(hog_file), if (root) "counts equal (root)" else
-                               sprintf("subset; study species' orthogroup genes kept: %s", paste(sprintf("%s %.2f%%",
+                               sprintf("subset%s; study species' orthogroup genes kept: %s", if (!is.na(raw_og)) " of the raw orthogroups" else "", paste(sprintf("%s %.2f%%",
                                  names(SP), 100 * cover[names(SP)]), collapse = ", ")), sum(expr %in% long$gene), length(expr), nrow(per),
                              sum(per$hog_consistent_cliques > 0), nrow(w), sum(w$one_hog), sum(w$member_without_hog)))
 fwrite(summ, paste0(prefix, "_summary.tsv"), sep = "\t")
