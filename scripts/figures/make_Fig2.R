@@ -12,7 +12,9 @@
 #   data/DEGs/per_timepoint_DEG_lists/<species>/DEGs_<sp>_C_vs_<tp>_p0.05_lfc0.txt
 #   data/DEGs/log2FoldChange_<code>.RData   (per-timepoint log2FC matrices; for direction)
 # Output:
-#   figures/Figure2.png
+#   figures/Figure2.png, figures/Figure2.pdf
+#   figures/Fig2_perTimepoint_lfc0.csv  the plotted counts (species, timepoint, up, down); the deposit's
+#                                       data/figure_source_values/ copy
 #
 # Usage:  Rscript scripts/figures/make_Fig2.R
 
@@ -46,6 +48,10 @@ for (lab in names(sp)) {
   }
 }
 d <- do.call(rbind, rows)
+dir.create("figures", showWarnings = FALSE)
+w <- reshape(d, idvar = c("species", "tp"), timevar = "Direction", direction = "wide")
+write.csv(data.frame(species = sub(" roots$", "", w$species), timepoint = w$tp, up = w$Count.Up, down = w$Count.Down),
+          "figures/Fig2_perTimepoint_lfc0.csv", row.names = FALSE, quote = FALSE)
 d$species   <- factor(d$species, levels = names(sp))
 d$tp        <- factor(d$tp, levels = tps)
 d$Direction <- factor(d$Direction, levels = c("Up", "Down"))
