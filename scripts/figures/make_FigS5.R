@@ -1,46 +1,86 @@
-#!/usr/bin/env Rscript
-# make_FigS5.R — Figure S5: UpSet plot of orthogroup overlaps between the co-expressolog sets of
-# the pairwise species comparisons (MaxpVal < 0.1). Horizontal bars give the number of
-# co-expressolog orthogroups per comparison; the matrix/vertical bars give the intersections.
-#
-# Run from a directory containing the unpacked figshare deposit `data/`.
-# Inputs: data/ComPlEx/co_expressologs.RData
-# Output: Figure_S5.pdf, Figure_S5_values.tsv (per comparison: co-expressolog orthogroups, and those found in
-#         that comparison only; and the orthogroups found in every comparison)
-# Usage:  Rscript scripts/figures/make_FigS5.R
+## Figure S5 — expression profiles of co-expressologs (P<0.1) directly linked to the
+## Arabidopsis CBFs (CBF1 AT4G25490, CBF2 AT4G25470, CBF3 AT4G25480), plotted as median VST.
+## Reproducible from the deposited data: data/ComPlEx/co_expressologs.RData + data/expression/.
+## Run from the deposit root (the dir that contains data/).
+suppressPackageStartupMessages({
+  library(dplyr); library(tidyr); library(tibble); library(stringr)
+  library(ggplot2); library(ggrepel)
+})
 
-suppressPackageStartupMessages({ library(UpSetR); library(dplyr) })
-P <- 0.1
-ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
-co <- ld("data/ComPlEx/co_expressologs.RData")
+load("data/ComPlEx/co_expressologs.RData")            # -> co_expressologs (P<0.1 set)
+prefix <- c(col0="Col", ost0="Ost", aspen="Pt", birch="Bp", spruce="Pa", pine="Ps")
+rd <- function(sp) read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", sp),
+                              header=TRUE, sep="\t", check.names=FALSE)
+E <- lapply(names(prefix), rd); names(E) <- names(prefix)
 
-# species display names
-disp <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "Aspen", birch = "Birch", spruce = "Spruce", pine = "Pine")
-co$Species1 <- disp[co$Species1]; co$Species2 <- disp[co$Species2]
+## timepoint coding: 01=Control, 02=6h, 03=24h, 04=3d, 05=10d
+tp_levels <- c("Control","6h","24h","3d","10d")
+tp_map    <- c("01"="Control","02"="6h","03"="24h","04"="3d","05"="10d")
 
-co$pair <- apply(cbind(co$Species1, co$Species2), 1, function(v) paste(sort(v), collapse = "_"))
-d <- co %>% filter(MaxpVal < P) %>% distinct(OrthologGroup, pair)
-M <- (as.data.frame.matrix(table(d$OrthologGroup, d$pair) > 0)) * 1
-allp <- colnames(M)
+## per-code sample counts per species (Control/6h/24h/3d/10d)
+cat("== per-code sample counts (Control/6h/24h/3d/10d) ==\n")
+for(sp in names(E)){
+  cols <- setdiff(colnames(E[[sp]]), "Genes")
+  code <- sub(sprintf("^%s[0-9]+\\.", prefix[sp]), "", cols)
+  cnt <- table(factor(tp_map[code], levels=tp_levels))
+  cat(sprintf("  %-7s %s  (total %d)\n", sp, paste(cnt, collapse="/"), sum(cnt)))
+}
 
-teal <- "#2A9BAF"; orange <- "#C46E00"
-q <- list(
-  list(query = intersects, params = list("Col-0_Ost-0"),  color = teal,   active = TRUE),
-  list(query = intersects, params = list("Pine_Spruce"),  color = teal,   active = TRUE),
-  list(query = intersects, params = list("Aspen_Birch"),  color = teal,   active = TRUE),
-  list(query = intersects, params = as.list(allp),        color = orange, active = TRUE))
+## co-expressologs directly linked to the col0 CBFs (verbatim hits() logic)
+hits <- function(cbf){
+  h <- co_expressologs %>% filter(GeneSpecies1==cbf, grepl("col0", Species1, ignore.case=TRUE)) %>%
+         dplyr::select(GeneSpecies2, Species2)
+  r <- co_expressologs %>% filter(GeneSpecies2==cbf, grepl("col0", Species1, ignore.case=TRUE),
+                                  grepl("ost0", Species2, ignore.case=TRUE)) %>%
+         dplyr::select(GeneSpecies1, Species1) %>%
+         dplyr::rename(GeneSpecies2=GeneSpecies1, Species2=Species1)
+  rbind(h, r)
+}
+CBFs <- c("AT4G25490","AT4G25470","AT4G25480")
+HIT  <- bind_rows(lapply(CBFs, hits)) %>% distinct()
 
-pdf("Figure_S5.pdf", width = 11, height = 8, onefile = FALSE)   # one page (UpSetR opens a blank one otherwise)
-upset(M, sets = allp, nintersects = 6, order.by = "freq",
-      mainbar.y.label = "Orthogroup overlap of co-expressologs",
-      sets.x.label = "Co-expressolog orthogroups", text.scale = 1.4,
-      main.bar.color = "grey35", sets.bar.color = "grey50", queries = q)
-dev.off()
-only <- rowSums(M) == 1
-vals <- rbind(data.frame(comparison = allp, quantity = "co-expressolog orthogroups", value = as.integer(colSums(M))),
-              data.frame(comparison = allp, quantity = "co-expressolog orthogroups in this comparison only",
-                         value = as.integer(colSums(M[only, , drop = FALSE]))),
-              data.frame(comparison = "all", quantity = "co-expressolog orthogroups in every comparison",
-                         value = sum(rowSums(M) == length(allp))))
-write.table(vals, "Figure_S5_values.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
-cat("Figure_S5.pdf written;", length(allp), "pairwise comparisons\n")
+## build median-VST-per-timepoint long table for one species panel
+panel <- function(sp){
+  genes <- HIT %>% filter(Species2==sp) %>% pull(GeneSpecies2) %>% unique()
+  df <- E[[sp]] %>% filter(Genes %in% genes)
+  if(nrow(df)==0) return(NULL)
+  long <- df %>% pivot_longer(-Genes, names_to="sample", values_to="expr") %>%
+    mutate(code = sub(sprintf("^%s[0-9]+\\.", prefix[sp]), "", sample),
+           Timepoint = factor(tp_map[code], levels=tp_levels)) %>%
+    filter(!is.na(Timepoint)) %>%
+    group_by(Genes, Timepoint) %>% summarise(med = median(expr, na.rm=TRUE), .groups="drop") %>%
+    mutate(Species = sp)
+  long
+}
+species_disp <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
+combined <- bind_rows(lapply(names(prefix), panel))
+combined$Species <- factor(species_disp[combined$Species],
+                           levels=c("Col-0","Ost-0","Aspen","Birch","Spruce","Pine"))
+## label CBFs
+combined <- combined %>% mutate(gene = case_when(
+  Genes=="AT4G25490" ~ "AT4G25490_CBF1", Genes=="AT4G25470" ~ "AT4G25470_CBF2",
+  Genes=="AT4G25480" ~ "AT4G25480_CBF3", TRUE ~ Genes))
+
+cat("\n== genes plotted per species panel ==\n")
+print(combined %>% distinct(Species, gene) %>% count(Species, name="n_genes"))
+
+lab <- combined %>% group_by(Species, gene) %>%
+  filter(as.numeric(Timepoint)==max(as.numeric(Timepoint))) %>% slice_tail(n=1) %>% ungroup()
+
+p <- ggplot(combined, aes(Timepoint, med, group=gene, color=gene)) +
+  geom_line(linewidth=0.9) +
+  geom_text_repel(data=lab, aes(label=gene), hjust=0, size=3.0, direction="y", seed=1,
+                  segment.color="grey70", box.padding=0.2, max.overlaps=Inf,
+                  show.legend=FALSE, xlim=c(5.2, NA)) +
+  facet_wrap(~Species, scales="free_y", ncol=3) +
+  scale_x_discrete(expand=expansion(add=c(0.1, 3.2))) +
+  coord_cartesian(clip="off") + theme_minimal() +
+  theme(panel.grid.minor=element_blank(), strip.text=element_text(size=14),
+        legend.position="none", plot.margin=margin(t=5,r=45,b=5,l=5),
+        panel.spacing=unit(1.4,"lines"), plot.title=element_text(size=15,hjust=0.5),
+        axis.title=element_text(size=13), axis.text=element_text(size=11)) +
+  labs(x="Cold time course", y="Expression (median VST)")
+
+ggsave("Figure_S5.pdf", p, width=13.5, height=9, bg = "white")
+ggsave("Figure_S5_preview.png", p, width=13.5, height=9, dpi=120, bg="white")
+cat("\nDONE — wrote Figure_S5.pdf + Figure_S5_preview.png\n")

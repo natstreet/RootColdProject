@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# string_by_cluster.R — the Fig. S6b STRING test broken down by clique cluster, and repeated without the cluster that
+# string_by_cluster.R — the Fig. S4b STRING test broken down by clique cluster, and repeated without the cluster that
 # carries the most within-cluster pairs, to ask whether cluster coherence in STRING holds beyond that cluster.
 #
 # Same data and settings as string_external_validation.R: STRING v12 A. thaliana co-expression channel, subscore
@@ -11,7 +11,7 @@
 #
 # Run from a directory holding data/ (the deposit plus this repository's data/), core_clusters.tsv (from
 # make_core_clusters.R) and the two STRING files; manuscript cluster numbers are read from MAP in
-# scripts/GO/make_TableS4.R.
+# scripts/GO/make_TableS3.R.
 # Outputs: string_by_cluster.tsv (tests 1 and 2), string_within_cluster_pairs.tsv (3)
 # Usage:   Rscript scripts/validation/string_by_cluster.R
 

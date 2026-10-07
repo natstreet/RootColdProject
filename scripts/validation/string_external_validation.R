@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 # string_external_validation.R — independent test that the conserved-core clusters are coherent co-regulated modules
-# (Fig. S6b).
+# (Fig. S4b).
 #
-# Tests whether the Arabidopsis members of the conserved core (the clique clusters of Fig. 5) are more co-expressed
+# Tests whether the Arabidopsis members of the conserved core (the clique clusters of Fig. 4) are more co-expressed
 # within clusters than between clusters in STRING v12 (an external A. thaliana co-expression compendium). This
 # validates the cluster structure as co-regulation, complementing the permutation test that establishes the
 # cross-species conservation itself.
@@ -16,7 +16,7 @@
 # conserved-core Arabidopsis genes (with cluster labels), count co-expression links that fall within a cluster; compare
 # with N_PERM permutations that re-assign the same genes to clusters at random (cluster sizes kept). STRING lists each
 # pair in both directions; each gene pair is counted once.
-# Outputs: string_null.csv (column null), string_obs.txt — the inputs of make_FigS6.R
+# Outputs: string_null.csv (column null), string_obs.txt — the inputs of make_FigS4.R
 # Usage:   Rscript scripts/validation/string_external_validation.R
 
 suppressMessages(library(data.table))

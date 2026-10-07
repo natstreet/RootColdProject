@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# worked_example_table.R — the Fig. S2 worked example in numbers: per genotype, the clique member, its Methods DEG call
+# worked_example_table.R — the Fig. S1 worked example in numbers: per genotype, the clique member, its Methods DEG call
 # and direction (tables/core_response_patterns.tsv), its number of conserved neighbours, how many are positively and
 # negatively correlated with it (tables/core_conserved_neighbours.tsv.gz), and the predicted transcription factors
 # among them (data/TranscriptionFactors/TF_<species>.RData; Ost-0 uses the Arabidopsis list), with their families.

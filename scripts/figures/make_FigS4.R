@@ -1,56 +1,56 @@
 #!/usr/bin/env Rscript
-# make_FigS4.R — Figure S4: for each species, the number of genes classed as co-expressologs and
-# as differentially expressed (DE) co-expressologs, split by whether the partner gene in the other
-# species is itself differentially expressed. Co-expressologs are taken at MaxpVal < 0.1.
+# make_FigS4.R — Figure S4: robustness of the conserved co-expression core.
+#   (a) Conservation permutation test: the observed number of orthogroups with a co-expressolog in all 15 comparisons
+#       against the label-permutation null.
+#   (b) Cluster coherence in independent data (STRING): observed within-cluster co-expressed gene pairs among the core
+#       Arabidopsis genes against the label-permuted null.
 #
-# Run from a directory containing the unpacked figshare deposit `data/`.
-# Inputs: data/ComPlEx/co_expressologs.RData, data/DEGs/DEGs_<species>.RData
-# Output: Figure_S4.pdf, Figure_S4.png
+# This step only plots. The null distributions and observed values are produced by:
+#   panel (a): scripts/validation/conservation_label_permutation.R -> conservation_null_null.csv,
+#              conservation_null_obs.txt   (from the figshare deposit)
+#   panel (b): scripts/validation/make_core_clusters.R, then string_external_validation.R -> string_null.csv,
+#              string_obs.txt   (needs the STRING v12 A. thaliana download)
+# Run those first, then run this from the same directory.
+# Output: Figure_S4.pdf, Figure_S4.png (300 dpi)
 # Usage:  Rscript scripts/figures/make_FigS4.R
 
-suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2) })
-P <- 0.1
-specs <- c("col0","ost0","aspen","birch","spruce","pine")
-labmap <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
+suppressPackageStartupMessages({ library(ggplot2); library(patchwork) })
 
-ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
-co <- ld("data/ComPlEx/co_expressologs.RData")
-DEG <- lapply(specs, function(s) as.character(ld(sprintf("data/DEGs/DEGs_%s.RData", s)))); names(DEG) <- specs
+nullA <- read.csv("conservation_null_null.csv")$null_core_size; obsA <- as.integer(readLines("conservation_null_obs.txt"))
+nullB <- read.csv("string_null.csv")$null;                     obsB <- as.integer(readLines("string_obs.txt"))
+pA <- (sum(nullA >= obsA) + 1) / (length(nullA) + 1)
+pB <- (sum(nullB >= obsB) + 1) / (length(nullB) + 1)
+foldB <- obsB / max(mean(nullB), 1e-9)
+RED <- "#d62728"
 
-# each co-expressolog edge contributes two (gene, species, partner) rows
-L <- bind_rows(
-  transmute(co, gene = GeneSpecies1, sp = Species1, pg = GeneSpecies2, psp = Species2, MaxpVal),
-  transmute(co, gene = GeneSpecies2, sp = Species2, pg = GeneSpecies1, psp = Species1, MaxpVal)) %>%
-  filter(MaxpVal < P)
+th <- theme_classic(base_size = 11) +
+  theme(plot.title = element_text(size = 12, hjust = 0.5), axis.text = element_text(colour = "black"),
+        plot.tag = element_text(face = "bold", size = 14))
 
-cat_counts <- function(S){
-  d <- L %>% filter(sp == S)
-  d$isDE   <- d$gene %in% DEG[[S]]
-  d$partDE <- mapply(function(pg, psp) pg %in% DEG[[psp]], d$pg, d$psp)
-  g <- d %>% group_by(gene) %>% summarise(isDE = any(isDE), partDE = any(partDE), .groups = "drop")
-  c(coexpr = sum(!g$isDE & !g$partDE), coexpr_DEpart = sum(!g$isDE & g$partDE),
-    DEcoexpr = sum(g$isDE & !g$partDE), DEcoexpr_DEpart = sum(g$isDE & g$partDE))
-}
-m <- as.data.frame(t(sapply(specs, cat_counts))); m$species <- labmap[rownames(m)]
+A <- ggplot(data.frame(x = nullA), aes(x)) +
+  geom_histogram(binwidth = 1, boundary = -0.5, fill = "#add8e6") +
+  geom_vline(xintercept = obsA, colour = RED, linewidth = 1.2) +
+  annotate("segment", x = obsA * 0.6, y = length(nullA) * 0.6, xend = obsA - 1, yend = 5, colour = RED,
+           arrow = arrow(length = unit(6, "pt"))) +
+  annotate("text", x = obsA * 0.55, y = length(nullA) * 0.62, label = sprintf("observed = %d", obsA), colour = RED,
+           size = 4.6, hjust = 0.5, vjust = -0.3) +
+  coord_cartesian(xlim = c(-3, obsA + 6)) + scale_x_continuous(breaks = seq(0, obsA + 6, 50)) + scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+  labs(x = "Orthogroups conserved across all 15\ncomparisons (permuted null)", y = "Permutations", tag = "a",
+       title = sprintf("Conservation permutation test (null max = %d; P = %.4g)", max(nullA), pA)) + th
 
-catlev <- c("DEcoexpr_DEpart","DEcoexpr","coexpr_DEpart","coexpr")
-catlab <- c(DEcoexpr_DEpart = "DE co-expressologs with DE co-expressolog in other species",
-            DEcoexpr        = "DE co-expressologs",
-            coexpr_DEpart   = "co-expressologs with DE co-expressolog in other species",
-            coexpr          = "co-expressologs")
-long <- m %>% pivot_longer(all_of(catlev), names_to = "cat", values_to = "n")
-long$species <- factor(long$species, levels = unname(labmap))
-long$cat <- factor(long$cat, levels = catlev)
+hB <- hist(nullB, breaks = seq(min(nullB), max(nullB), length.out = 31), plot = FALSE)   # 30 equal-width bins
+B <- ggplot(data.frame(x = nullB), aes(x)) +
+  geom_histogram(breaks = hB$breaks, fill = "#90ee90", colour = "white") +
+  geom_vline(xintercept = obsB, colour = RED, linewidth = 1.2) +
+  annotate("segment", x = obsB * 0.64, y = max(hB$counts) * 0.6, xend = obsB - 2, yend = max(hB$counts) * 0.02,
+           colour = RED, arrow = arrow(length = unit(6, "pt"))) +
+  annotate("text", x = obsB * 0.60, y = max(hB$counts) * 0.62, label = sprintf("observed = %d", obsB), colour = RED,
+           size = 4.6, hjust = 0.5, vjust = -0.3) +
+  coord_cartesian(xlim = c(min(nullB) - 20, obsB + 30)) + scale_x_continuous(breaks = seq(0, obsB + 30, 50)) + scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+  labs(x = "Within-cluster co-expressed gene pairs\nin STRING (clusters randomised)", y = "Permutations", tag = "b",
+       title = sprintf("Cluster coherence in independent data (%.1f-fold; P = %.4g)", foldB, pB)) + th
 
-cols <- c(DEcoexpr_DEpart = "#8A5FC0", DEcoexpr = "#C9A8DD", coexpr_DEpart = "#C8963C", coexpr = "#E0C089")
-p <- ggplot(long, aes(species, n, fill = cat)) +
-  geom_col(width = 0.8) +
-  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.1, colour = "grey15") +
-  scale_fill_manual(values = cols, labels = catlab, name = "Category",
-                    breaks = c("coexpr","coexpr_DEpart","DEcoexpr","DEcoexpr_DEpart")) +
-  labs(x = "Species", y = "Number of genes") +
-  theme_minimal(base_size = 13) +
-  theme(legend.title = element_text(face = "bold"), panel.grid.major.x = element_blank())
-ggsave("Figure_S4.pdf", p, width = 11, height = 6.5, bg = "white")
-ggsave("Figure_S4.png", p, width = 11, height = 6.5, dpi = 150, bg = "white")
-print(m[, c("species", catlev)], row.names = FALSE)
+fig <- A | B
+ggsave("Figure_S4.pdf", fig, width = 12.5, height = 4.6, bg = "white")
+ggsave("Figure_S4.png", fig, width = 12.5, height = 4.6, dpi = 300, bg = "white")
+cat(sprintf("wrote Figure_S4.pdf/.png ; panel a P=%.4g, panel b P=%.4g, fold=%.1f\n", pA, pB, foldB))

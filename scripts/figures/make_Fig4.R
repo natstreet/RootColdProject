@@ -1,87 +1,125 @@
 #!/usr/bin/env Rscript
-# make_Fig4.R — Figure 4: conserved co-expression across the three species groups.
-#   (A) Triple Venn of the co-expressolog orthogroups shared within each lineage pair —
-#       Arabidopsis (col0|ost0), broadleaf trees (aspen|birch) and conifers (pine|spruce),
-#       at MaxpVal < 0.1. Areas are computed from the data, not hard-coded.
-#   (B) GO (biological-process) enrichment of three Venn regions (the ten terms with the smallest P): the shared
-#       core ABC and the Arabidopsis–broadleaf AB set (Arabidopsis genes), and the broadleaf–conifer BC set (aspen
-#       genes). The terms and P-values are those of Table S3 (topGO classic Fisher's exact test), read from the table
-#       make_TableS3.R writes, so the panel and the table agree.
+# make_Fig4.R — Figure 4: heatmap of the conserved-core cliques across species.
+# For each clique, the per-gene z-scored MEDIAN expression of its member in each species over the
+# cold time course (Control, 6h, 24h, 3d, 10d). Rows are clustered (Euclidean distance, Ward.D2)
+# and cut into four clusters, as in the original analysis (E. van Zalen). The figure shows one block per
+# manuscript cluster, in the order the dendrogram places them, joined by one dendrogram; colours are capped at
+# |z| = 1.5.
 #
-# Run from a directory containing the unpacked figshare deposit `data/`, after scripts/GO/make_TableS3.R.
-# Inputs: data/ComPlEx/co_expressologs.RData, tables/TableS3_cladeGO_classic_p10.tsv
-# Output: Figure4.pdf, Figure4.png (300 dpi), Figure4_venn_regions.tsv (set totals, the seven exclusive Venn regions,
-#         and the share of the Arabidopsis and broadleaf sets that is conifer-conserved), Figure4b_values.tsv (the
-#         plotted terms: panel, GO ID, term, genes, classic Fisher P, -log10 P, padj)
-# Usage:  Rscript scripts/figures/make_Fig4.R
+# Each block is captioned with GO terms listed by ID per manuscript cluster in a caption table (default
+# scripts/figures/Fig4_captions.tsv; fig4_caption_candidates.R proposes terms). Term names are read from the
+# Table S3 output, and the script stops unless each term is significant in that cluster, so run
+# scripts/GO/make_TableS3.R first.
+#
+# Inputs:
+#   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS  the core cliques, one gene per species
+#   data/ComPlEx/cliques/clique_HMcluster_list.rda              clique -> analysis cluster (clique_clusters.R)
+#   scripts/ComPlEx/clique_matrix.R                            the z-scored matrix and the row clustering
+#   data/expression/med_expression/<sp>_med.txt.gz             per-timepoint median expression
+#   data/ComPlEx/cliques/manuscript_cluster_map.tsv            manuscript -> analysis cluster map
+#   tables/TableS3_cliqueClusterGO_classic.tsv                 GO terms per manuscript cluster
+#   scripts/figures/Fig4_captions.tsv (or the first argument)   GO IDs captioning each cluster (cluster, GO.ID)
+# Output: Figure4.pdf, Figure4.png
+# Usage:  Rscript scripts/figures/make_Fig4.R [caption table]
 
-suppressPackageStartupMessages({ library(VennDiagram); library(ggplot2); library(dplyr)
-  library(cowplot); library(ggplotify); library(grid); library(futile.logger); library(GO.db) })
-go_terms <- AnnotationDbi::Term(GO.db::GOTERM)      # GO id -> full term name (for un-truncated labels)
-flog.threshold(ERROR)                               # silence VennDiagram's log file chatter
-ld <- function(f){ e<-new.env(); load(f,envir=e); get(ls(e)[1],envir=e) }
+suppressPackageStartupMessages({ library(dplyr); library(readr); library(pheatmap); library(cowplot)
+  library(grid); library(ggplot2) })
 
-# ── panel A: Venn areas from the data ────────────────────────────────────────
-co <- ld("data/ComPlEx/co_expressologs.RData")
-co$pairkey <- apply(cbind(co$Species1, co$Species2), 1, function(v) paste(sort(v), collapse="|"))
-ogset <- function(k, p=0.1) unique(co$OrthologGroup[co$pairkey==k & co$MaxpVal<p])
-A <- ogset("col0|ost0"); B <- ogset("aspen|birch"); C <- ogset("pine|spruce")
-vg <- draw.triple.venn(area1=length(A), area2=length(B), area3=length(C),
-  n12=length(intersect(A,B)), n13=length(intersect(A,C)), n23=length(intersect(B,C)),
-  n123=length(Reduce(intersect,list(A,B,C))),
-  category=c("Arabidopsis","Broadleaf","Conifer"), fill=c("#7FBF9E","#F4C08A","#B9B9CE"),
-  alpha=rep(0.55,3), lwd=1.4, col=rep("grey30",3), cex=rep(1.1,7), fontface="bold", fontfamily="sans",
-  cat.col=c("#2E8B57","#D2691E","#6A5ACD"), cat.cex=rep(1.2,3), cat.fontface="bold", cat.fontfamily="sans",
-  cat.pos=c(-20,20,180), cat.dist=c(0.06,0.06,0.045), ind=FALSE)
-grid.newpage(); PA <- as.ggplot(grid::gTree(children=vg))
+source("scripts/ComPlEx/clique_matrix.R")                                   # the matrix, shared with clique_clusters.R
+sp <- clique_sp; labs <- clique_labs; conds <- clique_conds
+ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 
-# the Venn regions and the conifer-conserved shares quoted in the Results
-only <- function(x, y, z) length(setdiff(intersect(x, y), z))
-ABC <- length(Reduce(intersect, list(A, B, C)))
-reg <- data.frame(
-  quantity = c("A total", "B total", "C total", "A only", "B only", "C only", "AB only", "AC only", "BC only", "ABC"),
-  value = c(length(A), length(B), length(C),
-            length(setdiff(A, union(B, C))), length(setdiff(B, union(A, C))), length(setdiff(C, union(A, B))),
-            only(A, B, C), only(A, C, B), only(B, C, A), ABC))
-v <- setNames(reg$value, reg$quantity)
-shareA <- (v[["AC only"]] + ABC) / v[["A total"]]; shareB <- (v[["BC only"]] + ABC) / v[["B total"]]
-reg <- rbind(reg, data.frame(
-  quantity = c("AC only + ABC", "BC only + ABC", "conifer-conserved share of A (AC only + ABC) / A total",
-               "conifer-conserved share of B (BC only + ABC) / B total", "share of B / share of A"),
-  value = c(v[["AC only"]] + ABC, v[["BC only"]] + ABC, round(shareA, 4), round(shareB, 4), round(shareB / shareA, 4))))
-write.table(reg, "Figure4_venn_regions.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+## ---- z-scored median expression, one row per clique ----
+M  <- clique_matrix()
+cat("Cliques in heatmap:", nrow(M), "\n")
 
-# ── panel B: GO dot-plots from the Table S3 results (classic Fisher) ─────────
-go <- read.delim("tables/TableS3_cladeGO_classic_p10.tsv", stringsAsFactors = FALSE, quote = "")
-go$scores <- -log10(go$classicFisher)
-pan <- c("ABC (Arabidopsis)"="Col0 ABC", "AB (Arabidopsis)"="Col0 AB", "BC (aspen)"="Aspen BC")
-plotted <- list()
-subplot <- function(key, title, n=10, col){
-  d <- go[paste(go$species, go$set) == key, , drop=FALSE]
-  stopifnot(nrow(d) > 0)
-  d <- d[order(d$classicFisher, d$GO.ID), , drop=FALSE][seq_len(min(n, nrow(d))), ]
-  plotted[[title]] <<- data.frame(panel = title, GO.ID = d$GO.ID, Term = d$Term, Significant = d$Significant,
-                                  classicFisher = d$classicFisher, minus_log10_P = d$scores, padj = d$padj)
-  full <- go_terms[d$GO.ID]                                    # full names by GO id
-  d$Term <- ifelse(is.na(full), as.character(d$Term), unname(full))
-  d$Term <- vapply(d$Term, function(s) paste(strwrap(s, width=50), collapse="\n"), character(1))
-  d$Term <- factor(d$Term, levels=rev(d$Term))
-  ggplot(d, aes(scores, Term)) +
-    geom_segment(aes(x=0, xend=scores, yend=Term), colour="grey80", linewidth=0.4) +
-    geom_point(aes(size=as.integer(Significant)), colour=col) +
-    scale_size_continuous(range=c(2,6.5), name="Genes") +
-    scale_x_continuous(expand=expansion(mult=c(0.01,0.08))) +
-    labs(x=expression(-log[10]~italic(P)), y=NULL, title=title) +
-    theme_bw(base_size=10) +
-    theme(plot.title=element_text(face="bold", size=10), panel.grid.major.y=element_line(colour="grey93"))
+## ---- row clustering; check it against the deposited cluster assignment ----
+tr  <- clique_tree(M)
+ord <- tr$order
+cut <- cutree(tr, k = 4)
+hm  <- ld(Sys.glob("data/*/cliques/clique_HMcluster_list.rda")[1])            # ID, Cluster (analysis)
+ana <- hm$Cluster[match(rownames(M), hm$ID)]
+tab <- table(cut, ana)                                                        # must be a one-to-one relabelling
+if (anyNA(ana) || any(rowSums(tab > 0) != 1) || any(colSums(tab > 0) != 1))
+  stop("row clustering differs from clique_HMcluster_list.rda")
+mm <- read.delim("data/ComPlEx/cliques/manuscript_cluster_map.tsv")               # scripts/ComPlEx/manuscript_cluster_map.R
+MAP <- setNames(mm$analysis_cluster, mm$manuscript_cluster)                                # manuscript -> analysis
+man <- as.integer(names(MAP))[match(ana, MAP)]                               # manuscript cluster per row
+mo  <- man[ord]                                                               # manuscript cluster, dendrogram order
+runs <- rle(mo)
+if (anyDuplicated(runs$values)) stop("a cluster is not contiguous in dendrogram order")
+blk_cl <- runs$values                                                         # one block per cluster, top to bottom
+bo  <- rep(seq_along(runs$values), runs$lengths)
+nb  <- runs$lengths; NB <- length(nb)
+cat("Blocks (cluster: size):", paste(blk_cl, nb, sep = ": ", collapse = ", "), "\n")
+
+## ---- block captions: GO IDs -> names from Table S3, each required to be significant there ----
+s3  <- read.delim("tables/TableS3_cliqueClusterGO_classic.tsv", check.names = FALSE)
+cargs <- commandArgs(trailingOnly = TRUE)
+cap <- read.delim(if (length(cargs)) cargs[1] else "scripts/figures/Fig4_captions.tsv", stringsAsFactors = FALSE)
+go_label <- sapply(blk_cl, function(mc) {
+  ids <- cap$GO.ID[cap$cluster == mc]
+  hit <- s3[s3[["Cluster (manuscript)"]] == mc & s3$GO.ID %in% ids, ]
+  miss <- setdiff(ids, hit$GO.ID)
+  if (length(miss)) stop("caption table: not significant in Table S3 for cluster ", mc, ": ", paste(miss, collapse = ", "))
+  nm <- hit$Term[match(ids, hit$GO.ID)]
+  paste(paste0(toupper(substr(nm, 1, 1)), substring(nm, 2)), collapse = "\n") })
+tag <- paste("Cluster", blk_cl)
+
+## ---- drawing ----
+pal  <- colorRampPalette(c("#313695", "#f8f8f8", "#A50026"))(100)
+brks <- seq(-1.5, 1.5, length.out = 101)
+Mo   <- pmin(pmax(M[ord, ], -1.5), 1.5)                                      # rows in dendrogram order
+spl  <- split(seq_len(nrow(Mo)), bo)
+mkblock <- function(rows) pheatmap(Mo[rows, , drop = FALSE], cluster_rows = FALSE, cluster_cols = FALSE,
+  gaps_col = c(5, 10, 15, 20, 25), color = pal, breaks = brks, legend = FALSE,
+  show_rownames = FALSE, show_colnames = FALSE, border_color = NA, silent = TRUE)$gtable
+gb <- lapply(spl, mkblock)
+leg <- pheatmap(Mo, cluster_rows = FALSE, cluster_cols = FALSE, color = pal, breaks = brks,
+  legend = TRUE, show_rownames = FALSE, show_colnames = FALSE, border_color = NA, silent = TRUE)$gtable
+leg <- leg$grobs[[which(leg$layout$name == "legend")]]
+
+CW <- 9.5; CH <- 10.6
+BX <- 0.085; BW <- 0.805; Wreg <- BW * CW                                    # matrix-block region on canvas
+L  <- gb[[1]]$layout; mi <- which(L$name == "matrix")
+absin <- sapply(seq_along(gb[[1]]$widths), function(k) convertWidth(gb[[1]]$widths[[k]], "in", valueOnly = TRUE))
+absin[L$l[mi]:L$r[mi]] <- 0
+mx0 <- sum(absin[seq_len(L$l[mi] - 1)]) / Wreg; mx1 <- mx0 + (Wreg - sum(absin)) / Wreg
+mL <- BX + BW * mx0; mR <- BX + BW * mx1
+xm <- function(fr) BX + BW * (mx0 + (mx1 - mx0) * fr)
+gf <- 0.24; tot_u <- 30 + 5 * gf
+tp_cen <- sapply(1:30, function(c){ g <- sum(c > c(5, 10, 15, 20, 25)); (c - 0.5 + g * gf) / tot_u })
+sp_cen <- sapply(1:6,  function(k) (((k - 1) * 5 + (k - 1) * gf) + 2.5) / tot_u)
+
+hH <- 0.045; hG <- 0.058; hT <- 0.052; hS <- 0.030; topm <- 0.008; botm <- 0.006
+avail <- 1 - topm - hH - (NB - 1) * hG - hT - hS - botm
+bh <- avail * nb / sum(nb)
+y_top <- (1 - topm - hH) - c(0, cumsum(bh[-NB] + hG))
+y_bot <- y_top - bh
+y_cap <- c((1 - topm + y_top[1]) / 2, y_bot[-NB] - hG / 2)
+y_tp <- y_bot[NB] - hT / 2; y_sp <- y_bot[NB] - hT - hS / 2
+
+## one dendrogram across the blocks: leaf position -> canvas y, gaps built in
+yj <- unlist(lapply(seq_len(NB), function(b) y_top[b] - (seq_len(nb[b]) - 0.5) / nb[b] * bh[b]))
+ymap <- approxfun(seq_along(yj), yj, rule = 2)
+lp <- match(seq_len(nrow(M)), tr$order); nodex <- numeric(nrow(tr$merge)); H <- tr$height
+gx <- function(k) if (k < 0) lp[-k] else nodex[k]; gy <- function(k) if (k < 0) 0 else H[k]
+seg <- NULL
+for (i in seq_len(nrow(tr$merge))) {
+  a <- tr$merge[i, 1]; b <- tr$merge[i, 2]; xa <- gx(a); xb <- gx(b); h <- H[i]; nodex[i] <- (xa + xb) / 2
+  seg <- rbind(seg, cbind(x = c(xa, xb, xa), y = c(gy(a), gy(b), h), xe = c(xa, xb, xb), ye = c(h, h, h)))
 }
-cols <- c("#2E8B57","#B8860B","#6A5ACD")
-Bs <- Map(function(k,t,c) subplot(k,t,col=c), pan, names(pan), cols)
-PB <- plot_grid(plotlist=Bs, ncol=1, align="v")
+xdR <- mL - 0.006; xdL <- 0.006; xd <- function(h) xdR - (h / max(H)) * (xdR - xdL)
+segdf <- data.frame(x = xd(seg[, "y"]), y = ymap(seg[, "x"]), xend = xd(seg[, "ye"]), yend = ymap(seg[, "xe"]))
 
-fig <- plot_grid(PA, PB, ncol=1, labels=c("(a)","(b)"), label_size=16, rel_heights=c(0.85,1.7))
-ggsave("Figure4.pdf", fig, width=8, height=12, bg = "white")
-ggsave("Figure4.png", fig, width=8, height=12, dpi=300, bg = "white")
-write.table(do.call(rbind, plotted), "Figure4b_values.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
-cat(sprintf("Venn areas: A=%d B=%d C=%d  ABC=%d\n", length(A), length(B), length(C),
-            length(Reduce(intersect,list(A,B,C)))))
+p <- ggdraw() + theme(plot.background = element_rect(fill = "white", colour = NA))
+for (b in seq_len(NB)) p <- p + draw_grob(gb[[b]], x = BX, y = y_bot[b], width = BW, height = bh[b]) +
+  draw_label(go_label[b], x = mL + 0.004, y = y_cap[b], hjust = 0, vjust = 0.5, size = 11, fontface = "bold") +
+  draw_label(tag[b], x = mR - 0.004, y = y_cap[b], hjust = 1, vjust = 0.5, size = 11.5, fontface = "bold", colour = "#8C8C8C")
+p <- p + draw_grob(leg, x = 0.905, y = 0.34, width = 0.09, height = 0.34) +
+  geom_segment(data = segdf, aes(x = x, y = y, xend = xend, yend = yend), linewidth = 0.22, colour = "grey35")
+for (c in 1:30) p <- p + draw_label(rep(conds, 6)[c], x = xm(tp_cen[c]), y = y_tp, angle = 90, hjust = 1, vjust = 0.5, size = 8)
+for (k in 1:6)  p <- p + draw_label(labs[[k]], x = xm(sp_cen[k]), y = y_sp, hjust = 0.5, vjust = 0.5, size = 10, fontface = "bold")
+
+pdf("Figure4.pdf", width = CW, height = CH, encoding = "ISOLatin1"); print(p); invisible(dev.off())
+ggsave("Figure4.png", p, width = CW, height = CH, dpi = 300, bg = "white")

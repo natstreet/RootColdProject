@@ -3,7 +3,7 @@
 # that carry the analysis numbering.
 #
 # The analysis (clique_HMcluster_list.rda) numbers the four clusters differently from the manuscript. The mapping is
-# MAP in scripts/GO/make_TableS4.R, which is also what make_Fig5.R reads; it is read from there, not restated.
+# MAP in scripts/GO/make_TableS3.R, which is also what make_Fig4.R reads; it is read from there, not restated.
 #
 # Edits in place, leaving every other column byte for byte as it was:
 #   <open>/conserved_core.tsv   adds ManuscriptCluster after Cluster (analysis numbering)

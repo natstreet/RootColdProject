@@ -2,7 +2,7 @@
 # manuscript_cluster_map.R — the manuscript number of each analysis cluster of the conserved core: each manuscript
 # cluster (as published, scripts/ComPlEx/reference/published_manuscript_clusters.tsv) is matched to the analysis
 # cluster (clique_HMcluster_list.rda) sharing most of its orthogroups; the match must be one-to-one.
-# Read by make_TableS4.R, make_Fig5.R, manuscript_clusters.R, cluster_profiles.R, string_by_cluster.R.
+# Read by make_TableS3.R, make_Fig4.R, manuscript_clusters.R, cluster_profiles.R, string_by_cluster.R.
 # Usage (repository root): Rscript scripts/ComPlEx/manuscript_cluster_map.R
 # Output: data/ComPlEx/cliques/manuscript_cluster_map.tsv (manuscript_cluster, analysis_cluster, shared, analysis_size)
 ref <- read.delim("scripts/ComPlEx/reference/published_manuscript_clusters.tsv")

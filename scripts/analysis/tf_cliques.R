@@ -1,4 +1,4 @@
-# tf_cliques.R — the transcription-factor cliques of the conserved core (Figure 6, tf_clique_directions.R): the
+# tf_cliques.R — the transcription-factor cliques of the conserved core (Figure 5, tf_clique_directions.R): the
 # core cliques in which at least MIN_TF of the six members are predicted transcription factors
 # (data/TranscriptionFactors/TF_<species>.RData; Ost-0 uses the Arabidopsis list). Five of six is the rule that
 # reproduces the published selection (one bZIP61 clique member, in birch, is not in the birch prediction).

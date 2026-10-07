@@ -54,7 +54,7 @@ repository and is obtained as follows:
 scripts/ComPlEx/     Comparative co-expression pipeline and conserved-core analysis
 scripts/networks/    Per-species whole-genome co-expression networks of the resource
 scripts/DE/          Differential expression
-scripts/GO/          GO enrichment (Tables S1, S3, S4)
+scripts/GO/          GO enrichment (Tables S1, S2, S3)
 scripts/annotation/  GO-enrichment backgrounds (expressed genes per species)
 scripts/figures/     Figure producers
 scripts/validation/  Analyses supporting the conserved core
@@ -78,7 +78,7 @@ the highest reciprocal rank is at most 100. The method and its R commands are de
 separate from the pairwise ComPlEx networks.
 
 `scripts/validation/` -- the tests and counts behind the conserved-core results: the label-permutation and
-family-size-aware nulls, the STRING cluster-coherence test (Fig. S6) and the counts quoted in the Results. Each is
+family-size-aware nulls, the STRING cluster-coherence test (Fig. S4) and the counts quoted in the Results. Each is
 listed with its inputs and outputs in `REPRODUCE.md`.
 
 ## Reproducing the analysis

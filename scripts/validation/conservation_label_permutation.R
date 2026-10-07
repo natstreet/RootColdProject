@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # conservation_label_permutation.R — permutation test for the conserved co-expression core
-# (Fig. S6a).
+# (Fig. S4a).
 #
 # Observed statistic: the number of orthogroups that carry a co-expressolog (MaxpVal < 0.1) in all
 # 15 pairwise species comparisons. Null: in each permutation, each comparison's set of co-expressolog

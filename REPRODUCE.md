@@ -16,7 +16,7 @@ supplementary tables from the processed data deposited on figshare
 2. Run any producer from the repository root, e.g.:
 
    ```
-   Rscript scripts/GO/make_TableS4.R
+   Rscript scripts/GO/make_TableS3.R
    ```
 
 Outputs are written to the working directory. R package requirements: `DESeq2`,
@@ -36,7 +36,7 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
   lists (`…_p0.05_lfc0.txt`, provided in this repository) and the deposited per-species union sets
   (`DEGs_*.RData`) are the DEGs used throughout the paper.
 - **GO enrichment:** topGO, classic Fisher's exact test, biological process,
-  Benjamini–Hochberg adjustment, padj < 0.05 (Tables S1, S3 and S4).
+  Benjamini–Hochberg adjustment, padj < 0.05 (Tables S1, S2 and S3).
 
 ## Producer map
 
@@ -45,17 +45,17 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 | Genotype colours (every figure that colours by genotype; the deposit explorer) | `scripts/figures/genotype_colours.R` (writes `genotype_colours.json`); `check_genotype_colours.R` fails if a producer defines its own | none |
 | Fig. 1 | `scripts/figures/make_Fig1.R` | `expression/med_expression/`, `ComPlEx/gene2OG/`, `annotation/bg_*`, `DEGs/`; panel values in `results/Figure1_panel_values.tsv` |
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
-| Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/co_expressologs.RData`; panel b from the Table S3 output (`tables/TableS3_cladeGO_classic_p10.tsv`); Venn regions in `results/Figure4_venn_regions.tsv`, panel b values in `results/Figure4b_values.tsv` |
-| Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S4 output and `Fig5_captions_approved.tsv` (block captions by GO ID), written by `scripts/figures/fig5_captions_from_terms.R` from the approved terms in `scripts/figures/Fig5_terms_approved.tsv` (D008) |
-| Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/`; `results/orthogroup_size_flag.tsv` and `results/orthology_class.tsv` (panel labels) |
-| Fig. S2 | `scripts/figures/make_FigS2.R <orthogroup>` | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R`; `results/orthology_class.tsv`. The worked example is NOP56, OG0004969 (D044) |
-| Fig. S4 | `scripts/figures/make_FigS4.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
-| Fig. S5 | `scripts/figures/make_FigS5.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S5_values.tsv` |
-| Fig. S6 | `scripts/figures/make_FigS6.R` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.R` (panel b; **STRING download, see note**) |
-| Fig. S7 | `scripts/figures/make_FigS7.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
+| Fig. 3 | `scripts/figures/make_Fig3.R` | `ComPlEx/co_expressologs.RData`; panel b from the Table S2 output (`tables/TableS2_cladeGO_classic_p10.tsv`); Venn regions in `results/Figure3_venn_regions.tsv`, panel b values in `results/Figure3b_values.tsv` |
+| Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S3 output and `Fig4_captions_approved.tsv` (block captions by GO ID), written by `scripts/figures/fig4_captions_from_terms.R` from the approved terms in `scripts/figures/Fig4_terms_approved.tsv` (D008) |
+| Fig. 5 | `scripts/figures/make_Fig5.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/`; `results/orthogroup_size_flag.tsv` and `results/orthology_class.tsv` (panel labels) |
+| Fig. S1 | `scripts/figures/make_FigS1.R <orthogroup>` | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R`; `results/orthology_class.tsv`. The worked example is NOP56, OG0004969 (D044) |
+| Fig. S2 | `scripts/figures/make_FigS2.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
+| Fig. S3 | `scripts/figures/make_FigS3.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S3_values.tsv` |
+| Fig. S4 | `scripts/figures/make_FigS4.R` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.R` (panel b; **STRING download, see note**) |
+| Fig. S5 | `scripts/figures/make_FigS5.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
 | Table S1 (`Table_S1.xlsx`) | `scripts/GO/make_TableS1.R` (with `go_table_utils.R`) | `DEGs/og_summary.RData`, `DEGs/DEGs_col0.RData`, `*/Orthogroups_20240613.tsv`, `annotation/Athal_go_ids.tsv`, `annotation/bg_col0_ATC.rda` |
-| Table S3 (`Table_S3.xlsx`) | `scripts/GO/make_TableS3.R` (with `go_table_utils.R`) | `ComPlEx/co_expressologs.RData`, `annotation/{go_ids,bg_*}`, `DEGs/DEGs_*.RData` |
-| Table S4 (`Table_S4.xlsx`) | `scripts/GO/make_TableS4.R` (with `go_table_utils.R`) | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
+| Table S2 (`Table_S2.xlsx`) | `scripts/GO/make_TableS2.R` (with `go_table_utils.R`) | `ComPlEx/co_expressologs.RData`, `annotation/{go_ids,bg_*}`, `DEGs/DEGs_*.RData` |
+| Table S3 (`Table_S3.xlsx`) | `scripts/GO/make_TableS3.R` (with `go_table_utils.R`) | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
 | DEGs (Fig. 1 / Fig. 2) | `scripts/DE/differential_expression.R` | `dds/dds_{col0_soil,ost0_soil,Pt_new,Bp_new,Pa,Ps}.rda` |
 | GO backgrounds | `scripts/annotation/make_backgrounds.R` | `expression/<sp>_root_cold_stress_expression.txt` |
 | Species networks | `scripts/networks/export_network_inputs.R`, then `scripts/networks/build_coexpression_network.R` per species (method: `docs/coexpression_networks.md`) | `dds/` |
@@ -69,8 +69,8 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 | Family-size-aware null for the conserved core (Results) | `scripts/validation/conservation_sizeaware_null.R` | `open/co_expressologs.tsv` — **deposit v4 or later**, `*/Orthogroups_20240613.tsv`; outputs `results/conservation_sizeaware_{null.csv,summary.tsv}` |
 | ENA runs, sequencing depth and platform per sample (Methods; deposit `samples.tsv`) | `scripts/deposit/sample_ena_runs.R` | `open/samples.tsv`, `quantification/{sample_name_map,lane_map}.tsv` — **deposit v4 or later**; ENA portal API (network); outputs `results/{sample_ena_runs,ena_run_metadata,sequencing_depth}.tsv` |
 | Per-gene DE results (fold change, padj against no change, DEG call) | `scripts/DE/differential_expression.R` | as for DEGs; output `DE/de_results.tsv` |
-| Deposit GO tables (`open/go_enrichment_*.tsv`) | `scripts/deposit/export_go_tables.R` | the Table S1, S3 and S4 workbooks |
-| Deposit manuscript cluster numbers (`open/conserved_core.tsv`, `open/gene_index.tsv`) | `scripts/deposit/manuscript_clusters.R` | `MAP` in `scripts/GO/make_TableS4.R` |
+| Deposit GO tables (`open/go_enrichment_*.tsv`) | `scripts/deposit/export_go_tables.R` | the Table S1, S2 and S3 workbooks |
+| Deposit manuscript cluster numbers (`open/conserved_core.tsv`, `open/gene_index.tsv`) | `scripts/deposit/manuscript_clusters.R` | `MAP` in `scripts/GO/make_TableS3.R` |
 | Deposit DEG calls (`open/differential_expression.tsv` `padj_lfc0`, `is_deg`; `open/gene_index.tsv` cold-response columns) | `scripts/deposit/de_calls.R` | `DE/de_results.tsv`, `DEGs/DEGs_*.RData` |
 | Deposit ENA runs per sample (`open/samples.tsv`) | `scripts/deposit/sample_runs_columns.R` | `results/sample_ena_runs.tsv` |
 | Deposit open tables from the analysis objects (`open/{co_expressologs,conserved_core,pairwise_comparisons,orthogroup_annotation,gene_orthogroup_map,conserved_vs_specific_genes,differential_expression,transcription_factors}.tsv`) | `scripts/deposit/export_open_formats.R` (also shipped in the deposit) | `ComPlEx/`, `DEGs/`, `TranscriptionFactors/`, `orthologs/orthologs.parquet` |
@@ -95,11 +95,11 @@ expression data, and are needed only to rebuild those objects:
 | `ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS`, `conserved_genes_COMPLETE_wider.RDS` (every complete clique of every orthogroup; no orthogroup excluded, no cap) | `scripts/ComPlEx/complete_cliques.R` |
 | `results/orthogroup_size_rule.tsv`, `_model.tsv` (the even-odds size rule, D026: per eligible orthogroup, expressed genes, complete cliques, the fitted probability of a complete clique given size, and whether it is counted as conserved) | `scripts/ComPlEx/size_rule.R` (optional second argument: a fixed size threshold, for the sensitivity runs) |
 | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS` (the conserved core: one complete clique per orthogroup counted by the size rule) and `conserved_genes_COMPLETE_filtered_flagged.RDS` (the orthogroups the rule does not count) | `scripts/ComPlEx/core_cliques.R <out> results/orthogroup_size_rule.tsv` |
-| `ComPlEx/cliques/clique_HMcluster_list.rda` (the four clique clusters, analysis numbering) | `scripts/ComPlEx/clique_clusters.R` (with `clique_matrix.R`, shared with `make_Fig5.R`) |
+| `ComPlEx/cliques/clique_HMcluster_list.rda` (the four clique clusters, analysis numbering) | `scripts/ComPlEx/clique_clusters.R` (with `clique_matrix.R`, shared with `make_Fig4.R`) |
 | `DEGs/og_summary.RData` (per orthogroup, the genotypes with a gene and with a DEG) | `scripts/DE/og_summary.R` |
 
 Run them in this order: `ones_and_zeros.R` and `complete_cliques.R`; `size_rule.R`; `core_cliques.R`, then
-`clique_clusters.R`, before `make_TableS4.R`, `make_Fig5.R`, `make_Fig6.R` and `make_core_clusters.R`; `og_summary.R`
+`clique_clusters.R`, before `make_TableS3.R`, `make_Fig4.R`, `make_Fig5.R` and `make_core_clusters.R`; `og_summary.R`
 before `make_Fig1.R`, `make_TableS1.R` and `common_orthogroups.R`. Each writes its object to the path above, or to
 the path given as its first argument. `scripts/tests/test_rebuilt_objects.R` runs the four into a temporary folder
 and checks that each result is identical to the copy under `data/`.
@@ -126,10 +126,10 @@ species — every gene with nonzero VST expression across the cold time-course s
 `scripts/annotation/make_backgrounds.R` regenerates them from the deposited expression tables.
 
 
-Figure S6, panel a, comes from `scripts/validation/conservation_label_permutation.R` (deposit only).
+Figure S4, panel a, comes from `scripts/validation/conservation_label_permutation.R` (deposit only).
 Panel b needs the STRING v12 *A. thaliana* download (`3702.protein.links.detailed.v12.0.txt.gz` and
 `3702.protein.aliases.v12.0.txt.gz` from string-db.org): run `make_core_clusters.R`, then
-`string_external_validation.R`, then `make_FigS6.R` plots both. `string_by_cluster.R` (same inputs)
+`string_external_validation.R`, then `make_FigS4.R` plots both. `string_by_cluster.R` (same inputs)
 breaks the panel b test down by cluster and repeats it without manuscript cluster 2
 (`results/string_by_cluster.tsv`, `results/string_within_cluster_pairs.tsv`).
 

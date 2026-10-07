@@ -1,80 +1,98 @@
 #!/usr/bin/env Rscript
-# make_TableS3.R — Table S3: GO (biological-process) enrichment of the co-expressolog clade
-# sets (the Venn regions of Fig. 4A: ABC / AB / BC / A / B), per species, restricted to that
-# species' DEGs.
+# make_TableS3.R — Table S3: GO (biological-process) enrichment of the conserved-core clique
+# clusters, per species (manuscript cluster numbering).
 #
-# Enrichment: topGO, **classic** Fisher's exact test, BH adjustment, padj < 0.05.
-# Co-expressolog threshold: bidirectional adjusted P < THRESHOLD (default 0.1, the value used in
-# the paper). Pass a different value as the first argument.
+# The 116 conserved-core cliques (one gene per species, every pair a co-expressolog) are grouped
+# into four clusters by the co-expression heatmap (Fig. 4). For each cluster x species the member
+# genes are tested for GO enrichment.
+#
+# Enrichment: topGO, **classic** Fisher's exact test, BH adjustment, padj < 0.05 (consistent with
+# Table S1). Default nodeSize (1). scores = -log10(p). The Table_S3.xlsx p-value column
+# (classicFisher) holds these classic-Fisher values; regenerated numbers match the deposited table
+# to within GO.db-version rounding (e.g. GO:0008283 4.2e-10, 59 terms).
+#
+# Cluster numbering: the heatmap/analysis clusters are renumbered for the manuscript
+#   manuscript 1 = analysis 2 (cell division) ; 2 = analysis 4 (metabolic) ;
+#   3 = analysis 3 (signalling)               ; 4 = analysis 1 (16 cell-wall OGs, no enrichment).
+# Cluster 4 yields no enriched terms and so does not appear in the table.
 #
 # Inputs (unpack data.tar.gz from figshare into ./data):
-#   data/ComPlEx/co_expressologs.RData
-#   data/annotation/{Athal_go_ids.tsv, Potra02_go_ids.tsv, Picab02_go_ids.csv}
-#   data/annotation/{bg_col0_ATC.rda, bg_ost0_ATO.rda, bg_aspen_PT.rda, bg_spruce_PA.rda}
-#   data/DEGs/DEGs_{col0,ost0,aspen,spruce}.RData
+#   data/ComPlEx/cliques/clique_HMcluster_list.rda              (clique_cluster_order: cliqueID -> analysis cluster)
+#   data/ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS   (per-species gene of each clique)
+#   data/annotation/{Athal,Potra02,Betpen,Picab02,Pinsy01}_go_ids.{tsv,csv}
+#   data/annotation/bg_{col0_ATC,ost0_ATO,aspen_PT,birch_BP,spruce_PA,pine_PS}.rda
 # Output:
-#   tables/TableS3_cladeGO_classic_p<thr>.tsv
+#   tables/TableS3_cliqueClusterGO_classic.tsv
 #   tables/Table_S3.xlsx   (the supplementary table: Legend sheet + "Table S3" sheet; padj to 4 s.f., p to 3)
 #
-# Usage: Rscript scripts/GO/make_TableS3.R [threshold]     # e.g. 0.1 (default) or 0.05
+# Usage: Rscript scripts/GO/make_TableS3.R
 
 suppressMessages(library(dplyr)); source("scripts/GO/go_table_utils.R")
 
-thr <- suppressWarnings(as.numeric(commandArgs(trailingOnly = TRUE)[1])); if (is.na(thr)) thr <- 0.1
-
-load(Sys.glob("data/*/co_expressologs.RData")[1])
-mk <- function(a, b) apply(cbind(a, b), 1, function(v) paste(sort(v), collapse = "|"))
-co_expressologs$pairkey <- mk(co_expressologs$Species1, co_expressologs$Species2)
-ogset <- function(k, p) unique(co_expressologs$OrthologGroup[co_expressologs$pairkey == k & co_expressologs$MaxpVal < p])
-regions <- function(p) { A <- ogset("col0|ost0", p); B <- ogset("aspen|birch", p); C <- ogset("pine|spruce", p)
-  list(ABC = Reduce(intersect, list(A, B, C)), AB = setdiff(intersect(A, B), C), BC = setdiff(intersect(B, C), A),
-       A = setdiff(A, union(B, C)), B = setdiff(B, union(A, C))) }
-sp_pair <- list(Col0 = "col0|ost0", Ost0 = "col0|ost0", Aspen = "aspen|birch", Spruce = "pine|spruce")
-sp_side <- list(Col0 = "col0", Ost0 = "ost0", Aspen = "aspen", Spruce = "spruce")
-coexpr_genes <- function(species, ogs, p) { pk <- sp_pair[[species]]; side <- sp_side[[species]]
-  d <- co_expressologs[co_expressologs$pairkey == pk & co_expressologs$MaxpVal < p & co_expressologs$OrthologGroup %in% ogs, ]
-  unique(c(d$GeneSpecies1[d$Species1 == side], d$GeneSpecies2[d$Species2 == side])) }
-
 ld <- function(f, o = NULL) { e <- new.env(); load(f, envir = e); if (is.null(o)) get(ls(e)[1], envir = e) else get(o, e) }
-athal <- read_go_mapping("data/annotation/Athal_go_ids.tsv")
-potra <- read_go_mapping("data/annotation/Potra02_go_ids.tsv")
-picab_df <- read.csv("data/annotation/Picab02_go_ids.csv"); picab <- unstack(picab_df[, c("go_id", "external_gene_name")])
-bg_ATC <- ld("data/annotation/bg_col0_ATC.rda"); bg_ATO <- ld("data/annotation/bg_ost0_ATO.rda"); bg_PT <- ld("data/annotation/bg_aspen_PT.rda"); bg_PA <- ld("data/annotation/bg_spruce_PA.rda")
-ANN <- list(Col0 = athal[names(athal) %in% bg_ATC], Ost0 = athal[names(athal) %in% bg_ATO],
-            Aspen = potra[names(potra) %in% bg_PT], Spruce = picab[names(picab) %in% bg_PA])
-DEG <- list(Col0 = ld("data/DEGs/DEGs_col0.RData"), Ost0 = ld("data/DEGs/DEGs_ost0.RData"),
-            Aspen = ld("data/DEGs/DEGs_aspen.RData"), Spruce = ld("data/DEGs/DEGs_spruce.RData"))
 
-run_go <- function(species, gene_set) { g2 <- ANN[[species]]
-  gl <- factor(as.integer(names(g2) %in% gene_set)); names(gl) <- names(g2)
-  if (sum(gl == 1) < 3) return(data.frame())
+## --- clique cluster membership -> per (analysis cluster, species) gene sets ---
+cc  <- ld(Sys.glob("data/*/cliques/clique_HMcluster_list.rda")[1])          # ID, Cluster (analysis)
+cg  <- readRDS(Sys.glob("data/*/cliques/clique_genes_filterable_COMPLETE.RDS")[1])
+# long pairwise table -> one gene per (cliqueID, species)
+glong <- unique(rbind(
+  data.frame(cliqueID = cg$cliqueID, sp = cg$Species1, gene = cg$GeneSpecies1, stringsAsFactors = FALSE),
+  data.frame(cliqueID = cg$cliqueID, sp = cg$Species2, gene = cg$GeneSpecies2, stringsAsFactors = FALSE)))
+glong$Cluster <- cc$Cluster[match(glong$cliqueID, cc$ID)]
+glong <- glong[!is.na(glong$Cluster), ]
+gene_set <- function(anaclust, sp) unique(glong$gene[glong$Cluster == anaclust & glong$sp == sp])
+
+## --- per-species GO annotation restricted to the enrichment background ---
+A <- "data/annotation"
+athal <- read_go_mapping(file.path(A, "Athal_go_ids.tsv"))
+potra <- read_go_mapping(file.path(A, "Potra02_go_ids.tsv"))
+betpen<- read_go_mapping(file.path(A, "Betpen_go_ids.tsv"))
+picab <- unstack(read.csv(file.path(A, "Picab02_go_ids.csv"))[, c("go_id","external_gene_name")])
+pinsy <- unstack(read.csv(file.path(A, "Pinsy01_go_ids.csv"))[, c("go_id","external_gene_name")])
+bg <- function(o) ld(file.path(A, sprintf("bg_%s.rda", o)))
+ANN <- list(
+  col0   = athal [names(athal)  %in% bg("col0_ATC")],
+  ost0   = athal [names(athal)  %in% bg("ost0_ATO")],
+  aspen  = potra [names(potra)  %in% bg("aspen_PT")],
+  birch  = betpen[names(betpen) %in% bg("birch_BP")],
+  spruce = picab [names(picab)  %in% bg("spruce_PA")],
+  pine   = pinsy [names(pinsy)  %in% bg("pine_PS")])
+LAB <- c(col0="Col0", ost0="Ost0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
+
+run_go <- function(sp, genes) {
+  g2 <- ANN[[sp]]
+  gl <- factor(as.integer(names(g2) %in% genes)); names(gl) <- names(g2)
+  if (sum(gl == 1) < 1) return(data.frame())
   GOdata <- new("topGOdata", ontology = "BP", allGenes = gl, annot = annFUN.gene2GO, gene2GO = g2)
   res <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
-  go_result(GOdata, res) }
+  go_result(GOdata, res) %>% mutate(scores = -log10(classicFisher))
+}
 
-cells <- list(c("Col0","ABC"), c("Aspen","ABC"), c("Col0","AB"), c("Aspen","AB"),
-              c("Aspen","BC"), c("Spruce","BC"), c("Col0","A"), c("Aspen","B"))
-reg <- regions(thr); dir.create("tables", showWarnings = FALSE)
-all <- list()
-cat(sprintf("Table S3 clade GO (classic Fisher), co-expressolog P < %.2f\n", thr))
-for (cl in cells) { sp <- cl[1]; rg <- cl[2]
-  gs <- intersect(coexpr_genes(sp, reg[[rg]], thr), DEG[[sp]])
+## manuscript cluster -> analysis cluster
+mm <- read.delim("data/ComPlEx/cliques/manuscript_cluster_map.tsv")               # scripts/ComPlEx/manuscript_cluster_map.R
+MAP <- setNames(mm$analysis_cluster, mm$manuscript_cluster)                                # manuscript -> analysis
+out <- list()
+cat("Table S3 clique-cluster GO (classic Fisher, padj<0.05)\n")
+for (mc in names(MAP)) for (sp in names(LAB)) {
+  gs <- gene_set(MAP[[mc]], sp)
   r <- run_go(sp, gs)
-  if (nrow(r)) { r$species <- sp; r$set <- rg; all[[paste(sp, rg)]] <- r }
-  cat(sprintf("  %-11s study=%-4d sig=%-4d top: %s\n", paste(sp, rg), length(gs), nrow(r), if (nrow(r)) r$Term[1] else "-")) }
-out <- do.call(rbind, all)
-f <- sprintf("tables/TableS3_cladeGO_classic_p%02d.tsv", round(thr * 100))
-write.table(out[, c("species","set","GO.ID","Term","Annotated","Significant","classicFisher","padj")],
-            f, sep = "\t", quote = FALSE, row.names = FALSE)
-SETNAME <- c(ABC = "the shared core (ABC)", AB = "the Arabidopsis-broadleaf set (AB)",
-             BC = "the broadleaf-conifer set (BC)", A = "the Arabidopsis-exclusive set (A)",
-             B = "the broadleaf-exclusive set (B)")
-tested <- unique(vapply(cells, `[`, "", 2))
-xl <- out[, c("species","set","GO.ID","Term","Annotated","Significant","Expected","classicFisher","padj")]
-names(xl) <- c("Species","Co-expressolog set","GO.ID","Term","Annotated","Significant","Expected","classicFisher P","padj")
-write_supp_xlsx(xl, "tables/Table_S3.xlsx", "Table S3", sig_cols = c("classicFisher P", "padj"),
-  legend = paste0("Table S3 GO enrichment of the conserved co-expressolog clade sets (co-expressologs at adjusted P < ",
-    thr, ") \u2014 ", paste(SETNAME[tested], collapse = ", "), " \u2014 analysed per species and restricted to that ",
-    "species' differentially expressed genes, each tested against that genotype's own expressed-gene background ",
-    "(topGO classic Fisher's exact test, biological process; padj < 0.05). Sets with no enriched term are not listed."))
-cat("Wrote", f, "and tables/Table_S3.xlsx (", nrow(out), "rows )\n")
+  if (nrow(r)) {
+    r <- transform(r, `Cluster (manuscript)` = as.integer(mc), Species = LAB[[sp]],
+                   analysis_cluster = MAP[[mc]], check.names = FALSE)
+    out[[paste(mc, sp)]] <- r
+  }
+  cat(sprintf("  C%s(ana%d) %-7s study=%-3d sig=%-3d\n", mc, MAP[[mc]], sp, length(gs), nrow(r)))
+}
+D <- do.call(rbind, out)
+D <- D[, c("Cluster (manuscript)","Species","GO.ID","Term","Annotated","Significant","Expected",
+           "classicFisher","padj","scores","analysis_cluster")]
+dir.create("tables", showWarnings = FALSE)
+write.table(D, "tables/TableS3_cliqueClusterGO_classic.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write_supp_xlsx(D, "tables/Table_S3.xlsx", "Table S3", sig_cols = c("classicFisher", "padj", "scores"),
+  legend = sprintf(paste("Table S3 GO enrichment of the %s conserved-core clique expression clusters, per species",
+                         "(manuscript cluster numbering; topGO classic Fisher's exact test, biological process;",
+                         "padj < 0.05).%s"), c("one","two","three","four","five","six","seven","eight","nine")[length(MAP)],
+                   {  none <- setdiff(names(MAP), as.character(unique(D[["Cluster (manuscript)"]])))   # clusters without a row
+                      if (length(none)) sprintf(" Cluster%s %s had no enriched term.", if (length(none) > 1) "s" else "",
+                                                paste(none, collapse = " and ")) else "" }))
+cat("Wrote tables/TableS3_cliqueClusterGO_classic.tsv and tables/Table_S3.xlsx (", nrow(D), "rows )\n")

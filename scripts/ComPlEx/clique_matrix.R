@@ -1,6 +1,6 @@
-# clique_matrix.R — the matrix behind Figure 5 and the clique clusters: for each conserved-core clique, the per-gene
+# clique_matrix.R — the matrix behind Figure 4 and the clique clusters: for each conserved-core clique, the per-gene
 # z-scored MEDIAN expression of its member in each genotype over the cold time course (Control, 6h, 24h, 3d, 10d).
-# Sourced by scripts/ComPlEx/clique_clusters.R and scripts/figures/make_Fig5.R, so both use the same matrix.
+# Sourced by scripts/ComPlEx/clique_clusters.R and scripts/figures/make_Fig4.R, so both use the same matrix.
 #
 # Inputs: data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS, data/expression/med_expression/<sp>_med.txt.gz
 clique_sp    <- c("col0", "ost0", "aspen", "birch", "spruce", "pine")

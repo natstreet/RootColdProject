@@ -8,7 +8,7 @@
 # orthogroups, and each orthogroup to its A. thaliana members (data/orthologs/orthologs.parquet). Two orthogroups are
 # linked when any pair of their A. thaliana members is linked in STRING at score >= 400 in a channel:
 #   independent:  max(experimental, database), evidence that does not come from expression
-#   coexpression: STRING's co-expression channel (an external A. thaliana compendium, as in Fig. S6b)
+#   coexpression: STRING's co-expression channel (an external A. thaliana compendium, as in Fig. S4b)
 # Coherence = the fraction of orthogroup pairs in the neighbourhood that are linked; enrichment = that fraction over
 # its mean in random sets of the same number of genes drawn from the species-1 genes ComPlEx tested (N_NULL sets).
 #

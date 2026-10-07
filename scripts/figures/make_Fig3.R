@@ -1,0 +1,87 @@
+#!/usr/bin/env Rscript
+# make_Fig3.R — Figure 3: conserved co-expression across the three species groups.
+#   (A) Triple Venn of the co-expressolog orthogroups shared within each lineage pair —
+#       Arabidopsis (col0|ost0), broadleaf trees (aspen|birch) and conifers (pine|spruce),
+#       at MaxpVal < 0.1. Areas are computed from the data, not hard-coded.
+#   (B) GO (biological-process) enrichment of three Venn regions (the ten terms with the smallest P): the shared
+#       core ABC and the Arabidopsis–broadleaf AB set (Arabidopsis genes), and the broadleaf–conifer BC set (aspen
+#       genes). The terms and P-values are those of Table S2 (topGO classic Fisher's exact test), read from the table
+#       make_TableS2.R writes, so the panel and the table agree.
+#
+# Run from a directory containing the unpacked figshare deposit `data/`, after scripts/GO/make_TableS2.R.
+# Inputs: data/ComPlEx/co_expressologs.RData, tables/TableS2_cladeGO_classic_p10.tsv
+# Output: Figure3.pdf, Figure3.png (300 dpi), Figure3_venn_regions.tsv (set totals, the seven exclusive Venn regions,
+#         and the share of the Arabidopsis and broadleaf sets that is conifer-conserved), Figure3b_values.tsv (the
+#         plotted terms: panel, GO ID, term, genes, classic Fisher P, -log10 P, padj)
+# Usage:  Rscript scripts/figures/make_Fig3.R
+
+suppressPackageStartupMessages({ library(VennDiagram); library(ggplot2); library(dplyr)
+  library(cowplot); library(ggplotify); library(grid); library(futile.logger); library(GO.db) })
+go_terms <- AnnotationDbi::Term(GO.db::GOTERM)      # GO id -> full term name (for un-truncated labels)
+flog.threshold(ERROR)                               # silence VennDiagram's log file chatter
+ld <- function(f){ e<-new.env(); load(f,envir=e); get(ls(e)[1],envir=e) }
+
+# ── panel A: Venn areas from the data ────────────────────────────────────────
+co <- ld("data/ComPlEx/co_expressologs.RData")
+co$pairkey <- apply(cbind(co$Species1, co$Species2), 1, function(v) paste(sort(v), collapse="|"))
+ogset <- function(k, p=0.1) unique(co$OrthologGroup[co$pairkey==k & co$MaxpVal<p])
+A <- ogset("col0|ost0"); B <- ogset("aspen|birch"); C <- ogset("pine|spruce")
+vg <- draw.triple.venn(area1=length(A), area2=length(B), area3=length(C),
+  n12=length(intersect(A,B)), n13=length(intersect(A,C)), n23=length(intersect(B,C)),
+  n123=length(Reduce(intersect,list(A,B,C))),
+  category=c("Arabidopsis","Broadleaf","Conifer"), fill=c("#7FBF9E","#F4C08A","#B9B9CE"),
+  alpha=rep(0.55,3), lwd=1.4, col=rep("grey30",3), cex=rep(1.1,7), fontface="bold", fontfamily="sans",
+  cat.col=c("#2E8B57","#D2691E","#6A5ACD"), cat.cex=rep(1.2,3), cat.fontface="bold", cat.fontfamily="sans",
+  cat.pos=c(-20,20,180), cat.dist=c(0.06,0.06,0.045), ind=FALSE)
+grid.newpage(); PA <- as.ggplot(grid::gTree(children=vg))
+
+# the Venn regions and the conifer-conserved shares quoted in the Results
+only <- function(x, y, z) length(setdiff(intersect(x, y), z))
+ABC <- length(Reduce(intersect, list(A, B, C)))
+reg <- data.frame(
+  quantity = c("A total", "B total", "C total", "A only", "B only", "C only", "AB only", "AC only", "BC only", "ABC"),
+  value = c(length(A), length(B), length(C),
+            length(setdiff(A, union(B, C))), length(setdiff(B, union(A, C))), length(setdiff(C, union(A, B))),
+            only(A, B, C), only(A, C, B), only(B, C, A), ABC))
+v <- setNames(reg$value, reg$quantity)
+shareA <- (v[["AC only"]] + ABC) / v[["A total"]]; shareB <- (v[["BC only"]] + ABC) / v[["B total"]]
+reg <- rbind(reg, data.frame(
+  quantity = c("AC only + ABC", "BC only + ABC", "conifer-conserved share of A (AC only + ABC) / A total",
+               "conifer-conserved share of B (BC only + ABC) / B total", "share of B / share of A"),
+  value = c(v[["AC only"]] + ABC, v[["BC only"]] + ABC, round(shareA, 4), round(shareB, 4), round(shareB / shareA, 4))))
+write.table(reg, "Figure3_venn_regions.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+
+# ── panel B: GO dot-plots from the Table S2 results (classic Fisher) ─────────
+go <- read.delim("tables/TableS2_cladeGO_classic_p10.tsv", stringsAsFactors = FALSE, quote = "")
+go$scores <- -log10(go$classicFisher)
+pan <- c("ABC (Arabidopsis)"="Col0 ABC", "AB (Arabidopsis)"="Col0 AB", "BC (aspen)"="Aspen BC")
+plotted <- list()
+subplot <- function(key, title, n=10, col){
+  d <- go[paste(go$species, go$set) == key, , drop=FALSE]
+  stopifnot(nrow(d) > 0)
+  d <- d[order(d$classicFisher, d$GO.ID), , drop=FALSE][seq_len(min(n, nrow(d))), ]
+  plotted[[title]] <<- data.frame(panel = title, GO.ID = d$GO.ID, Term = d$Term, Significant = d$Significant,
+                                  classicFisher = d$classicFisher, minus_log10_P = d$scores, padj = d$padj)
+  full <- go_terms[d$GO.ID]                                    # full names by GO id
+  d$Term <- ifelse(is.na(full), as.character(d$Term), unname(full))
+  d$Term <- vapply(d$Term, function(s) paste(strwrap(s, width=50), collapse="\n"), character(1))
+  d$Term <- factor(d$Term, levels=rev(d$Term))
+  ggplot(d, aes(scores, Term)) +
+    geom_segment(aes(x=0, xend=scores, yend=Term), colour="grey80", linewidth=0.4) +
+    geom_point(aes(size=as.integer(Significant)), colour=col) +
+    scale_size_continuous(range=c(2,6.5), name="Genes") +
+    scale_x_continuous(expand=expansion(mult=c(0.01,0.08))) +
+    labs(x=expression(-log[10]~italic(P)), y=NULL, title=title) +
+    theme_bw(base_size=10) +
+    theme(plot.title=element_text(face="bold", size=10), panel.grid.major.y=element_line(colour="grey93"))
+}
+cols <- c("#2E8B57","#B8860B","#6A5ACD")
+Bs <- Map(function(k,t,c) subplot(k,t,col=c), pan, names(pan), cols)
+PB <- plot_grid(plotlist=Bs, ncol=1, align="v")
+
+fig <- plot_grid(PA, PB, ncol=1, labels=c("(a)","(b)"), label_size=16, rel_heights=c(0.85,1.7))
+ggsave("Figure3.pdf", fig, width=8, height=12, bg = "white")
+ggsave("Figure3.png", fig, width=8, height=12, dpi=300, bg = "white")
+write.table(do.call(rbind, plotted), "Figure3b_values.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+cat(sprintf("Venn areas: A=%d B=%d C=%d  ABC=%d\n", length(A), length(B), length(C),
+            length(Reduce(intersect,list(A,B,C)))))

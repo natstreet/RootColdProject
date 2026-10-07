@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# clique_clusters.R — the four clusters of the conserved-core cliques (analysis numbering): the Figure 5 matrix
+# clique_clusters.R — the four clusters of the conserved-core cliques (analysis numbering): the Figure 4 matrix
 # (clique_matrix.R) clustered with Ward.D2 on Euclidean distance and cut into four, rows in dendrogram order.
 # The manuscript numbers these clusters differently: data/ComPlEx/cliques/manuscript_cluster_map.tsv (manuscript_cluster_map.R).
 #
@@ -7,7 +7,7 @@
 #         data/expression/med_expression/<sp>_med.txt.gz
 # Output: data/ComPlEx/cliques/clique_HMcluster_list.rda (object clique_cluster_order: ID = cliqueID, Cluster), or
 #         the path given as the first argument.
-# Read by: make_Fig5.R, make_TableS4.R
+# Read by: make_Fig4.R, make_TableS3.R
 # Usage:  Rscript scripts/ComPlEx/clique_clusters.R [output.rda]
 suppressPackageStartupMessages(library(dplyr))
 args <- commandArgs(trailingOnly = TRUE)

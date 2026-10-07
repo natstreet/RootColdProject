@@ -71,5 +71,5 @@ p <- ggplot(d, aes(tp, Count, fill = Direction)) +
 
 dir.create("figures", showWarnings = FALSE)
 ggsave("figures/Figure2.pdf", p, width = 12.54, height = 12.54, bg = "white")
-ggsave("figures/Figure2.png", p, width = 12.54, height = 12.54, dpi = 110, bg = "white")
+ggsave("figures/Figure2.png", p, width = 12.54, height = 12.54, dpi = 300, bg = "white")
 cat("Wrote figures/Figure2.pdf and figures/Figure2.png\n")
