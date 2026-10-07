@@ -65,7 +65,7 @@ data/                Not included; download from figshare and unpack here (see D
 `scripts/ComPlEx/` -- the ComPlEx co-expression workflow (Netotea et al. 2014): variance-stabilising
 data preparation (`Network_Generation_setup.R`), the 15 pairwise co-expressolog comparisons
 (`ComPlEx.R`, run once per species pair; for each pair it builds mutual-rank networks from absolute
-Pearson correlation on the genes with an orthologue in that pair and keeps the top 3 % of edges), extraction of the complete cliques and the conserved core (`complete_cliques.R`, `core_cliques.R`, `clique_clusters.R`),
+Pearson correlation on the genes with an orthologue in that pair and keeps the top 3 % of edges), extraction of the complete cliques and the conserved core (`complete_cliques.R`, `size_rule.R`, `core_cliques.R`, `clique_clusters.R`),
 and the co-expressolog table (`Genelists.Rmd`). `submit_ComPlEx_cold.sh` submits `ComPlEx.R` through
 `RunR.sh` on a Slurm cluster; adapt both to your environment.
 
@@ -88,7 +88,8 @@ listed with its inputs and outputs in `REPRODUCE.md`.
 2. Compute the 15 pairwise co-expressolog comparisons (`scripts/ComPlEx/ComPlEx.R`), which build
    each pair's mutual-rank networks (top 3 % of edges), and the per-species whole-genome networks of
    the resource (`scripts/networks/export_network_inputs.R`, then `build_coexpression_network.R`).
-3. Extract the complete cliques and the conserved core (`complete_cliques.R`, `core_cliques.R`, `clique_clusters.R`).
+3. Extract the complete cliques and the conserved core (`complete_cliques.R`, `size_rule.R`, `core_cliques.R`,
+   `clique_clusters.R`), and classify each core orthogroup as orthologue- or paralogue-carried (`orthology_class.R`).
 4. Produce the figures, tables and numbers of the article from the deposited data: `REPRODUCE.md` lists every
    producer with its inputs and outputs.
 

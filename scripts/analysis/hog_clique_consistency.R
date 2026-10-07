@@ -20,6 +20,8 @@
 #          <prefix>_tf_cliques.tsv      for each transcription-factor clique of the current core (tf_cliques.R, at least
 #                                       5 of 6 members predicted TFs): its consistent cliques, how many keep at least
 #                                       5 TF members, and the members of the best such clique (lowest MeanCliqueSum)
+#          <prefix>_representatives.tsv per orthogroup: the representative clique (core_cliques.R's pick), whether it is
+#                                       HOG-consistent, and the best HOG-consistent clique with its six members
 #          <prefix>_summary.tsv         counts (including cliques with a member that has no HOG at this node)
 # Usage (repository root): Rscript scripts/analysis/hog_clique_consistency.R <HOG table> <output prefix> [raw Orthogroups.tsv]
 # Below the root, OrthoFinder can place genes that the root-level table left unplaced (and Orthogroups_20240613.tsv
@@ -98,6 +100,16 @@ setcolorder(per, c("orthogroup", "expressed_genes", "complete_cliques", "hog_con
                    "hogs", "largest_hog_genes", "consistent_hogs", "largest_consistent_hog_genes"))
 setorder(per, -expressed_genes, orthogroup)
 fwrite(per, paste0(prefix, "_per_orthogroup.tsv"), sep = "\t")
+
+# per orthogroup, the representative clique (the first in the input's order: lowest MeanCliqueSum, ties by clique
+# number, as core_cliques.R picks it), whether it is HOG-consistent, and the best HOG-consistent clique (first such)
+rep1 <- w[, .SD[1], by = OrthoGroup][, .(orthogroup = OrthoGroup, representative_clique = cliqueID,
+                                         representative_consistent = one_hog)]
+best <- w[one_hog == TRUE, .SD[1], by = OrthoGroup]
+best <- best[, c(list(orthogroup = OrthoGroup, best_consistent_clique = cliqueID,
+                      best_consistent_mean_clique_sum = MeanCliqueSum), .SD), .SDcols = G]
+reps <- merge(rep1, best, by = "orthogroup", all.x = TRUE)
+fwrite(reps, paste0(prefix, "_representatives.tsv"), sep = "\t")
 
 # transcription-factor cliques: the same predicted-TF sets as tf_cliques.R
 source("scripts/analysis/tf_cliques.R")

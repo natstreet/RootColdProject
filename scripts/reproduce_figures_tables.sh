@@ -4,6 +4,9 @@
 # two STRING v12 A. thaliana files for Fig. S6b. Each producer's output stays in the working directory (figures and
 # their value files), tables/ or results/; each producer's console output is kept in logs/.
 #
+# The orthology classification (D043) needs the N1 hierarchical orthogroups from the multiple-alignment gene trees and
+# OrthoFinder's raw orthogroups in data/orthofinder/ (N1_msa.tsv, Orthogroups.tsv, msa_trees/).
+#
 # Usage: bash scripts/reproduce_figures_tables.sh <working dir> [Rscript for DESeq2 steps]
 #   RSCRIPT: the Rscript to use (default: Rscript on the PATH). The second argument names an Rscript with DESeq2 for
 #   tf_clique_directions.R (default: the same).
@@ -19,17 +22,21 @@ run Fig5_caption_cand     $R scripts/figures/fig5_caption_candidates.R
 run Fig1                  $R scripts/figures/make_Fig1.R
 run Fig2                  $R scripts/figures/make_Fig2.R
 run Fig4                  $R scripts/figures/make_Fig4.R
-run Fig5                  $R scripts/figures/make_Fig5.R Fig5_caption_candidates.tsv   # proposed terms; the final caption table is NRS's choice
+run Fig5_captions          $R scripts/figures/fig5_captions_from_terms.R                # the approved terms (D008), matched to Table S4
+run Fig5                  $R scripts/figures/make_Fig5.R Fig5_captions_approved.tsv
 run size_flag             $R scripts/validation/orthogroup_size_flag.R
+run hog_N1msa             $R scripts/analysis/hog_clique_consistency.R data/orthofinder/N1_msa.tsv results/hog_N1msa data/orthofinder/Orthogroups.tsv
+run orthology_class       $R scripts/analysis/orthology_class.R results/hog_N1msa data/orthofinder/msa_trees
 run Fig6                  $R scripts/figures/make_Fig6.R
 run FigS4                 $R scripts/figures/make_FigS4.R
 run FigS5                 $R scripts/figures/make_FigS5.R
 run FigS7                 $R scripts/figures/make_FigS7.R
 run tf_clique_directions  $RD scripts/analysis/tf_clique_directions.R
 run core_response         $R scripts/analysis/core_response_patterns.R
+run orthology_tables      $R scripts/analysis/orthology_class_tables.R
 run core_modules          $R scripts/analysis/core_module_directions.R 3
-run FigS2                 $R scripts/figures/make_FigS2.R OG0002696          # worked example: AtFBS1 (NRS, 2026-10-05)
-run worked_example        $R scripts/analysis/worked_example_table.R OG0002696 results/worked_example_OG0002696.tsv
+run FigS2                 $R scripts/figures/make_FigS2.R OG0004969          # worked example: NOP56 (D044, 2026-10-07)
+run worked_example        $R scripts/analysis/worked_example_table.R OG0004969 results/worked_example_OG0004969.tsv
 run cluster_profiles      $R scripts/analysis/cluster_profiles.R data/open results/cluster_profiles
 run label_permutation     $R scripts/validation/conservation_label_permutation.R
 run sizeaware_null        $R scripts/validation/conservation_sizeaware_null.R

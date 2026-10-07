@@ -1,0 +1,7 @@
+cluster	Term	arabidopsis_only
+1	microtubule-based process	FALSE
+1	cell cycle	FALSE
+2	translation	FALSE
+3	response to chitin	TRUE
+3	response to wounding	TRUE
+4	suberin biosynthetic process	TRUE

@@ -15,6 +15,7 @@
 #   data/DEGs/DEGs_<species>.RData                         per-species DEG sets (for the stars)
 #   results/orthogroup_size_flag.tsv (scripts/validation/orthogroup_size_flag.R): each panel's label carries its
 #   orthogroup's number of expressed genes (NRS, 2026-10-05)
+#   results/orthology_class.tsv (scripts/analysis/orthology_class.R): and its orthology class (D043)
 # Output: Figure6.pdf, Figure6.png
 #
 # Usage: Rscript scripts/figures/make_Fig6.R
@@ -47,10 +48,13 @@ names(EXP) <- names(species)
 
 SIZE <- read.delim("results/orthogroup_size_flag.tsv")
 if (!all(TFC$OrthoGroup %in% SIZE$OrthoGroup)) stop("a transcription-factor clique has no size flag")
+OCL <- read.delim("results/orthology_class.tsv")
+if (!all(TFC$OrthoGroup %in% OCL$OrthoGroup)) stop("a transcription-factor clique has no orthology class")
 rows <- list(); stars <- list()
 for (k in seq_len(nrow(TFC))) {
   og <- TFC$OrthoGroup[k]; s <- TFC$tf[k]                  # TF symbol (dual where Ost-0 member differs)
-  lab <- sprintf("%s (%d genes)", s, SIZE$expressed_genes[SIZE$OrthoGroup == og])   # panel label
+  lab <- sprintf("%s (%d genes, %s)", s, SIZE$expressed_genes[SIZE$OrthoGroup == og],
+                 OCL$orthology_class[OCL$OrthoGroup == og])                           # panel label
   mem <- members(og)
   for (sp in names(species)) {
     g <- intersect(mem[[sp]], rownames(EXP[[sp]])); if (!length(g)) next

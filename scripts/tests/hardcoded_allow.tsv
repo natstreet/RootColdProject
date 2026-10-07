@@ -8,3 +8,4 @@ scripts/figures/make_FigS6.R	30	axis padding
 scripts/figures/make_FigS7.R	45	plot margin
 scripts/networks/network_qc.R	30	QC parameter: the 30 most linked genes inspected (method choice)
 scripts/validation/conservation_sizeaware_null.R	30	size-bin edge (method choice)
+scripts/tests/check_hardcoded_results.py	137	docstring describing F010 (the failure the check exists for), not a computation

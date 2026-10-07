@@ -46,9 +46,9 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 | Fig. 1 | `scripts/figures/make_Fig1.R` | `expression/med_expression/`, `ComPlEx/gene2OG/`, `annotation/bg_*`, `DEGs/`; panel values in `results/Figure1_panel_values.tsv` |
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
 | Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/co_expressologs.RData`; panel b from the Table S3 output (`tables/TableS3_cladeGO_classic_p10.tsv`); Venn regions in `results/Figure4_venn_regions.tsv`, panel b values in `results/Figure4b_values.tsv` |
-| Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S4 output and `scripts/figures/Fig5_captions.tsv` (block captions, by GO ID) |
-| Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/` |
-| Fig. S2 | `scripts/figures/make_FigS2.R <orthogroup>` | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R` |
+| Fig. 5 | `scripts/figures/make_Fig5.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S4 output and `Fig5_captions_approved.tsv` (block captions by GO ID), written by `scripts/figures/fig5_captions_from_terms.R` from the approved terms in `scripts/figures/Fig5_terms_approved.tsv` (D008) |
+| Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/`; `results/orthogroup_size_flag.tsv` and `results/orthology_class.tsv` (panel labels) |
+| Fig. S2 | `scripts/figures/make_FigS2.R <orthogroup>` | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R`; `results/orthology_class.tsv`. The worked example is NOP56, OG0004969 (D044) |
 | Fig. S4 | `scripts/figures/make_FigS4.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
 | Fig. S5 | `scripts/figures/make_FigS5.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S5_values.tsv` |
 | Fig. S6 | `scripts/figures/make_FigS6.R` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.R` (panel b; **STRING download, see note**) |
@@ -86,11 +86,12 @@ expression data, and are needed only to rebuild those objects:
 | `ComPlEx/co_expressologs.RData`, `ComPlEx/all_expressed_genes.RData` | `scripts/ComPlEx/Genelists.Rmd` |
 | `ComPlEx/ones_and_zeros_all.RData` (per orthogroup and comparison, whether ComPlEx tested a gene pair) | `scripts/ComPlEx/ones_and_zeros.R` |
 | `ComPlEx/cliques/clique_genes_filterable_COMPLETE.RDS`, `conserved_genes_COMPLETE_wider.RDS` (every complete clique of every orthogroup; no orthogroup excluded, no cap) | `scripts/ComPlEx/complete_cliques.R` |
-| `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS` (the conserved core: one complete clique per orthogroup) | `scripts/ComPlEx/core_cliques.R` |
+| `results/orthogroup_size_rule.tsv`, `_model.tsv` (the even-odds size rule, D026: per eligible orthogroup, expressed genes, complete cliques, the fitted probability of a complete clique given size, and whether it is counted as conserved) | `scripts/ComPlEx/size_rule.R` (optional second argument: a fixed size threshold, for the sensitivity runs) |
+| `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS` (the conserved core: one complete clique per orthogroup counted by the size rule) and `conserved_genes_COMPLETE_filtered_flagged.RDS` (the orthogroups the rule does not count) | `scripts/ComPlEx/core_cliques.R <out> results/orthogroup_size_rule.tsv` |
 | `ComPlEx/cliques/clique_HMcluster_list.rda` (the four clique clusters, analysis numbering) | `scripts/ComPlEx/clique_clusters.R` (with `clique_matrix.R`, shared with `make_Fig5.R`) |
 | `DEGs/og_summary.RData` (per orthogroup, the genotypes with a gene and with a DEG) | `scripts/DE/og_summary.R` |
 
-Run them in this order: `ones_and_zeros.R` and `complete_cliques.R`; `core_cliques.R`, then
+Run them in this order: `ones_and_zeros.R` and `complete_cliques.R`; `size_rule.R`; `core_cliques.R`, then
 `clique_clusters.R`, before `make_TableS4.R`, `make_Fig5.R`, `make_Fig6.R` and `make_core_clusters.R`; `og_summary.R`
 before `make_Fig1.R`, `make_TableS1.R` and `common_orthogroups.R`. Each writes its object to the path above, or to
 the path given as its first argument. `scripts/tests/test_rebuilt_objects.R` runs the four into a temporary folder
@@ -103,6 +104,15 @@ constants inspected and found not to be results are listed, with reasons, in `sc
 The size of each core orthogroup (expressed genes), its number of complete cliques, and the probability that an
 orthogroup of its size is conserved in all 15 comparisons come from `scripts/validation/orthogroup_size_flag.R`
 (`results/orthogroup_size_flag.tsv`, with the fitted model in `results/orthogroup_size_model.tsv`).
+
+The orthology class of each orthogroup with a complete clique (D043) comes from the N1 (seed-plant) hierarchical
+orthogroups inferred from multiple-alignment gene trees: `scripts/analysis/hog_clique_consistency.R <N1 table> <prefix>
+<raw Orthogroups.tsv>` (per orthogroup and per representative clique), then `scripts/analysis/orthology_class.R <prefix>
+<tree dir>` (`results/orthology_class.tsv`: orthologue- or paralogue-carried, the representative's consistency, the best
+consistent clique, and which trees the call rests on). `scripts/analysis/orthology_class_tables.R` writes the descriptive
+tables (class by size band, by manuscript cluster and by response pattern; paralogue-carried orthogroups with at most 20
+genes). The class is a gene-tree call with error in both directions. `scripts/analysis/core_sensitivity.R` reports core
+size, cluster sizes and TF cliques for working trees built with different size rules.
 
 The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene universe for each
 species — every gene with nonzero VST expression across the cold time-course samples.

@@ -17,6 +17,7 @@
 #   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS   the conserved-core cliques
 #   DE/de_results.tsv                         fold changes and DEG calls (scripts/DE/differential_expression.R)
 #   tables/core_conserved_neighbours.tsv.gz   conserved neighbours and their correlation with the member
+#   results/orthology_class.tsv               the orthogroup's orthology class (scripts/analysis/orthology_class.R, D043)
 #                                             (scripts/analysis/core_module_directions.R; its MIN_PAIRS is used here)
 #   data/expression/med_expression/<sp>_med.txt.gz         median expression per condition
 #   data/expression/<sp>_root_cold_stress_expression.txt   ComPlEx input matrices (GO background)
@@ -54,6 +55,9 @@ mem <- unlist(row[SP])
 al <- read.delim("data/annotation/gene_aliases_20140331.txt", colClasses = "character")
 sym <- al$symbol[toupper(al$locus_name) == strip(mem[["col0"]])]
 label <- if (length(sym) && nzchar(sym[1])) sym[1] else strip(mem[["col0"]])
+ocl <- read.delim("results/orthology_class.tsv")
+ocl <- ocl$orthology_class[ocl$OrthoGroup == OG]
+if (length(ocl) != 1) stop(OG, " has no orthology class")
 
 ## ---- (a) fold changes of the members ----
 de <- fread("DE/de_results.tsv")
@@ -124,7 +128,7 @@ A <- ggplot(pa, aes(x, lfc, colour = species)) +
   scale_x_continuous(breaks = seq_along(TPS), labels = TPLAB, expand = expansion(mult = 0.06)) +
   scale_y_continuous(breaks = function(l) seq(ceiling(l[1]), floor(l[2]), 1), expand = expansion(mult = 0.1)) +
   labs(x = NULL, y = expression(log[2]~fold~change~vs~control), tag = "a",
-       title = sprintf("%s clique members (%s)", label, OG)) + th +
+       title = sprintf("%s clique members (%s)\n%s (gene-tree call)", label, OG, ocl)) + th +
   theme(legend.position = "bottom", legend.text = element_text(size = 7), legend.key.width = unit(10, "pt"),
         legend.margin = margin(0, 0, 0, 0)) +
   guides(colour = guide_legend(nrow = 1, override.aes = list(linewidth = 0.8)))
