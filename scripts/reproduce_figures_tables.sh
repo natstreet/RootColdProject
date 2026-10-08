@@ -66,6 +66,8 @@ run external_sets         $R scripts/validation/external_gene_sets.R data/extern
 run external_test         $R scripts/validation/external_validation_test.R results/external_validation/sets/external_gene_sets.tsv results/stability/kept_lost_orthogroups.tsv results/external_validation
 run menges2005            $R scripts/validation/menges2005_core_regulators.R data/external_gene_sets/tpj_2319_sm_tables1.xls results/stability/kept_lost_orthogroups.tsv results/external_validation
 run worked_candidates     $R scripts/analysis/worked_example_candidates.R results/stability
+run paralogue_switch      $R scripts/analysis/paralogue_switching.R                       # D062 item 2
+run paralogue_artefact    $R scripts/analysis/paralogue_switching_artefact.R              # needs data/paralogue_switching (Araport11 extracts)
 run ga_biosynthesis       $R scripts/analysis/ga_biosynthesis_check.R                     # D049 GA paragraph
 run manuscript_values     $R scripts/analysis/manuscript_values.R
 echo "all producers finished"
