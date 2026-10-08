@@ -34,6 +34,16 @@ w0[, fseq := paste0(PFX, seq)]
 if (w0[!fseq %in% fai$fseq, .N]) stop("sequence names not in the .fai: ", paste(head(unique(w0[!fseq %in% fai$fseq, fseq])), collapse = " "))
 w0 <- merge(w0, fai, by = "fseq")
 w0[, atg := ifelse(strand == "+", cmin, cmax)]
+# genomic pieces of the first three coding bases in transcript order (a start codon can be split by an intron), for the
+# start-codon check: "seq:from-to" joined by ",", read on the gene's strand
+f3 <- merge(unique(cds[, .(tx, start, end)]), w0[, .(tx, fseq, strand)], by = "tx")
+f3 <- f3[order(tx, ifelse(strand == "+", start, -end))][, {
+  need <- 3L; out <- character(0)
+  for (k in seq_len(.N)) { if (need <= 0L) break; L <- end[k] - start[k] + 1L; take <- min(L, need)
+    out <- c(out, if (strand[1] == "+") sprintf("%s:%d-%d", fseq[1], start[k], start[k] + take - 1L) else sprintf("%s:%d-%d", fseq[1], end[k] - take + 1L, end[k]))
+    need <- need - take }
+  .(first3 = paste(out, collapse = ",")) }, by = tx]
+w0 <- merge(w0, f3, by = "tx"); setorder(w0, fseq, gene)   # the order of the first run (merge by fseq, genes in ID order)
 rpt <- NULL
 if (REP != "-") {
   isg <- grepl("\\.gff3?(\\.gz)?$", REP)
@@ -60,7 +70,7 @@ res <- rbindlist(lapply(WINS, function(W) {
     w[, repeat_bp := union_bp(nrow(w), rv[, .(id, a = pmax(s, i.s), b = pmin(e, i.e))])]
   } else w[, repeat_bp := NA_integer_]
   fwrite(w[win_len > 0, .(fseq, ws - 1L, we, gene, 0L, strand)], sprintf("%s_%d.bed", OUT, W), sep = "\t", col.names = FALSE)
-  w[, .(gene, win = W, transcript = tx, seq = fseq, strand, atg, ws, we, win_len, clipped = win_len < W, neighbour_gene_bp, repeat_bp)] }))
+  w[, .(gene, win = W, transcript = tx, seq = fseq, strand, atg, ws, we, win_len, clipped = win_len < W, neighbour_gene_bp, repeat_bp, first3)] }))
 fwrite(res, sprintf("%s_windows.tsv", OUT), sep = "\t")
 print(res[, .(genes = .N, clipped = sum(clipped), mean_len = round(mean(win_len)), mean_neighbour_bp = round(mean(neighbour_gene_bp)),
               mean_repeat_bp = if (all(is.na(repeat_bp))) NA_real_ else round(mean(repeat_bp))), by = win], row.names = FALSE)
