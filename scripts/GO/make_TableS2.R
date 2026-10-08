@@ -74,7 +74,7 @@ xl <- out[, c("species","set","GO.ID","Term","Annotated","Significant","Expected
 names(xl) <- c("Species","Co-expressolog set","GO.ID","Term","Annotated","Significant","Expected","classicFisher P","padj")
 write_supp_xlsx(xl, "tables/Table_S2.xlsx", "Table S2", sig_cols = c("classicFisher P", "padj"),
   legend = paste0("Table S2 GO enrichment of the conserved co-expressolog clade sets (co-expressologs at adjusted P < ",
-    thr, ") \u2014 ", paste(SETNAME[tested], collapse = ", "), " \u2014 analysed per species and restricted to that ",
-    "species' differentially expressed genes, each tested against that genotype's own expressed-gene background ",
+    thr, "). The sets are ", paste(SETNAME[tested], collapse = ", "), ". Each set was analysed per species and restricted to that ",
+    "species' differentially expressed genes, and tested against that genotype's own expressed-gene background ",
     "(topGO classic Fisher's exact test, biological process; padj < 0.05). Sets with no enriched term are not listed."))
 cat("Wrote", f, "and tables/Table_S2.xlsx (", nrow(out), "rows )\n")

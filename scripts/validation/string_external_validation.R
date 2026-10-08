@@ -17,7 +17,9 @@
 # with N_PERM permutations that re-assign the same genes to clusters at random (cluster sizes kept). STRING lists each
 # pair in both directions; each gene pair is counted once.
 # Outputs: string_null.csv (column null), string_obs.txt — the inputs of make_FigS4.R
-# Usage:   Rscript scripts/validation/string_external_validation.R
+# Usage:   Rscript scripts/validation/string_external_validation.R [clusters tsv] [output prefix]
+#          (defaults core_clusters.tsv and no prefix; with a prefix, the outputs are <prefix>_string_null.csv and
+#          <prefix>_string_obs.txt, e.g. for the sample-stable and sample-sensitive orthogroups separately, D066)
 
 suppressMessages(library(data.table))
 THRESHOLD <- 400; N_PERM <- 5000; set.seed(1)
@@ -35,7 +37,8 @@ string_tables <- function() {
 }
 
 st <- string_tables()
-cl <- fread("core_clusters.tsv")[!is.na(Col0) & !is.na(Cluster)]
+ARGS <- commandArgs(trailingOnly = TRUE); CLF <- if (length(ARGS) > 0) ARGS[1] else "core_clusters.tsv"; PFX <- if (length(ARGS) > 1) paste0(ARGS[2], "_") else ""
+cl <- fread(CLF)[!is.na(Col0) & !is.na(Cluster)]
 prot <- st$at2s[toupper(cl$Col0)]
 nodes_in_net <- unique(c(st$links$a, st$links$b))
 ok <- !is.na(prot) & prot %in% nodes_in_net
@@ -48,8 +51,8 @@ obs <- sum(lab[ei] == lab[ej])
 null <- vapply(seq_len(N_PERM), function(i) { p <- sample(lab); sum(p[ei] == p[ej]) }, integer(1))
 pval <- (sum(null >= obs) + 1) / (N_PERM + 1)
 
-write.csv(data.frame(null = null), "string_null.csv", row.names = FALSE, quote = FALSE)
-writeLines(as.character(obs), "string_obs.txt")
+write.csv(data.frame(null = null), paste0(PFX, "string_null.csv"), row.names = FALSE, quote = FALSE)
+writeLines(as.character(obs), paste0(PFX, "string_obs.txt"))
 within <- lab[ei][lab[ei] == lab[ej]]
 cat(sprintf("core genes with cluster + STRING: %d; core-core gene pairs: %d\n", length(nodes), nrow(e)))
 cat(sprintf("observed within-cluster gene pairs: %d\n", obs))

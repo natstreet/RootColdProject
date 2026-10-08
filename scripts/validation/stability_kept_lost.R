@@ -2,8 +2,9 @@
 # stability_kept_lost.R — what the sample-stability rule (D052, D059) keeps and loses, per orthogroup, with evidence that
 # does not come from the co-expression test itself (ledger R041; NRS: a decision grounded in biology).
 #
-# Per core orthogroup (133, conserved_genes_COMPLETE_filtered.RDS), using the clique that represents it (the new
-# representative for orthogroups that stay core, the old one for sample-sensitive orthogroups):
+# Per core orthogroup (133, conserved_genes_COMPLETE_filtered.RDS), using the core's representative clique (lowest
+# MeanCliqueSum; D066 keeps it whatever the stability label; until 2026-10-08 evening the D052 passing representative was
+# used for stable orthogroups, ledger N149):
 #   status, manuscript cluster, complete cliques, passing cliques, orthology class (orthology_class.tsv)
 #   de_members        members that are cold DEGs in their own genotype (DEGs_<genotype>, union over time points; 0-6)
 #   peak_sign_agree   members whose largest-|log2FC| time point has the majority sign (direction of the cold response; 0-6)
@@ -15,7 +16,10 @@
 #   {conserved_genes_COMPLETE_filtered.RDS, conserved_genes_COMPLETE_wider.RDS, clique_HMcluster_list.rda,
 #   manuscript_cluster_map.tsv}, results/orthology_class.tsv, data/DEGs/{DEGs_<g>, log2FoldChange_<code>}.RData,
 #   data/expression/<g>_root_cold_stress_expression.txt, data/ComPlEx/PairwiseComparisons/comparison-col0-aspen-*.RData
-# Outputs (<out dir>): kept_lost_orthogroups.tsv, kept_lost_summary.tsv
+# Also a logistic model of passing (stable = 1) on log10(complete cliques) and DE in at least 3 genotypes (A036's model).
+# Outputs (<out dir>): kept_lost_orthogroups.tsv, kept_lost_summary.tsv, kept_lost_logistic.tsv, and for the STRING test
+#   (string_external_validation.R) the representative Col-0 gene and manuscript cluster of each set: stable_core_clusters.tsv,
+#   sensitive_core_clusters.tsv
 # Usage (working tree): Rscript stability_kept_lost.R <out dir>
 suppressPackageStartupMessages(library(data.table))
 OUT <- commandArgs(trailingOnly = TRUE)[1]; dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
@@ -25,7 +29,7 @@ ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], e) }
 og <- fread("results/loo_stability/loo_orthogroups.tsv")
 old <- as.data.table(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS"))
 w <- as.data.table(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_wider.RDS"))
-og[, clique := ifelse(core_status == "core", representative, old$cliqueID[match(OrthoGroup, old$OrthoGroup)])]
+og[, clique := old$cliqueID[match(OrthoGroup, old$OrthoGroup)]]   # the core's representative for every orthogroup (D066)
 cl <- as.data.table(ld("data/ComPlEx/cliques/clique_HMcluster_list.rda")); cl[, OrthoGroup := sub("_.*", "", ID)]
 mp <- fread("data/ComPlEx/cliques/manuscript_cluster_map.tsv")
 og[, cluster := mp$manuscript_cluster[match(cl$Cluster[match(OrthoGroup, cl$OrthoGroup)], mp$analysis_cluster)]]
@@ -61,3 +65,8 @@ ft <- function(lab, x) { t <- table(og$core_status, x); data.table(quantity = la
                          detail = paste(apply(t, 1, function(r) paste(names(r), r, sep = "=", collapse = ",")), rownames(t), sep = " @ ", collapse = " | ")) }
 sm <- rbind(sm[, detail := NA_character_], ft("orthology_class", og$orthology_class), ft("cluster", og$cluster), ft("DE_in_at_least_3_genotypes", og$de_members >= 3))
 fwrite(sm, file.path(OUT, "kept_lost_summary.tsv"), sep = "\t"); print(sm, row.names = FALSE)
+lg <- glm(I(core_status == "core") ~ log10(complete_cliques) + I(de_members >= 3), family = binomial, data = og)
+lc <- as.data.table(summary(lg)$coefficients, keep.rownames = "term"); setnames(lc, c("term", "estimate", "se", "z", "p"))
+fwrite(lc, file.path(OUT, "kept_lost_logistic.tsv"), sep = "\t"); print(lc)
+fwrite(og[core_status == "core", .(Col0 = col0_gene, Cluster = cluster)], file.path(OUT, "stable_core_clusters.tsv"), sep = "\t")
+fwrite(og[core_status == "sample-sensitive", .(Col0 = col0_gene, Cluster = cluster)], file.path(OUT, "sensitive_core_clusters.tsv"), sep = "\t")
