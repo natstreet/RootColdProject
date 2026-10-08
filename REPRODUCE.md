@@ -48,7 +48,7 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 | Fig. 3 | `scripts/figures/make_Fig3.R` | `ComPlEx/co_expressologs.RData`; panel b from the Table S2 output (`tables/TableS2_cladeGO_classic_p10.tsv`); Venn regions in `results/Figure3_venn_regions.tsv`, panel b values in `results/Figure3b_values.tsv` |
 | Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S3 output and `Fig4_captions_approved.tsv` (block captions by GO ID), written by `scripts/figures/fig4_captions_from_terms.R` from the approved terms in `scripts/figures/Fig4_terms_approved.tsv` (D008) |
 | Fig. 5 | `scripts/figures/make_Fig5.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/`; `results/orthogroup_size_flag.tsv` and `results/orthology_class.tsv` (panel labels) |
-| Fig. S1 | `scripts/figures/make_FigS1.R <orthogroup>` | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R`; `results/orthology_class.tsv`. The worked example is NOP56, OG0004969 (D044) |
+| Fig. S1 | `scripts/figures/make_FigS1.R OG0005042` (the worked example) | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R`; `results/orthology_class.tsv`. The worked example is NOP56, OG0004969 (D044) |
 | Fig. S2 | `scripts/figures/make_FigS2.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
 | Fig. S3 | `scripts/figures/make_FigS3.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S3_values.tsv` |
 | Fig. S4 | `scripts/figures/make_FigS4.R` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.R` (panel b; **STRING download, see note**) |
@@ -125,6 +125,26 @@ The per-species GO backgrounds (`annotation/bg_*.rda`) are the expressed-gene un
 species — every gene with nonzero VST expression across the cold time-course samples.
 `scripts/annotation/make_backgrounds.R` regenerates them from the deposited expression tables.
 
+
+## Sample-stability label and validation (D066)
+
+The conserved core is the 133 orthogroups of the D043 rule. Each carries a sample-stability label from a
+leave-one-sample-out test: every sample of every genotype is left out in turn, the genotype's network is rebuilt and
+ComPlEx is re-run for its five comparisons (665 runs plus the 15 unmodified runs, which must reproduce the deposited
+tables). `scripts/validation/loo_task.R` and `loo_run_task.sh` run one task each (an HPC array);
+`scripts/validation/loo_stability_score.R <run dir> results/loo_stability` scores them (a clique member passes if its pair
+with the clique partner stays at Max.p.val < 0.1 in the worst leave-one-out run in at least 4 of its 5 comparisons; an
+orthogroup is stable if one complete clique has all six members passing), and `scripts/analysis/core_stability_label.R`
+writes `results/core_stability_label.tsv`. The label does not change membership or representatives.
+
+The interpretation of the label: `loo_diagnostics.R`, `stability_kept_lost.R`, `stability_why_spruce.R`,
+`stability_timepoint_attribution.R`, and the design analyses `stability_matched_n.R` and `design_stability.R` (run on an
+HPC cluster; summaries by `stability_matched_n_summary.R` and `design_stability_summary.R`), all in `scripts/validation/`.
+External validation against published *A. thaliana* cold gene sets: `external_gene_sets.R` (builds each set from the
+papers' supplementary tables and checks its size against the paper), `external_validation_test.R` and
+`menges2005_core_regulators.R`. `scripts/analysis/manuscript_values.R` collects the values quoted in the text, each with
+its source file. `scripts/reproduce_figures_tables.sh` runs all of these in order; the Fig. S1 worked example is
+OG0005042 (`WORKED_EXAMPLE=OG0005042`).
 
 Figure S4, panel a, comes from `scripts/validation/conservation_label_permutation.R` (deposit only).
 Panel b needs the STRING v12 *A. thaliana* download (`3702.protein.links.detailed.v12.0.txt.gz` and
