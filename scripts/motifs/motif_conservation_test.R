@@ -10,7 +10,8 @@
 #               orthogroup has both pair types there (pairs as in motif_pairs.R)
 #   primary     the 6 angiosperm-gymnosperm comparisons (col0, aspen, birch x spruce, pine): per orthogroup, the mean of its
 #               per-comparison differences; Wilcoxon signed-rank across orthogroups (two-sided, exact = FALSE)
-#   outcome     "supported" if the Hodges-Lehmann estimate is positive and P < 0.05; "not supported" otherwise
+#   outcome     "supported" if the Hodges-Lehmann estimate is positive and P < 0.05; "not supported" otherwise; the 95% CI of the
+#               estimate (Wilcoxon) is reported so a null can be read as the size of difference it excludes
 #   secondary   the same per comparison for all 10 comparisons (BH across the 10), shown with the 4 within-lineage ones
 #   start codon (D064) genes whose model has no annotated start codon (check_start_codons.py, start_codon FALSE) are
 #               dropped with their pairs in mode "primary"; mode "sensitivity" keeps them
@@ -48,13 +49,16 @@ d <- pr[, .(n_co = sum(coexpressolog), n_non = sum(!coexpressolog), diff = mean(
         by = .(s1, s2, OrthoGroup)][n_co > 0 & n_non > 0]
 d[, angio_gymno := (s1 %in% ANG & s2 %in% GYM) | (s2 %in% ANG & s1 %in% GYM)]
 fwrite(d, file.path(OUT, sprintf("motif_og_differences_%d_%s.tsv", WIN, MODE)), sep = "\t")
-wt <- function(x) { if (length(x) < 2) return(list(n = length(x), estimate = NA_real_, p = NA_real_))
-  t <- wilcox.test(x, mu = 0, exact = FALSE, conf.int = TRUE); list(n = length(x), estimate = unname(t$estimate), p = t$p.value) }
+wt <- function(x) { if (length(x) < 2) return(list(n = length(x), estimate = NA_real_, ci_low = NA_real_, ci_high = NA_real_, p = NA_real_))
+  t <- wilcox.test(x, mu = 0, exact = FALSE, conf.int = TRUE)
+  list(n = length(x), estimate = unname(t$estimate), ci_low = t$conf.int[1], ci_high = t$conf.int[2], p = t$p.value) }
 pool <- d[angio_gymno == TRUE, .(diff = mean(diff), comparisons = .N), by = OrthoGroup]
 pt <- wt(pool$diff)
-res <- rbind(data.table(test = "primary: angiosperm-gymnosperm pooled", comparisons = 6L, orthogroups = pt$n, hl_estimate = pt$estimate, p = pt$p, p_bh = NA_real_,
+res <- rbind(data.table(test = "primary: angiosperm-gymnosperm pooled", comparisons = 6L, orthogroups = pt$n, hl_estimate = pt$estimate,
+                        ci_low = pt$ci_low, ci_high = pt$ci_high, p = pt$p, p_bh = NA_real_,
                         outcome = ifelse(!is.na(pt$p) & pt$estimate > 0 & pt$p < 0.05, "supported", "not supported")),
-             d[, { t <- wt(diff); .(test = paste("secondary:", s1, s2), comparisons = 1L, orthogroups = t$n, hl_estimate = t$estimate, p = t$p) }, by = .(s1, s2)][
+             d[, { t <- wt(diff); .(test = paste("secondary:", s1, s2), comparisons = 1L, orthogroups = t$n, hl_estimate = t$estimate,
+                                   ci_low = t$ci_low, ci_high = t$ci_high, p = t$p) }, by = .(s1, s2)][
                , p_bh := p.adjust(p, "BH")][, outcome := NA_character_][, !c("s1", "s2")], use.names = TRUE)
 res[, `:=`(window = WIN, mode = MODE)]
 fwrite(res, file.path(OUT, sprintf("motif_test_%d_%s.tsv", WIN, MODE)), sep = "\t"); print(res, row.names = FALSE)

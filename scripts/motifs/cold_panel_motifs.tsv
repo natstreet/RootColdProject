@@ -1,0 +1,7 @@
+motif	iupac	role	source
+DRE_CRT	RCCGAC	CBF/DREB1 binding site (primary for the CBF check)	Cold-stress/cis_motif_conservation.py, MOTIFS (June 2026 prototype; sha256 f3d1c626f9090a06); panel adopted in ledger A036
+ABRE	ACGTGKC	ABA-responsive element	same
+EE	AAAATATCT	evening element	same
+CBS	AAGATATTT	CCA1-binding site	same
+Gbox	CACGTG	G-box	same
+LTRE	CCGAAA	low-temperature-responsive element	same
