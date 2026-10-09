@@ -34,7 +34,9 @@ nl <- merge(x[core_status == "near-core", .(OrthoGroup, expressed_genes)], nl, b
 fwrite(blank_na(nl[order(OrthoGroup)]), file.path(O, "near_core_orthogroups.tsv"), sep = "\t", na = "")
 cat("near-core orthogroups:", nrow(nl), "\n")
 for (f in c("orthogroup_annotation.tsv", list.files(O, "^conserved_core.*\\.tsv$"))) { p <- file.path(O, f); if (!file.exists(p)) next
-  t <- fread(p); k <- intersect(c("OrthoGroup", "orthogroup", "Orthogroup"), names(t))[1]; if (is.na(k)) { cat("no orthogroup column in", f, "\n"); next }
+  # every field as text, unstripped and unquoted, so the existing columns are written back unchanged (ledger R046)
+  t <- fread(p, sep = "\t", colClasses = "character", strip.white = FALSE, quote = "", na.strings = NULL)
+  k <- intersect(c("OrthoGroup", "orthogroup", "Orthogroup"), names(t))[1]; if (is.na(k)) { cat("no orthogroup column in", f, "\n"); next }
   t[, intersect(c("core_status", "stability", "share_passing"), names(t)) := NULL]
   t <- merge(t, x[, .(OrthoGroup, core_status, stability, share_passing)], by.x = k, by.y = "OrthoGroup", all.x = TRUE, sort = FALSE)
   t[is.na(core_status), core_status := "none"]; fwrite(blank_na(t), p, sep = "\t", na = ""); cat(f, ": columns added\n") }
