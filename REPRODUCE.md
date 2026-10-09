@@ -53,7 +53,8 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 | Fig. S2 | `scripts/figures/make_FigS2.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
 | Fig. S3 | `scripts/figures/make_FigS3.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S3_values.tsv` |
 | Fig. S4 | `scripts/figures/make_FigS4.R` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.R` (panel b; **STRING download, see note**) |
-| Fig. S5 | `scripts/figures/make_FigS5.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
+| Fig. S5 | `scripts/figures/make_FigS5.R` | `results/a2_per_level_medians.tsv` from `scripts/companion/a2_tissue_stress_specificity.R <dds dir>`, which refits DESeq2 on the companion conifer experiment's dds objects (van Zalen et al., AbioticStressConifers `data/dds/dds_{SCR,SCN,SDR,SDN,PCR,PCN,PDR,PDN}.rda`, deposited with that study; not in this deposit); labels as Fig. 5 |
+| Fig. S6 | `scripts/figures/make_FigS6.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
 | Table S1 (`Table_S1.xlsx`) | `scripts/GO/make_TableS1.R` (with `go_table_utils.R`) | `DEGs/og_summary.RData`, `DEGs/DEGs_col0.RData`, `*/Orthogroups_20240613.tsv`, `annotation/Athal_go_ids.tsv`, `annotation/bg_col0_ATC.rda` |
 | Table S2 (`Table_S2.xlsx`) | `scripts/GO/make_TableS2.R` (with `go_table_utils.R`) | `ComPlEx/co_expressologs.RData`, `annotation/{go_ids,bg_*}`, `DEGs/DEGs_*.RData` |
 | Table S3 (`Table_S3.xlsx`) | `scripts/GO/make_TableS3.R` (with `go_table_utils.R`) | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |

@@ -1,86 +1,37 @@
-## Figure S5 — expression profiles of co-expressologs (P<0.1) directly linked to the
-## Arabidopsis CBFs (CBF1 AT4G25490, CBF2 AT4G25470, CBF3 AT4G25480), plotted as median VST.
-## Reproducible from the deposited data: data/ComPlEx/co_expressologs.RData + data/expression/.
-## Run from the deposit root (the dir that contains data/).
-suppressPackageStartupMessages({
-  library(dplyr); library(tidyr); library(tibble); library(stringr)
-  library(ggplot2); library(ggrepel)
-})
-
-load("data/ComPlEx/co_expressologs.RData")            # -> co_expressologs (P<0.1 set)
-prefix <- c(col0="Col", ost0="Ost", aspen="Pt", birch="Bp", spruce="Pa", pine="Ps")
-rd <- function(sp) read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", sp),
-                              header=TRUE, sep="\t", check.names=FALSE)
-E <- lapply(names(prefix), rd); names(E) <- names(prefix)
-
-## timepoint coding: 01=Control, 02=6h, 03=24h, 04=3d, 05=10d
-tp_levels <- c("Control","6h","24h","3d","10d")
-tp_map    <- c("01"="Control","02"="6h","03"="24h","04"="3d","05"="10d")
-
-## per-code sample counts per species (Control/6h/24h/3d/10d)
-cat("== per-code sample counts (Control/6h/24h/3d/10d) ==\n")
-for(sp in names(E)){
-  cols <- setdiff(colnames(E[[sp]]), "Genes")
-  code <- sub(sprintf("^%s[0-9]+\\.", prefix[sp]), "", cols)
-  cnt <- table(factor(tp_map[code], levels=tp_levels))
-  cat(sprintf("  %-7s %s  (total %d)\n", sp, paste(cnt, collapse="/"), sum(cnt)))
-}
-
-## co-expressologs directly linked to the col0 CBFs (verbatim hits() logic)
-hits <- function(cbf){
-  h <- co_expressologs %>% filter(GeneSpecies1==cbf, grepl("col0", Species1, ignore.case=TRUE)) %>%
-         dplyr::select(GeneSpecies2, Species2)
-  r <- co_expressologs %>% filter(GeneSpecies2==cbf, grepl("col0", Species1, ignore.case=TRUE),
-                                  grepl("ost0", Species2, ignore.case=TRUE)) %>%
-         dplyr::select(GeneSpecies1, Species1) %>%
-         dplyr::rename(GeneSpecies2=GeneSpecies1, Species2=Species1)
-  rbind(h, r)
-}
-CBFs <- c("AT4G25490","AT4G25470","AT4G25480")
-HIT  <- bind_rows(lapply(CBFs, hits)) %>% distinct()
-
-## build median-VST-per-timepoint long table for one species panel
-panel <- function(sp){
-  genes <- HIT %>% filter(Species2==sp) %>% pull(GeneSpecies2) %>% unique()
-  df <- E[[sp]] %>% filter(Genes %in% genes)
-  if(nrow(df)==0) return(NULL)
-  long <- df %>% pivot_longer(-Genes, names_to="sample", values_to="expr") %>%
-    mutate(code = sub(sprintf("^%s[0-9]+\\.", prefix[sp]), "", sample),
-           Timepoint = factor(tp_map[code], levels=tp_levels)) %>%
-    filter(!is.na(Timepoint)) %>%
-    group_by(Genes, Timepoint) %>% summarise(med = median(expr, na.rm=TRUE), .groups="drop") %>%
-    mutate(Species = sp)
-  long
-}
-species_disp <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
-combined <- bind_rows(lapply(names(prefix), panel))
-combined$Species <- factor(species_disp[combined$Species],
-                           levels=c("Col-0","Ost-0","Aspen","Birch","Spruce","Pine"))
-## label CBFs
-combined <- combined %>% mutate(gene = case_when(
-  Genes=="AT4G25490" ~ "AT4G25490_CBF1", Genes=="AT4G25470" ~ "AT4G25470_CBF2",
-  Genes=="AT4G25480" ~ "AT4G25480_CBF3", TRUE ~ Genes))
-
-cat("\n== genes plotted per species panel ==\n")
-print(combined %>% distinct(Species, gene) %>% count(Species, name="n_genes"))
-
-lab <- combined %>% group_by(Species, gene) %>%
-  filter(as.numeric(Timepoint)==max(as.numeric(Timepoint))) %>% slice_tail(n=1) %>% ungroup()
-
-p <- ggplot(combined, aes(Timepoint, med, group=gene, color=gene)) +
-  geom_line(linewidth=0.9) +
-  geom_text_repel(data=lab, aes(label=gene), hjust=0, size=3.0, direction="y", seed=1,
-                  segment.color="grey70", box.padding=0.2, max.overlaps=Inf,
-                  show.legend=FALSE, xlim=c(5.2, NA)) +
-  facet_wrap(~Species, scales="free_y", ncol=3) +
-  scale_x_discrete(expand=expansion(add=c(0.1, 3.2))) +
-  coord_cartesian(clip="off") + theme_minimal() +
-  theme(panel.grid.minor=element_blank(), strip.text=element_text(size=14),
-        legend.position="none", plot.margin=margin(t=5,r=45,b=5,l=5),
-        panel.spacing=unit(1.4,"lines"), plot.title=element_text(size=15,hjust=0.5),
-        axis.title=element_text(size=13), axis.text=element_text(size=11)) +
-  labs(x="Cold time course", y="Expression (median VST)")
-
-ggsave("Figure_S5.pdf", p, width=13.5, height=9, bg = "white")
-ggsave("Figure_S5_preview.png", p, width=13.5, height=9, dpi=120, bg="white")
-cat("\nDONE — wrote Figure_S5.pdf + Figure_S5_preview.png\n")
+#!/usr/bin/env Rscript
+# make_FigS5.R — Fig. S5: the core's manuscript clusters 1 and 2 (representative spruce and pine members) in the companion conifer
+# experiment (van Zalen et al.): root and needle, 5 C, -5 C and drought (ledger N159, N160, R045). Written by SCI; committed by CODE
+# with the cluster labels read from Table S3 (as make_Fig5.R), R's pdf device and plotmath degree signs (no reliance on the locale).
+# Input: results/a2_per_level_medians.tsv (scripts/companion/a2_tissue_stress_specificity.R), tables/TableS3_cliqueClusterGO_classic.tsv,
+#   scripts/figures/Fig5_cluster_labels.tsv. Output: Figure_S5.pdf, Figure_S5.png (300 dpi)
+# Usage (working tree): Rscript scripts/figures/make_FigS5.R [input] [out dir]
+suppressPackageStartupMessages({ library(data.table); library(ggplot2) })
+args <- commandArgs(trailingOnly = TRUE); inp <- if (length(args) > 0) args[1] else "results/a2_per_level_medians.tsv"; outdir <- if (length(args) > 1) args[2] else "."
+lab <- fread("scripts/figures/Fig5_cluster_labels.tsv"); t3 <- fread("tables/TableS3_cliqueClusterGO_classic.tsv")
+lab[, term := vapply(seq_len(.N), function(i) { h <- t3[`Cluster (manuscript)` == cluster[i] & GO.ID == go_id[i], unique(Term)]
+  if (length(h) != 1) stop("GO term ", go_id[i], " is not enriched for cluster ", cluster[i], " in Table S3"); h }, "")]
+clab <- sprintf("%s (Cluster %d)", paste0(toupper(substr(lab$term, 1, 1)), substring(lab$term, 2)), lab$cluster)
+d <- fread(inp)
+lv <- list("5C" = paste0("5C_", c("6h","24h","3d","10d")), "-5C" = paste0("neg5C_", c("6h","24h","3d","10d")))
+lab_cold <- c("6 h","24 h","3 d","10 d"); lab_dr <- c("60%","40%","30%","30%, 7 d","Collapse","Collapse, 2 d")
+d[, step := mapply(function(t, l) if (t == "drought") match(l, c("60%","40%","30%","30%7d","Collapse","C2d","FC60","FC40","FC30","FC30d7","Collapsed","Collapsed2d")) %% 6 else match(l, lv[[t]]), trt, level)]
+d[trt == "drought" & step == 0, step := 6]
+stopifnot(!anyNA(d$step), nrow(d) == 2 * 2 * (4 + 4 + 6))
+d <- rbind(d, unique(d[, .(sp, tissue, trt)])[, `:=`(level = "control", c1_median = 0, c2_median = 0, step = 0)], use.names = TRUE)
+m <- melt(d, id.vars = c("sp","tissue","trt","level","step"), measure.vars = c("c1_median","c2_median"), variable.name = "cl", value.name = "lfc")
+stopifnot(identical(lab$cluster, 1:2))
+m[, cl := factor(cl, c("c1_median","c2_median"), clab)]
+m[, trt := factor(trt, c("5C","-5C","drought"), c("5*degree*C", "-5*degree*C", "Drought"))]   # parsed by label_parsed
+m[, row := factor(paste(ifelse(sp == "spruce", "Norway spruce", "Scots pine"), tissue), c("Norway spruce root","Norway spruce needle","Scots pine root","Scots pine needle"))]
+labs_all <- c("C", "6 h", "24 h", "3 d", "10 d", "60%", "40%", "30%", "30%, 7 d", "Collapse", "Collapse, 2 d")
+m[, xl := factor(ifelse(step == 0, "C", ifelse(trt == "Drought", lab_dr[pmax(step, 1)], lab_cold[pmax(step, 1)])), levels = labs_all)]
+p <- ggplot(m, aes(xl, lfc, colour = cl, shape = cl, group = cl)) +
+  geom_hline(yintercept = 0, colour = "grey60", linewidth = 0.3) + geom_line(linewidth = 0.6) + geom_point(size = 1.3) +
+  facet_grid(row ~ trt, scales = "free_x", space = "free_x", labeller = labeller(trt = label_parsed)) +
+  scale_colour_manual(values = c("#000000", "#999999")) +
+  labs(x = "Time (cold) or soil water content as % of field capacity (drought); C, control",
+       y = expression("Median " * log[2] * " fold change"), colour = NULL, shape = NULL) +
+  theme_classic(base_size = 8) + theme(legend.position = "bottom", strip.background = element_blank(), strip.text = element_text(size = 7),
+                                       axis.text.x = element_text(angle = 45, hjust = 1, size = 6), panel.border = element_rect(fill = NA, colour = "grey80"))
+ggsave(file.path(outdir, "Figure_S5.pdf"), p, width = 180, height = 160, units = "mm", device = grDevices::pdf, useDingbats = FALSE)
+ggsave(file.path(outdir, "Figure_S5.png"), p, width = 180, height = 160, units = "mm", dpi = 300, bg = "white")

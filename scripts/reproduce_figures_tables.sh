@@ -10,7 +10,9 @@
 # Sample stability (D052/D059 test as a label, D066) and its interpretation need: data/loo_run (the leave-one-sample-out
 # ComPlEx runs: tasks.tsv, out/), data/stability_design/{matched_n,design} (outputs of stability_matched_n.R and
 # design_stability.R, run on micro), and data/external_gene_sets (the published tables of external_gene_sets.R).
-# The Fig. S1 worked example is drawn only when WORKED_EXAMPLE names its orthogroup (its choice is pending, ledger R042).
+# The Fig. S1 worked example is drawn when WORKED_EXAMPLE names its orthogroup (OG0005042, D067). The companion-conifer analysis (A2,
+# Fig. S5) refits DESeq2 on the van Zalen dds objects when COMPANION_DDS names their folder; otherwise it takes results made on a
+# cluster from data/companion_a2/.
 #
 # Usage: bash scripts/reproduce_figures_tables.sh <working dir> [Rscript for DESeq2 steps]
 #   RSCRIPT: the Rscript to use (default: Rscript on the PATH). The second argument names an Rscript with DESeq2 for
@@ -38,9 +40,15 @@ run stability_label       $R scripts/analysis/core_stability_label.R            
 run Fig6                  $R scripts/figures/make_Fig6.R                                   # TF cliques
 run FigS2                 $R scripts/figures/make_FigS2.R
 run FigS3                 $R scripts/figures/make_FigS3.R
-run FigS5                 $R scripts/figures/make_FigS5.R
+run FigS6                 $R scripts/figures/make_FigS6.R                                  # CBF co-expressologs (R045 renumbering)
 run tf_clique_directions  $RD scripts/analysis/tf_clique_directions.R
 run core_response         $R scripts/analysis/core_response_patterns.R
+run a1_rewiring           $R scripts/analysis/a1_rewiring_duplication.R                   # A1 (N159)
+run aspen_degs            $R scripts/analysis/aspen_timepoint_degs.R                      # aspen DEGs per time point (R045)
+if [ -n "${COMPANION_DDS:-}" ]; then                                                       # A2: DESeq2 refits of the companion conifer data (heavy; HPC)
+  run a2_companion        $R scripts/companion/a2_tissue_stress_specificity.R "$COMPANION_DDS"
+else echo "== a2_companion: COMPANION_DDS not set; results/a2_*.tsv copied from data/companion_a2 (made on micro)"; cp data/companion_a2/a2_*.tsv results/; fi
+run FigS5                 $R scripts/figures/make_FigS5.R                                  # companion conifers (R045)
 run orthology_tables      $R scripts/analysis/orthology_class_tables.R
 run core_modules          $R scripts/analysis/core_module_directions.R 3
 if [ -n "${WORKED_EXAMPLE:-}" ]; then
