@@ -14,6 +14,9 @@
 suppressPackageStartupMessages(library(data.table))
 O <- commandArgs(trailingOnly = TRUE)[1]
 ld <- function(f) { e <- new.env(); load(f, envir = e); as.data.table(get(ls(e)[1], e)) }
+# fwrite writes an empty string as "" (to tell it from NA); the deposit's tables leave empty fields empty, so empty strings
+# become NA before writing with na = "" (ledger R046)
+blank_na <- function(t) { for (k in names(t)) if (is.character(t[[k]])) set(t, which(t[[k]] == ""), k, NA_character_); t }
 sz <- fread("results/orthogroup_sizes_all.tsv"); sr <- fread("results/orthogroup_size_rule.tsv"); lab <- fread("results/core_stability_label.tsv")
 x <- merge(sz[eligible == TRUE, .(OrthoGroup, expressed_genes, all15)], sr[, .(OrthoGroup, has_complete_clique, counted_as_conserved)], by = "OrthoGroup", all.x = TRUE)
 x[is.na(has_complete_clique), `:=`(has_complete_clique = FALSE, counted_as_conserved = FALSE)]
@@ -28,10 +31,10 @@ ann <- unique(rbindlist(lapply(list.files("data/ComPlEx/PairwiseComparisons", "^
 ann[is.na(symbol) | symbol == "", symbol := NA_character_]
 nl <- ann[, .(col0_genes_tested = uniqueN(gene), col0_symbols = paste(sort(unique(na.omit(symbol))), collapse = " | ")), by = OrthoGroup]
 nl <- merge(x[core_status == "near-core", .(OrthoGroup, expressed_genes)], nl, by = "OrthoGroup", all.x = TRUE)
-fwrite(nl[order(OrthoGroup)], file.path(O, "near_core_orthogroups.tsv"), sep = "\t", na = "")
+fwrite(blank_na(nl[order(OrthoGroup)]), file.path(O, "near_core_orthogroups.tsv"), sep = "\t", na = "")
 cat("near-core orthogroups:", nrow(nl), "\n")
 for (f in c("orthogroup_annotation.tsv", list.files(O, "^conserved_core.*\\.tsv$"))) { p <- file.path(O, f); if (!file.exists(p)) next
   t <- fread(p); k <- intersect(c("OrthoGroup", "orthogroup", "Orthogroup"), names(t))[1]; if (is.na(k)) { cat("no orthogroup column in", f, "\n"); next }
-  t[, c("core_status", "stability", "share_passing") := NULL]
+  t[, intersect(c("core_status", "stability", "share_passing"), names(t)) := NULL]
   t <- merge(t, x[, .(OrthoGroup, core_status, stability, share_passing)], by.x = k, by.y = "OrthoGroup", all.x = TRUE, sort = FALSE)
-  t[is.na(core_status), core_status := "none"]; fwrite(t, p, sep = "\t", na = ""); cat(f, ": columns added\n") }
+  t[is.na(core_status), core_status := "none"]; fwrite(blank_na(t), p, sep = "\t", na = ""); cat(f, ": columns added\n") }
