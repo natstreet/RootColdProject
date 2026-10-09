@@ -1,105 +1,62 @@
 #!/usr/bin/env Rscript
-# make_Fig5.R — Figure 5: expression profiles across species of transcription factors from the
-# conserved co-expression core. One panel per transcription factor (labelled by its Arabidopsis
-# symbol); within a panel, the VST expression profile of that orthogroup's member in each species
-# over the cold time course (mean line, +/-1 SD ribbon, individual replicates as points). A
-# coloured star marks each species in which that member is differentially expressed (adjusted P <= 0.05
-# and |log2FC| >= 1 at any timepoint).
-#
-# Run from a directory containing the unpacked figshare deposit `data/`.
-# Inputs:
-#   scripts/analysis/tf_cliques.R (the transcription-factor cliques: >= 5 of 6 members predicted TFs, and their
-#   labels), which reads data/TranscriptionFactors/ and data/annotation/gene_aliases_20140331.txt
-#   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS orthogroup -> per-species clique member
-#   data/expression/<species>_root_cold_stress_expression.txt  per-sample VST
-#   data/DEGs/DEGs_<species>.RData                         per-species DEG sets (for the stars)
-#   results/orthogroup_size_flag.tsv (scripts/validation/orthogroup_size_flag.R): each panel's label carries its
-#   orthogroup's number of expressed genes (NRS, 2026-10-05)
-#   results/orthology_class.tsv (scripts/analysis/orthology_class.R): and its orthology class (D043)
-#   results/core_stability_label.tsv (scripts/analysis/core_stability_label.R): and its sample-stability label (D066)
-# Output: Figure5.pdf, Figure5.png
-#
-# Usage: Rscript scripts/figures/make_Fig5.R
-
-suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2) })
-
-source("scripts/analysis/tf_cliques.R")
-TFC <- tf_cliques()                       # the transcription-factor cliques of the core, labelled, in panel order
-species <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spruce", pine="Pine")
-pre     <- c(col0="Col", ost0="Ost", aspen="Pt", birch="Bp", spruce="Pa", pine="Ps")
-cond    <- c("01"="Control","02"="6h","03"="24h","04"="3d","05"="10d")
-source("scripts/figures/genotype_colours.R")
-pal     <- setNames(GENOTYPE_COLOURS[names(species)], species)   # the shared genotype palette, by display name
-ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
-
-# the selected conserved clique: one member gene per species for each orthogroup
-cgsel <- as.data.frame(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS"))
-members <- function(og){                                   # species -> that species' clique member
-  r <- cgsel[cgsel$OrthoGroup == og, ]
-  if (!nrow(r)) return(list())
-  setNames(lapply(names(species), function(sp) as.character(r[[sp]])), names(species))
+# make_Fig5.R — Figure 5: the two growth components of the conserved core (manuscript clusters 1 and 2) respond separably to cold
+# (ledger R043; producer written by SCI, committed by CODE with two changes: the panel labels are read from Table S3, and the
+# axis limits follow the data instead of fixed values that could silently drop points).
+#   a, b   median log2 fold change over the cluster's clique members, per genotype and time point (0 = control)
+#   c      sustained response: per genotype, the mean over 24 h, 3 d and 10 d of each cluster's median log2 fold change
+# Labels: for each cluster, the GO term named in scripts/figures/Fig5_cluster_labels.tsv, read with its name from Table S3
+#   (tables/TableS3_cliqueClusterGO_classic.tsv), where it must be enriched for that cluster; the script stops otherwise.
+# Inputs (working tree): results/cluster_profiles/cluster_profiles.tsv (cluster_profiles.R), tables/TableS3_cliqueClusterGO_classic.tsv
+#   (make_TableS3.R), scripts/figures/Fig5_cluster_labels.tsv, scripts/figures/genotype_colours.json
+# Outputs: figures/Figure5.pdf, figures/Figure5.png (300 dpi, opaque), results/Figure5_values.tsv
+# Usage (working tree): Rscript scripts/figures/make_Fig5.R
+suppressPackageStartupMessages({ library(data.table); library(ggplot2); library(jsonlite); library(patchwork) })
+cp  <- fread("results/cluster_profiles/cluster_profiles.tsv")
+col <- unlist(fromJSON("scripts/figures/genotype_colours.json"))
+lab <- fread("scripts/figures/Fig5_cluster_labels.tsv"); t3 <- fread("tables/TableS3_cliqueClusterGO_classic.tsv")
+lab[, term := vapply(seq_len(.N), function(i) { h <- t3[`Cluster (manuscript)` == cluster[i] & GO.ID == go_id[i], unique(Term)]
+  if (length(h) != 1) stop("GO term ", go_id[i], " is not enriched for cluster ", cluster[i], " in Table S3"); h }, "")]
+lab[, display := paste0(toupper(substr(term, 1, 1)), substring(term, 2))]
+geno <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "Aspen", birch = "Birch", spruce = "Norway spruce", pine = "Scots pine")
+tps  <- c("0", "6h", "24h", "3d", "10d"); tlab <- c("0", "6 h", "24 h", "3 d", "10 d")
+d <- cp[ms_cluster %in% lab$cluster, .(cluster = ms_cluster, species, timepoint, n, median_log2fc)]
+stopifnot(nrow(d) == nrow(lab) * 6 * 4, setequal(unique(d$species), names(geno)))
+d <- rbind(d, unique(d[, .(cluster, species, n)])[, `:=`(timepoint = "0", median_log2fc = 0)], use.names = TRUE)
+d[, t := factor(timepoint, levels = tps, labels = tlab)][, g := factor(geno[species], levels = geno)]
+pal <- setNames(col[names(geno)], geno)
+pad <- function(x, f = 0.08) { r <- range(x); r + c(-1, 1) * f * diff(r) }
+ylim_ab <- pad(c(d$median_log2fc, 0))
+th <- theme_classic(base_size = 8) + theme(axis.text = element_text(size = 6), legend.text = element_text(size = 7),
+  plot.title = element_text(size = 8, hjust = 0), plot.tag = element_text(face = "bold", size = 10), legend.title = element_blank())
+line_panel <- function(k) {
+  ggplot(d[cluster == k], aes(t, median_log2fc, colour = g, group = g)) +
+    geom_hline(yintercept = 0, colour = "grey60", linewidth = 0.3) + geom_line(linewidth = 0.6) + geom_point(size = 1.2) +
+    scale_colour_manual(values = pal, guide = guide_legend(nrow = 1)) + scale_y_continuous(limits = ylim_ab, breaks = seq(-3, 3, 1)) +
+    labs(x = expression("Time at 5 " * degree * "C"), y = expression("Median " * log[2] * " fold change"),
+         title = sprintf("%s (Cluster %d, %d orthogroups)", lab[cluster == k, display], k, unique(d[cluster == k]$n))) + th
 }
-
-# per-species per-sample VST for one gene -> long table of (Species, Condition, rep, VST)
-DEG <- lapply(names(species), function(sp) as.character(ld(sprintf("data/DEGs/DEGs_%s.RData", sp))))
-names(DEG) <- names(species)
-EXP <- lapply(names(species), function(sp)
-  read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", sp), check.names = FALSE, row.names = 1))
-names(EXP) <- names(species)
-
-SIZE <- read.delim("results/orthogroup_size_flag.tsv")
-if (!all(TFC$OrthoGroup %in% SIZE$OrthoGroup)) stop("a transcription-factor clique has no size flag")
-OCL <- read.delim("results/orthology_class.tsv")
-if (!all(TFC$OrthoGroup %in% OCL$OrthoGroup)) stop("a transcription-factor clique has no orthology class")
-STB <- read.delim("results/core_stability_label.tsv")
-if (!all(TFC$OrthoGroup %in% STB$OrthoGroup)) stop("a transcription-factor clique has no stability label")
-rows <- list(); stars <- list()
-for (k in seq_len(nrow(TFC))) {
-  og <- TFC$OrthoGroup[k]; s <- TFC$tf[k]                  # TF symbol (dual where Ost-0 member differs)
-  lab <- sprintf("%s (%d genes)\n%s, %s", s, SIZE$expressed_genes[SIZE$OrthoGroup == og],
-                 OCL$orthology_class[OCL$OrthoGroup == og], STB$core_status[STB$OrthoGroup == og])   # panel label
-  mem <- members(og)
-  for (sp in names(species)) {
-    g <- intersect(mem[[sp]], rownames(EXP[[sp]])); if (!length(g)) next
-    v <- colMeans(EXP[[sp]][g, , drop = FALSE], na.rm = TRUE)                          # the clique member
-    cc <- cond[sub(paste0("^", pre[sp], "\\d+\\."), "", names(v))]
-    df <- data.frame(TF = lab, Species = species[[sp]], Condition = cc, VST = as.numeric(v))
-    rows[[paste(s, sp)]] <- df
-    if (any(g %in% DEG[[sp]])) stars[[paste(s, sp)]] <- data.frame(TF = lab, Species = species[[sp]])
-  }
-}
-d <- bind_rows(rows)
-d$Condition <- factor(d$Condition, levels = unname(cond))
-d$Species   <- factor(d$Species,   levels = unname(species))
-d$TF        <- factor(d$TF, levels = unique(d$TF))
-summ <- d %>% group_by(TF, Species, Condition) %>%
-  summarise(m = mean(VST), sd = sd(VST), .groups = "drop")
-
-# place the DEG stars just below the top of each panel, stacked per species
-star <- bind_rows(stars)
-if (nrow(star)) {
-  star$TF <- factor(star$TF, levels = levels(d$TF)); star$Species <- factor(star$Species, levels = levels(d$Species))
-  top <- d %>% group_by(TF) %>% summarise(ymax = max(VST), .groups = "drop")
-  star <- star %>% left_join(top, by = "TF") %>% group_by(TF) %>%
-    mutate(y = ymax - (row_number() - 1) * 0.06 * ymax) %>% ungroup()
-}
-
-p <- ggplot(summ, aes(Condition, m, colour = Species, group = Species)) +
-  geom_ribbon(aes(ymin = m - sd, ymax = m + sd, fill = Species), alpha = 0.12, colour = NA) +
-  geom_line(linewidth = 0.7) +
-  geom_point(data = d, aes(Condition, VST, colour = Species), size = 0.5, alpha = 0.5) +
-  { if (nrow(star)) geom_text(data = star, aes(x = length(cond) + 0.4, y = y, colour = Species),
-        label = "*", size = 5, show.legend = FALSE) } +
-  facet_wrap(~TF, nrow = 2, scales = "free_y") +
-  scale_colour_manual(values = pal) + scale_fill_manual(values = pal, guide = "none") +
-  labs(x = "Condition", y = "Expression (VST)", colour = "Species",
-       caption = expression("* differentially expressed in that species (DEG: adjusted" ~ italic(P) <= 0.05 ~
-                            "and |" * log[2] * "FC|" >= 1 ~ "at any timepoint)")) +
-  theme_bw(base_size = 11) +
-  theme(panel.grid.minor = element_blank(), strip.background = element_rect(fill = "grey92"),
-        strip.text = element_text(face = "bold"), axis.text.x = element_text(angle = 45, hjust = 1))
-
-ggsave("Figure5.pdf", p, width = 13, height = 6, bg = "white")
-ggsave("Figure5.png", p, width = 13, height = 6, dpi = 300, bg = "white")
-if (nlevels(d$TF) != nrow(TFC)) stop("plotted ", nlevels(d$TF), " of ", nrow(TFC), " transcription-factor cliques")
-cat("TFs plotted:", nlevels(d$TF), "| orthogroups:", paste(levels(d$TF), collapse=", "), "\n")
+k1 <- lab$cluster[1]; k2 <- lab$cluster[2]
+pa <- line_panel(k1); pb <- line_panel(k2) + theme(axis.title.y = element_blank())
+w <- dcast(d[timepoint %in% c("24h", "3d", "10d")], g ~ cluster, value.var = "median_log2fc", fun.aggregate = mean)
+setnames(w, as.character(c(k1, k2)), c("xa", "xb"))
+xl <- pad(c(w$xa, 0), 0.30); yl <- pad(c(w$xb, 0), 0.20)   # room for the point labels
+n1 <- tolower(lab[cluster == k1, term]); n2 <- tolower(lab[cluster == k2, term])
+pc <- ggplot(w, aes(xa, xb, colour = g)) +
+  geom_hline(yintercept = 0, colour = "grey60", linewidth = 0.3) + geom_vline(xintercept = 0, colour = "grey60", linewidth = 0.3) +
+  geom_point(size = 2.2) +
+  geom_text(data = w[g != "Ost-0"], aes(label = g), size = 2.4, vjust = -1, show.legend = FALSE) +
+  geom_text(data = w[g == "Ost-0"], aes(label = g), size = 2.4, hjust = 1.25, show.legend = FALSE) +
+  annotate("text", x = xl[1], y = yl[2], label = sprintf("%s down,\n%s up", n1, n2), hjust = 0, vjust = 1, size = 2.3, colour = "grey35") +
+  annotate("text", x = xl[2], y = yl[2], label = "both up", hjust = 1, vjust = 1, size = 2.3, colour = "grey35") +
+  annotate("text", x = xl[1], y = yl[1], label = "both down", hjust = 0, vjust = 0, size = 2.3, colour = "grey35") +
+  scale_colour_manual(values = pal, guide = "none") + scale_x_continuous(limits = xl) + scale_y_continuous(limits = yl) +
+  labs(x = bquote(.(lab[cluster == k1, display]) ~ "(mean" ~ log[2] ~ "FC)"), y = bquote(.(lab[cluster == k2, display]) ~ "(mean" ~ log[2] ~ "FC)"),
+       title = "Sustained response (24 h to 10 d)") + th
+fig <- (pa + pb + pc) + plot_layout(widths = c(1, 1, 1.05), guides = "collect") + plot_annotation(tag_levels = "a") &
+  theme(legend.position = "bottom", legend.margin = margin(0, 0, 0, 0))
+dir.create("figures", showWarnings = FALSE); dir.create("results", showWarnings = FALSE)
+ggsave("figures/Figure5.pdf", fig, device = grDevices::pdf, width = 180, height = 72, units = "mm", useDingbats = FALSE)   # cairo_pdf needs X11 libraries not present on every system
+ggsave("figures/Figure5.png", fig, width = 180, height = 72, units = "mm", dpi = 300, bg = "white")
+fwrite(d[order(cluster, g, t), .(cluster, genotype = species, timepoint, n_orthogroups = n, median_log2fc)], "results/Figure5_values.tsv", sep = "\t")
+fwrite(w[, .(genotype = g, mean_24h_to_10d_cluster_a = xa, mean_24h_to_10d_cluster_b = xb)], "results/Figure5c_values.tsv", sep = "\t")
+cat("Figure 5:", nrow(d), "values; panel labels:", paste(lab$display, collapse = ", "), "\n")

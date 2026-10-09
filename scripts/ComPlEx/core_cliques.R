@@ -8,7 +8,7 @@
 # Output: data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS (one row per orthogroup, the columns of the
 #         input), or the path given as the first argument; with a size-rule table also <output>_flagged.RDS, the
 #         same columns for the orthogroups the rule does not count.
-# Read by: scripts/ComPlEx/clique_clusters.R, make_Fig4.R, make_Fig5.R, make_core_clusters.R, tf_clique_directions.R,
+# Read by: scripts/ComPlEx/clique_clusters.R, make_Fig4.R, make_Fig6.R, make_core_clusters.R, tf_clique_directions.R,
 #          complete_cliques_per_orthogroup.R
 # Usage:  Rscript scripts/ComPlEx/core_cliques.R [output.RDS] [size-rule table]
 suppressPackageStartupMessages(library(dplyr))

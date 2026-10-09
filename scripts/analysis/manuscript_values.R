@@ -4,7 +4,9 @@
 # Inputs (working tree, written by the driver's producers): results/core_stability_label.tsv, results/loo_stability/loo_gate.tsv,
 #   results/stability/{kept_lost_orthogroups,kept_lost_summary,kept_lost_logistic,why_spruce_signal,timepoint_attribution,
 #   matched_n_summary}.tsv, results/stability/design/design_model.tsv, results/stability/{stable,sensitive}_string_{obs.txt,null.csv},
-#   results/external_validation/{external_validation,external_validation_control}.tsv
+#   results/external_validation/{external_validation,external_validation_control}.tsv, results/Figure5_values.tsv and
+#   results/Figure5c_values.tsv (make_Fig5.R), results/orthogroup_sizes_all.tsv and results/orthogroup_size_rule.tsv (near-core),
+#   data/TranscriptionFactors/TF_col0.RData, the col0 comparison tables, results/cbf_check/ (cold_motif_check.R)
 # Output: results/manuscript_values.tsv. Usage (working tree): Rscript scripts/analysis/manuscript_values.R
 suppressPackageStartupMessages(library(data.table))
 V <- list(); add <- function(name, value, source) V[[length(V) + 1]] <<- data.table(name = name, value = as.character(value), source = source)
@@ -48,4 +50,30 @@ for (st in c("stable", "sensitive", "all")) for (cl in c("cluster_2", "all_clust
   add(sprintf("ext_%s_%s_%s", st, cl, se), sprintf("%d/%d; expected %.2f; fold %.2f; q %.2g; %s", r$overlap, r$members, r$expected, r$fold, r$q, r$call),
       "external_validation.tsv: representative members") }
 add("external_universe", unique(ev$universe), "external_validation.tsv: universe")
+# Fig. 5 (R043): panel a/b values per cluster, genotype and time point; panel c means per genotype
+f5 <- fread("results/Figure5_values.tsv")
+for (i in seq_len(nrow(f5))) add(sprintf("fig5_cluster%d_%s_%s", f5$cluster[i], f5$genotype[i], f5$timepoint[i]), f5$median_log2fc[i], "Figure5_values.tsv")
+f5c <- fread("results/Figure5c_values.tsv")
+for (i in seq_len(nrow(f5c))) { add(sprintf("fig5c_%s_cluster_a_mean_24h_10d", f5c$genotype[i]), round(f5c$mean_24h_to_10d_cluster_a[i], 3), "Figure5c_values.tsv")
+  add(sprintf("fig5c_%s_cluster_b_mean_24h_10d", f5c$genotype[i]), round(f5c$mean_24h_to_10d_cluster_b[i], 3), "Figure5c_values.tsv") }
+# near-core (D050) and its orthogroups with an Arabidopsis TF among the Col-0 genes ComPlEx tested (R043)
+sz <- fread("results/orthogroup_sizes_all.tsv"); sr <- fread("results/orthogroup_size_rule.tsv")
+nc <- setdiff(sz[eligible == TRUE & all15 == TRUE, OrthoGroup], sr[has_complete_clique == TRUE, OrthoGroup])
+add("near_core_orthogroups", length(nc), "orthogroup_sizes_all.tsv all15, without a complete clique (orthogroup_size_rule.tsv)")
+ldd <- function(f) { e <- new.env(); load(f, envir = e); as.data.table(get(ls(e)[1], e)) }
+tfc <- unique(ldd("data/TranscriptionFactors/TF_col0.RData")$Gene_ID)
+tst <- unique(rbindlist(lapply(list.files("data/ComPlEx/PairwiseComparisons", "^comparison-col0-.*-table[.]RData$", full.names = TRUE),
+  function(f) ldd(f)[OrthoGroup %in% nc, .(OrthoGroup, gene = Species1)])))
+add("near_core_with_col0_tf", tst[gene %in% tfc, uniqueN(OrthoGroup)], "near-core orthogroups with a tested Col-0 gene in TF_col0.RData")
+# CBF / cold-panel promoter check (D068)
+cc <- fread("results/cbf_check/cold_motif_control.tsv")
+add("cbf_control_odds_ratio", sprintf("%.2f (95%% CI %.2f-%.2f); %d/%d vs %d/%d", cc$odds_ratio, cc$ci_low, cc$ci_high, cc$fg_with, cc$fg_genes, cc$bg_with, cc$bg_genes), "cold_motif_control.tsv")
+add("cbf_control_zhao_presence_agreement", cc$presence_agreement, "cold_motif_control.tsv")
+ce <- fread("results/cbf_check/cold_motif_enrichment.tsv")
+for (g in unique(ce$genotype)) { r <- ce[genotype == g & motif == "DRE_CRT"]
+  add(paste0("cbf_core_dre_", g), sprintf("%d/%d; OR %.2f (95%% CI %.2f-%.2f); q %.2g; %s", r$fg_with, r$fg_genes, r$odds_ratio, r$ci_low, r$ci_high, r$q, r$call), "cold_motif_enrichment.tsv") }
+add("cbf_panel_min_q", signif(min(ce$q), 3), "cold_motif_enrichment.tsv: all 30 tests")
+add("cbf_panel_enriched_tests", ce[call == "enriched", .N], "cold_motif_enrichment.tsv")
+cb <- fread("results/cbf_check/cbf_genes_status.tsv")
+add("cbf1_3_orthogroup_status", paste(unique(paste(cb$OrthoGroup, cb$core_status)), collapse = "; "), "cbf_genes_status.tsv")
 out <- rbindlist(V); fwrite(out, "results/manuscript_values.tsv", sep = "\t"); cat(nrow(out), "values written\n")

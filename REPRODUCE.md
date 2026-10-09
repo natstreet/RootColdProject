@@ -47,7 +47,8 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
 | Fig. 3 | `scripts/figures/make_Fig3.R` | `ComPlEx/co_expressologs.RData`; panel b from the Table S2 output (`tables/TableS2_cladeGO_classic_p10.tsv`); Venn regions in `results/Figure3_venn_regions.tsv`, panel b values in `results/Figure3b_values.tsv` |
 | Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S3 output and `Fig4_captions_approved.tsv` (block captions by GO ID), written by `scripts/figures/fig4_captions_from_terms.R` from the approved terms in `scripts/figures/Fig4_terms_approved.tsv` (D008) |
-| Fig. 5 | `scripts/figures/make_Fig5.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/`; `results/orthogroup_size_flag.tsv` and `results/orthology_class.tsv` (panel labels) |
+| Fig. 5 | `scripts/figures/make_Fig5.R` | `results/cluster_profiles/cluster_profiles.tsv` (from `cluster_profiles.R`), `tables/TableS3_cliqueClusterGO_classic.tsv` (the panel labels: Table S3 terms named in `scripts/figures/Fig5_cluster_labels.tsv`), `scripts/figures/genotype_colours.json`; values in `results/Figure5_values.tsv` |
+| Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/`; `results/orthogroup_size_flag.tsv` and `results/orthology_class.tsv` (panel labels) |
 | Fig. S1 | `scripts/figures/make_FigS1.R OG0005042` (the worked example) | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R`; `results/orthology_class.tsv`. The worked example is NOP56, OG0004969 (D044) |
 | Fig. S2 | `scripts/figures/make_FigS2.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
 | Fig. S3 | `scripts/figures/make_FigS3.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S3_values.tsv` |
@@ -99,7 +100,7 @@ expression data, and are needed only to rebuild those objects:
 | `DEGs/og_summary.RData` (per orthogroup, the genotypes with a gene and with a DEG) | `scripts/DE/og_summary.R` |
 
 Run them in this order: `ones_and_zeros.R` and `complete_cliques.R`; `size_rule.R`; `core_cliques.R`, then
-`clique_clusters.R`, before `make_TableS3.R`, `make_Fig4.R`, `make_Fig5.R` and `make_core_clusters.R`; `og_summary.R`
+`clique_clusters.R`, before `make_TableS3.R`, `make_Fig4.R`, `make_Fig6.R` and `make_core_clusters.R`; `og_summary.R`
 before `make_Fig1.R`, `make_TableS1.R` and `common_orthogroups.R`. Each writes its object to the path above, or to
 the path given as its first argument. `scripts/tests/test_rebuilt_objects.R` runs the four into a temporary folder
 and checks that each result is identical to the copy under `data/`.

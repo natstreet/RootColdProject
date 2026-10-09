@@ -1,7 +1,7 @@
 file	value	reason
 scripts/figures/make_Fig2.R	110	PNG resolution (dpi)
 scripts/figures/make_Fig4.R	30	heatmap columns: 6 genotypes x 5 conditions (design)
-scripts/figures/make_Fig5.R	45	axis label angle
+scripts/figures/make_Fig6.R	45	axis label angle
 scripts/figures/make_FigS1.R	24	the 24 h time point label
 scripts/figures/make_FigS1.R	21	ggplot point shape code
 scripts/figures/make_FigS4.R	30	axis padding

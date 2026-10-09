@@ -35,7 +35,7 @@ run hog_N1msa             $R scripts/analysis/hog_clique_consistency.R data/orth
 run orthology_class       $R scripts/analysis/orthology_class.R results/hog_N1msa data/orthofinder/msa_trees
 run loo_score             $R scripts/validation/loo_stability_score.R data/loo_run results/loo_stability   # D052/D059 test (gate first)
 run stability_label       $R scripts/analysis/core_stability_label.R                                     # D066 label
-run Fig5                  $R scripts/figures/make_Fig5.R
+run Fig6                  $R scripts/figures/make_Fig6.R                                   # TF cliques
 run FigS2                 $R scripts/figures/make_FigS2.R
 run FigS3                 $R scripts/figures/make_FigS3.R
 run FigS5                 $R scripts/figures/make_FigS5.R
@@ -48,6 +48,7 @@ if [ -n "${WORKED_EXAMPLE:-}" ]; then
   run worked_example      $R scripts/analysis/worked_example_table.R "$WORKED_EXAMPLE" "results/worked_example_$WORKED_EXAMPLE.tsv"
 else echo "== FigS1, worked_example: skipped (WORKED_EXAMPLE not set; choice pending)"; fi
 run cluster_profiles      $R scripts/analysis/cluster_profiles.R data/open results/cluster_profiles
+run Fig5                  $R scripts/figures/make_Fig5.R                                   # growth components (R043)
 run label_permutation     $R scripts/validation/conservation_label_permutation.R
 run sizeaware_null        $R scripts/validation/conservation_sizeaware_null.R
 run core_clusters         $R scripts/validation/make_core_clusters.R
