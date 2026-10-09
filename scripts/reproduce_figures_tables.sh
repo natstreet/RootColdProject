@@ -11,7 +11,8 @@
 # ComPlEx runs: tasks.tsv, out/), data/stability_design/{matched_n,design} (outputs of stability_matched_n.R and
 # design_stability.R, run on micro), and data/external_gene_sets (the published tables of external_gene_sets.R).
 # The Fig. S1 worked example is drawn when WORKED_EXAMPLE names its orthogroup (OG0005042, D067). The companion-conifer analysis (A2,
-# Fig. S5) refits DESeq2 on the van Zalen dds objects when COMPANION_DDS names their folder; otherwise it takes results made on a
+# Fig. S5) refits DESeq2 on the dds objects of van Zalen et al. (2026, https://doi.org/10.64898/2026.08.03.742458) when COMPANION_DDS
+# names their folder; otherwise it takes results made on a
 # cluster from data/companion_a2/.
 #
 # Usage: bash scripts/reproduce_figures_tables.sh <working dir> [Rscript for DESeq2 steps]
