@@ -9,10 +9,12 @@
 # Inputs: <gff3> (gene / mRNA / CDS features; gz allowed), <genes.txt>, <fasta .fai>, <seq prefix> (prepended to GFF
 #   seqids to give FASTA names, "-" for none), <repeat intervals> (BED or GFF, gz allowed, "-" for none), <out prefix>
 # Outputs: <out prefix>_<WIN>.bed (BED6, name = gene ID) and <out prefix>_windows.tsv (one row per gene and window)
-# Stops if a listed gene has no CDS or its sequence is not in the .fai.
+# Stops if a listed gene has no CDS (unless a 7th argument "skip_noncoding" is given: such genes are then skipped and counted)
+# or its sequence is not in the .fai.
 suppressPackageStartupMessages(library(data.table))
 a <- commandArgs(trailingOnly = TRUE)
 GFF <- a[1]; GENES <- a[2]; FAI <- a[3]; PFX <- if (a[4] == "-") "" else a[4]; REP <- a[5]; OUT <- a[6]
+SKIP_NONCODING <- length(a) > 6 && a[7] == "skip_noncoding"   # background lists: drop genes without a CDS (counted) instead of stopping
 WINS <- c(1000L, 2000L)
 nocomment <- function(f) paste(if (grepl("\\.gz$", f)) "gzip -dc" else "cat", shQuote(f), "| grep -v '^#'")   # comment lines confuse fread
 gff <- fread(cmd = nocomment(GFF), sep = "\t", header = FALSE, quote = "", fill = TRUE, select = 1:9, colClasses = "character")
@@ -27,7 +29,9 @@ cds <- merge(cds, mrna, by = "tx")
 want <- readLines(GENES)
 txl <- cds[gene %in% want, .(cds_len = sum(end - start + 1L), cmin = min(start), cmax = max(end)), by = .(gene, tx)]
 setorder(txl, gene, -cds_len, tx); txl <- txl[, .SD[1], by = gene]
-miss <- setdiff(want, txl$gene); if (length(miss)) stop(length(miss), " listed genes have no CDS, e.g. ", paste(head(miss, 5), collapse = " "))
+miss <- setdiff(want, txl$gene)
+if (length(miss) && !SKIP_NONCODING) stop(length(miss), " listed genes have no CDS, e.g. ", paste(head(miss, 5), collapse = " "))
+if (length(miss)) cat("genes without a CDS skipped:", length(miss), "of", length(want), "\n")
 w0 <- merge(txl, genes, by = "gene")
 fai <- fread(FAI, header = FALSE, select = 1:2, col.names = c("fseq", "len"))
 w0[, fseq := paste0(PFX, seq)]
