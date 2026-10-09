@@ -9,8 +9,8 @@
 # Inputs: <gff3> (gene / mRNA / CDS features; gz allowed), <genes.txt>, <fasta .fai>, <seq prefix> (prepended to GFF
 #   seqids to give FASTA names, "-" for none), <repeat intervals> (BED or GFF, gz allowed, "-" for none), <out prefix>
 # Outputs: <out prefix>_<WIN>.bed (BED6, name = gene ID) and <out prefix>_windows.tsv (one row per gene and window)
-# Stops if a listed gene has no CDS (unless a 7th argument "skip_noncoding" is given: such genes are then skipped and counted)
-# or its sequence is not in the .fai.
+# Stops if a listed gene has no CDS or its sequence is not in the .fai, unless a 7th argument "skip_noncoding" is given (for
+# genome-wide background lists): such genes are then skipped and counted (non-coding genes; organelle genes).
 suppressPackageStartupMessages(library(data.table))
 a <- commandArgs(trailingOnly = TRUE)
 GFF <- a[1]; GENES <- a[2]; FAI <- a[3]; PFX <- if (a[4] == "-") "" else a[4]; REP <- a[5]; OUT <- a[6]
@@ -35,6 +35,8 @@ if (length(miss)) cat("genes without a CDS skipped:", length(miss), "of", length
 w0 <- merge(txl, genes, by = "gene")
 fai <- fread(FAI, header = FALSE, select = 1:2, col.names = c("fseq", "len"))
 w0[, fseq := paste0(PFX, seq)]
+if (w0[!fseq %in% fai$fseq, .N] && SKIP_NONCODING) { cat("genes on sequences absent from the FASTA skipped (e.g. organelles):", w0[!fseq %in% fai$fseq, .N],
+  paste(unique(w0[!fseq %in% fai$fseq, fseq]), collapse = " "), "\n"); w0 <- w0[fseq %in% fai$fseq] }
 if (w0[!fseq %in% fai$fseq, .N]) stop("sequence names not in the .fai: ", paste(head(unique(w0[!fseq %in% fai$fseq, fseq])), collapse = " "))
 w0 <- merge(w0, fai, by = "fseq")
 w0[, atg := ifelse(strand == "+", cmin, cmax)]
