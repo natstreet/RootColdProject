@@ -69,6 +69,7 @@ run menges2005            $R scripts/validation/menges2005_core_regulators.R dat
 run worked_candidates     $R scripts/analysis/worked_example_candidates.R results/stability
 run paralogue_switch      $R scripts/analysis/paralogue_switching.R                       # D062 item 2
 run paralogue_artefact    $R scripts/analysis/paralogue_switching_artefact.R              # needs data/paralogue_switching (Araport11 extracts)
+run motif_tests           bash scripts/motifs/run_motif_tests.sh                           # D062 item 4 (data/motifs)
 run cold_motif_check     $R scripts/motifs/cold_motif_check.R data/cbf_check/promoters scripts/motifs/cold_panel_motifs.tsv results/external_validation/sets/external_gene_sets.tsv data/cbf_check/orthogroup_core_status.tsv results/cbf_check
 run ga_biosynthesis       $R scripts/analysis/ga_biosynthesis_check.R                     # D049 GA paragraph
 run manuscript_values     $R scripts/analysis/manuscript_values.R
