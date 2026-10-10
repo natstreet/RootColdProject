@@ -66,10 +66,14 @@ print(combined %>% distinct(Species, gene) %>% count(Species, name="n_genes"))
 
 lab <- combined %>% group_by(Species, gene) %>%
   filter(as.numeric(Timepoint)==max(as.numeric(Timepoint))) %>% slice_tail(n=1) %>% ungroup()
+## point labels as plotmath: the gene symbol after the locus is italic, identifiers stay roman (NRS, ledger R049)
+lab$label <- ifelse(grepl("^AT[1-5CM]G[0-9]{5}_", lab$gene),
+                    sprintf('"%s_"*italic("%s")', sub("_.*$", "", lab$gene), sub("^[^_]*_", "", lab$gene)),
+                    sprintf('"%s"', lab$gene))
 
 p <- ggplot(combined, aes(Timepoint, med, group=gene, color=gene)) +
   geom_line(linewidth=0.9) +
-  geom_text_repel(data=lab, aes(label=gene), hjust=0, size=3.0, direction="y", seed=1,
+  geom_text_repel(data=lab, aes(label=label), parse=TRUE, hjust=0, size=3.0, direction="y", seed=1,
                   segment.color="grey70", box.padding=0.2, max.overlaps=Inf,
                   show.legend=FALSE, xlim=c(5.2, NA)) +
   facet_wrap(~Species, scales="free_y", ncol=3) +
@@ -83,4 +87,5 @@ p <- ggplot(combined, aes(Timepoint, med, group=gene, color=gene)) +
 
 ggsave("Figure_S6.pdf", p, width=13.5, height=9, bg = "white")
 ggsave("Figure_S6_preview.png", p, width=13.5, height=9, dpi=120, bg="white")
-cat("\nDONE — wrote Figure_S6.pdf + Figure_S6_preview.png\n")
+ggsave("Figure_S6.png", p, width=13.5, height=9, dpi=300, bg="white")
+cat("\nDONE — wrote Figure_S6.pdf, Figure_S6.png + Figure_S6_preview.png\n")

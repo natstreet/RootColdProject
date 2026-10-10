@@ -53,11 +53,17 @@ OCL <- read.delim("results/orthology_class.tsv")
 if (!all(TFC$OrthoGroup %in% OCL$OrthoGroup)) stop("a transcription-factor clique has no orthology class")
 STB <- read.delim("results/core_stability_label.tsv")
 if (!all(TFC$OrthoGroup %in% STB$OrthoGroup)) stop("a transcription-factor clique has no stability label")
-rows <- list(); stars <- list()
+# Panel titles: gene symbols italic, locus identifiers roman (NRS, ledger R049). The data keep the plain label; the
+# strips are drawn from a plotmath version of it (bold, as before).
+sym_expr <- function(s) paste(vapply(strsplit(s, "/", fixed = TRUE)[[1]], function(x)
+  sprintf(if (grepl("^AT[1-5CM]G[0-9]{5}$", x)) 'bold("%s")' else 'bolditalic("%s")', x), ""), collapse = '*bold("/")*')
+rows <- list(); stars <- list(); STRIP <- character(0)
 for (k in seq_len(nrow(TFC))) {
   og <- TFC$OrthoGroup[k]; s <- TFC$tf[k]                  # TF symbol (dual where Ost-0 member differs)
   lab <- sprintf("%s (%d genes)\n%s, %s", s, SIZE$expressed_genes[SIZE$OrthoGroup == og],
                  OCL$orthology_class[OCL$OrthoGroup == og], STB$core_status[STB$OrthoGroup == og])   # panel label
+  STRIP[lab] <- sprintf('atop(%s~bold("(%d genes)"), bold("%s, %s"))', sym_expr(s), SIZE$expressed_genes[SIZE$OrthoGroup == og],
+                        OCL$orthology_class[OCL$OrthoGroup == og], STB$core_status[STB$OrthoGroup == og])
   mem <- members(og)
   for (sp in names(species)) {
     g <- intersect(mem[[sp]], rownames(EXP[[sp]])); if (!length(g)) next
@@ -90,7 +96,7 @@ p <- ggplot(summ, aes(Condition, m, colour = Species, group = Species)) +
   geom_point(data = d, aes(Condition, VST, colour = Species), size = 0.5, alpha = 0.5) +
   { if (nrow(star)) geom_text(data = star, aes(x = length(cond) + 0.4, y = y, colour = Species),
         label = "*", size = 5, show.legend = FALSE) } +
-  facet_wrap(~TF, nrow = 2, scales = "free_y") +
+  facet_wrap(~TF, nrow = 2, scales = "free_y", labeller = as_labeller(STRIP, default = label_parsed)) +
   scale_colour_manual(values = pal) + scale_fill_manual(values = pal, guide = "none") +
   labs(x = "Condition", y = "Expression (VST)", colour = "Species",
        caption = expression("* differentially expressed in that species (DEG: adjusted" ~ italic(P) <= 0.05 ~

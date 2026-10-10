@@ -54,7 +54,8 @@ if (nrow(row) != 1) stop(OG, " is not a conserved-core orthogroup")
 mem <- unlist(row[SP])
 al <- read.delim("data/annotation/gene_aliases_20140331.txt", colClasses = "character")
 sym <- al$symbol[toupper(al$locus_name) == strip(mem[["col0"]])]
-label <- if (length(sym) && nzchar(sym[1])) sym[1] else strip(mem[["col0"]])
+has_symbol <- length(sym) > 0 && nzchar(sym[1])
+label <- if (has_symbol) sym[1] else strip(mem[["col0"]])
 ocl <- read.delim("results/orthology_class.tsv")
 ocl <- ocl$orthology_class[ocl$OrthoGroup == OG]
 if (length(ocl) != 1) stop(OG, " has no orthology class")
@@ -128,7 +129,9 @@ A <- ggplot(pa, aes(x, lfc, colour = species)) +
   scale_x_continuous(breaks = seq_along(TPS), labels = TPLAB, expand = expansion(mult = 0.06)) +
   scale_y_continuous(breaks = function(l) seq(ceiling(l[1]), floor(l[2]), 1), expand = expansion(mult = 0.1)) +
   labs(x = NULL, y = expression(log[2]~fold~change~vs~control), tag = "a",
-       title = sprintf("%s clique members (%s)\n%s (gene-tree call)", label, OG, ocl)) + th +
+       title = if (has_symbol)                      # gene symbol italic, locus identifier roman (NRS, ledger R049)
+         bquote(atop(italic(.(label)) ~ "clique members (" * .(OG) * ")", .(paste(ocl, "(gene-tree call)"))))
+       else sprintf("%s clique members (%s)\n%s (gene-tree call)", label, OG, ocl)) + th +
   theme(legend.position = "bottom", legend.text = element_text(size = 7), legend.key.width = unit(10, "pt"),
         legend.margin = margin(0, 0, 0, 0)) +
   guides(colour = guide_legend(nrow = 1, override.aes = list(linewidth = 0.8)))
