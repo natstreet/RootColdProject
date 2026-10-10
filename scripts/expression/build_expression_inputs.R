@@ -4,8 +4,8 @@
 #
 # Counts per species:
 #   Col-0, aspen, birch, Norway spruce, Scots pine: the deposited DESeq2 objects, unchanged (they already sum every
-#     run, except pine sample 112, which has only run S2: its second run, S9, was not quantified with the study's
-#     pine pipeline, whose reference index was not kept).
+#     run). Pine sample 112 has two sequencing runs, S2 and S9; its deposited column equals a quantification of a
+#     merged read file (59.5 M reads), and which runs went into that file was not confirmed (ledger A033, N126).
 #   Ost-0: the deposited object, with sample OstR1001 given both of its sequencing runs: each run's salmon read
 #     counts summed per gene and rounded, then added over runs (the convention of the other samples, which the
 #     script checks by reproducing their deposited counts).
