@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# core_status_columns.R — version 5 deposit (ledger R037 item 2, R042 item 1; DECISIONS.md D050, D066): each orthogroup's
+# core_status_columns.R — deposit, version 4 (ledger R037 item 2, R042 item 1; DECISIONS.md D050, D066): each orthogroup's
 # place relative to the conserved core, the sample-stability label of the core orthogroups, and the near-core list.
 #   core_status  core (counted as conserved: complete clique and the D026 size rule) | set aside by size (complete clique,
 #                not counted) | near-core (co-expressolog in all 15 comparisons, Max.p.val < 0.1, but no complete
