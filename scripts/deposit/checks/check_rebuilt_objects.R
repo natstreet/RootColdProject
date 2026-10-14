@@ -21,7 +21,7 @@ for (g in names(G)) {
   v <- assay(varianceStabilizingTransformation(dds0, blind = TRUE)); v <- v - min(v)
   ex <- fread(file.path(R, sprintf("data/expression/%s_root_cold_stress_expression.txt", g)), header = TRUE)
   m <- as.matrix(ex[, -1]); rownames(m) <- ex[[1]]
-  mp <- nm[genotype == g]; colnames(v) <- setNames(mp$deposited_sample_id, mp$sequencing_name)[colnames(v)]   # publication codes
+  mp <- nm[genotype == g]; colnames(v) <- unname(setNames(mp$deposited_sample_id, mp$sequencing_name)[colnames(v)])   # publication codes
   same_dim <- identical(sort(rownames(m)), sort(rownames(v))) && identical(sort(colnames(m)), sort(colnames(v)))
   add(genotype = g, check = "a VST matrix", result = if (same_dim) sprintf("max |diff| %.3g", max(abs(m[rownames(v), colnames(v)] - v))) else
       sprintf("names differ: genes %d/%d, samples %d/%d", length(intersect(rownames(m), rownames(v))), nrow(v), length(intersect(colnames(m), colnames(v))), ncol(v)))
