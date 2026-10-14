@@ -88,6 +88,8 @@ for (i in seq_len(nrow(a2))) add(sprintf("a2_%s_%s_%s", a2$sp[i], a2$tissue[i], 
   sprintf("cluster 1 median %.2f, cluster 2 median %.2f; T1 q %.2g, T2 q %.2g; pattern %s", a2$c1_median[i], a2$c2_median[i], a2$T1_q[i], a2$T2_q[i], a2$pattern[i]), "a2_series_tests.tsv")
 add("a2_series_with_pattern", sprintf("%d of %d", sum(a2$pattern), nrow(a2)), "a2_series_tests.tsv")
 ad <- fread("results/aspen_timepoint_degs.tsv")
-for (i in seq_len(nrow(ad))) add(paste0("aspen_degs_", ad$timepoint[i]), ad$study_degs[i], "aspen_timepoint_degs.tsv: study DEG call (equal to padj < 0.05 alone at every time point)")
-stopifnot(all(ad$study_degs == ad$padj_below_0.05))
+for (i in seq_len(nrow(ad))) add(paste0("aspen_degs_", ad$timepoint[i]), ad$study_degs[i],
+  "aspen_timepoint_degs.tsv: the study's DEG call (lfcThreshold 0, padj <= 0.05, |log2FC| >= 1); DE results and lfc0 list agree")
+# the study's call must not be confused with the two-fold-null test (ledger A052): at some time point they must differ
+stopifnot(any(ad$study_degs != ad$twofold_null_padj_below_0.05))
 out <- rbindlist(V); fwrite(out, "results/manuscript_values.tsv", sep = "\t"); cat(nrow(out), "values written\n")
