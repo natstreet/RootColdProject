@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 # check_rebuilt_objects.R — consistency of the regenerated analysis objects of the deposit with its DESeq2 objects.
-#   (a) data/expression/<g>_root_cold_stress_expression.txt = VST (blind) of data/dds, minus the matrix minimum
+#   (a) data/expression/<g>_root_cold_stress_expression.txt = VST (blind) of data/dds, minus the matrix minimum (sample
+#       names through data/quantification/sample_name_map.tsv)
 #   (b) DEGs_<g>.RData = union of the per-timepoint *_lfc0 lists = genes with is_deg in data/open/differential_expression.tsv
 #   (c) log2FoldChange_<code>.RData = DESeq2 log2 fold change, time point against control (lfcThreshold 0)
 #   (d) the per-timepoint *_lfc0 lists = padj (lfcThreshold 0) <= 0.05 and |log2FC| >= 1
@@ -12,6 +13,7 @@ G <- list(col0 = c("dds_col0_soil.rda", "col0"), ost0 = c("dds_ost0_soil.rda", "
           birch = c("dds_Bp_new.rda", "bp"), spruce = c("dds_Pa.rda", "pa"), pine = c("dds_Ps.rda", "ps"))
 ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], e) }
 de <- fread(file.path(R, "data/open/differential_expression.tsv"))
+nm <- fread(file.path(R, "data/quantification/sample_name_map.tsv"), colClasses = "character")
 rows <- list(); add <- function(...) rows[[length(rows) + 1]] <<- data.table(...)
 for (g in names(G)) {
   dds0 <- ld(file.path(R, "data/dds", G[[g]][1])); code <- G[[g]][2]
@@ -19,6 +21,7 @@ for (g in names(G)) {
   v <- assay(varianceStabilizingTransformation(dds0, blind = TRUE)); v <- v - min(v)
   ex <- fread(file.path(R, sprintf("data/expression/%s_root_cold_stress_expression.txt", g)), header = TRUE)
   m <- as.matrix(ex[, -1]); rownames(m) <- ex[[1]]
+  mp <- nm[genotype == g]; colnames(v) <- setNames(mp$deposited_sample_id, mp$sequencing_name)[colnames(v)]   # publication codes
   same_dim <- identical(sort(rownames(m)), sort(rownames(v))) && identical(sort(colnames(m)), sort(colnames(v)))
   add(genotype = g, check = "a VST matrix", result = if (same_dim) sprintf("max |diff| %.3g", max(abs(m[rownames(v), colnames(v)] - v))) else
       sprintf("names differ: genes %d/%d, samples %d/%d", length(intersect(rownames(m), rownames(v))), nrow(v), length(intersect(colnames(m), colnames(v))), ncol(v)))
