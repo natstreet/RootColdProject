@@ -1,9 +1,9 @@
 quantity	value
-observed	256
+observed	264
 universe_orthogroups_with_genes_in_all_five_species	7318
-expected	25.1376117514431
-null_mean	25.0942
+expected	25.2129916032691
+null_mean	25.1906
 null_max	44
-fold	10.1839427918328
+fold	10.4707923658599
 empirical_P	0.0001999600079984
 n_sim	5000

@@ -1,0 +1,16 @@
+quantity	value
+A total	7103
+B total	3939
+C total	2791
+A only	3133
+B only	480
+C only	769
+AB only	2062
+AC only	625
+BC only	114
+ABC	1283
+AC only + ABC	1908
+BC only + ABC	1397
+conifer-conserved share of A (AC only + ABC) / A total	0.2686
+conifer-conserved share of B (BC only + ABC) / B total	0.3547
+share of B / share of A	1.3203

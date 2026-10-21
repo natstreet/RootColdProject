@@ -1,7 +1,7 @@
 quantity	value
 common_orthogroups	270
-common_with_at_least_20_genes	218
-common_pct_at_least_20_genes	80.7407407407407
+common_with_at_least_20_genes	217
+common_pct_at_least_20_genes	80.3703703703704
 orthogroups_with_genes_in_all_six_genotypes	6643
 of_those_with_at_least_20_genes	880
 of_those_pct_at_least_20_genes	13.2470269456571

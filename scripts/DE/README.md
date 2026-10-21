@@ -13,8 +13,8 @@ results(dds, contrast = c("Condition", <timepoint>, "control"), alpha = 0.05, lf
 
 and genes with `padj ≤ 0.05` **and** `abs(log2FoldChange) >= 1` are differentially expressed
 (direction from the sign of `log2FoldChange`). The per-species DEG set is the union over the four
-timepoints (Col-0 5689, Ost-0 7995, aspen 11729, birch 3312, spruce 6353, pine 4717); these totals
-are used for Figure 1 and Figure 2.
+timepoints; these sets (the deposit's `DEGs/DEGs_<species>.RData`; counts per timepoint in
+`DE/<species>/DEG_counts.tsv`) are used for Figure 1 and Figure 2.
 
 ## Deposited files
 

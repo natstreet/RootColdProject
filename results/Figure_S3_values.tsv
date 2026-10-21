@@ -1,0 +1,32 @@
+comparison	quantity	value
+Aspen_Birch	co-expressolog orthogroups	3939
+Aspen_Col-0	co-expressolog orthogroups	3192
+Aspen_Ost-0	co-expressolog orthogroups	3282
+Aspen_Pine	co-expressolog orthogroups	1773
+Aspen_Spruce	co-expressolog orthogroups	1579
+Birch_Col-0	co-expressolog orthogroups	3204
+Birch_Ost-0	co-expressolog orthogroups	2922
+Birch_Pine	co-expressolog orthogroups	1451
+Birch_Spruce	co-expressolog orthogroups	1110
+Col-0_Ost-0	co-expressolog orthogroups	7103
+Col-0_Pine	co-expressolog orthogroups	1768
+Col-0_Spruce	co-expressolog orthogroups	1150
+Ost-0_Pine	co-expressolog orthogroups	1754
+Ost-0_Spruce	co-expressolog orthogroups	1200
+Pine_Spruce	co-expressolog orthogroups	2791
+Aspen_Birch	co-expressolog orthogroups in this comparison only	264
+Aspen_Col-0	co-expressolog orthogroups in this comparison only	39
+Aspen_Ost-0	co-expressolog orthogroups in this comparison only	57
+Aspen_Pine	co-expressolog orthogroups in this comparison only	30
+Aspen_Spruce	co-expressolog orthogroups in this comparison only	24
+Birch_Col-0	co-expressolog orthogroups in this comparison only	71
+Birch_Ost-0	co-expressolog orthogroups in this comparison only	45
+Birch_Pine	co-expressolog orthogroups in this comparison only	34
+Birch_Spruce	co-expressolog orthogroups in this comparison only	21
+Col-0_Ost-0	co-expressolog orthogroups in this comparison only	1525
+Col-0_Pine	co-expressolog orthogroups in this comparison only	12
+Col-0_Spruce	co-expressolog orthogroups in this comparison only	7
+Ost-0_Pine	co-expressolog orthogroups in this comparison only	26
+Ost-0_Spruce	co-expressolog orthogroups in this comparison only	12
+Pine_Spruce	co-expressolog orthogroups in this comparison only	615
+all	co-expressolog orthogroups in every comparison	264

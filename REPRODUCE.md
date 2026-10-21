@@ -19,7 +19,10 @@ supplementary tables from the processed data deposited on figshare
    Rscript scripts/GO/make_TableS3.R
    ```
 
-Outputs are written to the working directory. R package requirements: `DESeq2`,
+Outputs are written to the working directory (some producers write to `results/`). The committed `results/` holds
+the producers' outputs from a run on version 5 of the deposit; before each release,
+`scripts/tests/check_committed_outputs.sh` checks them against a fresh run, and the committed `data/` files against
+the deposit. R package requirements: `DESeq2`,
 `matrixStats`, `topGO`, `GO.db`, `ggplot2`, `ggtext`, `corrplot`, `dplyr`, `tidyr`,
 `pheatmap`, `patchwork`, `cowplot`, `ggplotify`, `VennDiagram`, `UpSetR`, `readr`, `readxl`, `writexl`,
 `data.table` and `curl`.

@@ -7,8 +7,7 @@
 # contrasts each cold timepoint (6h, 24h, 3d, 10d at 5 C) against the pooled control, with DESeq2's
 # default independent filtering (mean of normalised counts). Genes with padj <= 0.05 and
 # |log2FoldChange| >= 1 are differentially expressed; direction is the sign of log2FoldChange. The
-# per-species DEG total is the union over timepoints (Col-0 5689, Ost-0 7995, aspen 11729,
-# birch 3312, spruce 6353, pine 4717).
+# per-species DEG set is the union over timepoints (the deposit's DEGs/DEGs_<species>.RData).
 #
 # Inputs (unpack data.tar.gz from figshare into ./data):
 #   data/dds/dds_<species>.rda   raw DESeqDataSet per species
