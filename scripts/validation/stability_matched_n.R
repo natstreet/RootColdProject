@@ -6,7 +6,7 @@
 #                  of 3% density on mutual ranks; ComPlEx itself is not re-run)
 #   stability      Jaccard similarity between the neighbourhood from the full sample set and from the set minus one
 #                  sample; per query gene, the minimum over left-out samples (the worst case, as in D052) and the mean
-#   query genes    members of that genotype in the representative cliques of the 133 core orthogroups (kept and lost
+#   query genes    members of that genotype in the representative cliques of the core orthogroups (kept and lost
 #                  marked) and 300 random filtered genes (seed 1)
 #   designs        full: all samples. matched15: for 5 x 5 genotypes, 3 replicates drawn per time point (15 samples, as
 #                  spruce), 10 draws (seeds 1-10). Spruce and pine are run as they are.

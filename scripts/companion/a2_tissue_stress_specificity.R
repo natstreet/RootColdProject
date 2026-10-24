@@ -14,7 +14,7 @@ ld1 <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], e) }
 rep <- as.data.table(readRDS(file.path(T, "data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS")))
 hm  <- as.data.table(ld1(file.path(T, "data/ComPlEx/cliques/clique_HMcluster_list.rda"))); mp <- fread(file.path(T, "data/ComPlEx/cliques/manuscript_cluster_map.tsv"))
 hm[, OrthoGroup := sub("_.*$", "", ID)]; hm[, ms := mp$manuscript_cluster[match(Cluster, mp$analysis_cluster)]]
-rep <- merge(rep, hm[, .(OrthoGroup, ms)], by = "OrthoGroup"); stopifnot(nrow(rep) == 133)
+n_core <- nrow(rep); rep <- merge(rep, hm[, .(OrthoGroup, ms)], by = "OrthoGroup"); stopifnot(nrow(rep) == n_core)   # every core orthogroup has a cluster
 series <- rbindlist(list(
   data.table(sp = "spruce", tissue = "root",   obj = "SCR", var = "Condition", ctrl = "20C_0h", trt = "5C",   lev = list(paste0("5C_", c("6h","24h","3d","10d")))),
   data.table(sp = "spruce", tissue = "root",   obj = "SCR", var = "Condition", ctrl = "20C_0h", trt = "-5C",  lev = list(paste0("neg5C_", c("6h","24h","3d","10d")))),
