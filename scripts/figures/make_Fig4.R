@@ -1,7 +1,9 @@
 #!/usr/bin/env Rscript
-# make_Fig4.R — Figure 4: heatmap of the conserved-core cliques across species.
-# For each clique, the per-gene z-scored MEDIAN expression of its member in each species over the
-# cold time course (Control, 6h, 24h, 3d, 10d). Rows are clustered (Euclidean distance, Ward.D2)
+# make_Fig4.R — Figure 4: heatmap of the conserved core across species.
+# One row per core orthogroup (D082): per species, the median over the orthogroup's clique genes (every gene in any of
+# its complete cliques) of the per-gene z-scored MEDIAN expression over the cold time course (Control, 6h, 24h, 3d, 10d);
+# family_matrix() in clique_matrix.R. A black triangle after a species block marks a cell whose clique genes differ in
+# their DE direction (D083, results/paralogue_agreement.tsv from scripts/analysis/paralogue_agreement.R). Rows are clustered (Euclidean distance, Ward.D2)
 # and cut into four clusters, as in the original analysis (E. van Zalen). The figure shows one block per
 # manuscript cluster, in the order the dendrogram places them, joined by one dendrogram; colours are capped at
 # |z| = 1.5.
@@ -18,7 +20,9 @@
 #   data/expression/med_expression/<sp>_med.txt.gz             per-timepoint median expression
 #   data/ComPlEx/cliques/manuscript_cluster_map.tsv            manuscript -> analysis cluster map
 #   tables/TableS3_cliqueClusterGO_classic.tsv                 GO terms per manuscript cluster
-#   scripts/figures/Fig4_captions.tsv (or the first argument)   GO IDs captioning each cluster (cluster, GO.ID)
+#   scripts/figures/Fig4_captions.tsv (or the first argument)   GO IDs captioning each cluster (cluster, GO.ID);
+#                                                              "none" draws the blocks without GO captions
+#   results/paralogue_agreement.tsv                            the D083 agreement per orthogroup x species
 # Output: Figure4.pdf, Figure4.png
 # Usage:  Rscript scripts/figures/make_Fig4.R [caption table]
 
@@ -30,8 +34,8 @@ sp <- clique_sp; labs <- clique_labs; conds <- clique_conds
 ld <- function(f){ e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
 
 ## ---- z-scored median expression, one row per clique ----
-M  <- clique_matrix()
-cat("Cliques in heatmap:", nrow(M), "\n")
+M  <- family_matrix()                                                        # D082
+cat("Orthogroups in heatmap:", nrow(M), "\n")
 
 ## ---- row clustering; check it against the deposited cluster assignment ----
 tr  <- clique_tree(M)
@@ -56,8 +60,10 @@ cat("Blocks (cluster: size):", paste(blk_cl, nb, sep = ": ", collapse = ", "), "
 ## ---- block captions: GO IDs -> names from Table S3, each required to be significant there ----
 s3  <- read.delim("tables/TableS3_cliqueClusterGO_classic.tsv", check.names = FALSE)
 cargs <- commandArgs(trailingOnly = TRUE)
-cap <- read.delim(if (length(cargs)) cargs[1] else "scripts/figures/Fig4_captions.tsv", stringsAsFactors = FALSE)
-go_label <- sapply(blk_cl, function(mc) {
+no_caps <- length(cargs) && cargs[1] == "none"
+cap <- if (no_caps) data.frame(cluster = integer(0), GO.ID = character(0)) else
+  read.delim(if (length(cargs)) cargs[1] else "scripts/figures/Fig4_captions.tsv", stringsAsFactors = FALSE)
+go_label <- if (no_caps) rep("", length(blk_cl)) else sapply(blk_cl, function(mc) {
   ids <- cap$GO.ID[cap$cluster == mc]
   hit <- s3[s3[["Cluster (manuscript)"]] == mc & s3$GO.ID %in% ids, ]
   miss <- setdiff(ids, hit$GO.ID)
@@ -120,6 +126,19 @@ p <- p + draw_grob(leg, x = 0.905, y = 0.34, width = 0.09, height = 0.34) +
   geom_segment(data = segdf, aes(x = x, y = y, xend = xend, yend = yend), linewidth = 0.22, colour = "grey35")
 for (c in 1:30) p <- p + draw_label(rep(conds, 6)[c], x = xm(tp_cen[c]), y = y_tp, angle = 90, hjust = 1, vjust = 0.5, size = 8)
 for (k in 1:6)  p <- p + draw_label(labs[[k]], x = xm(sp_cen[k]), y = y_sp, hjust = 0.5, vjust = 0.5, size = 10, fontface = "bold")
+
+## ---- D083: cells whose clique genes differ in DE direction ----
+ag <- read.delim("results/paralogue_agreement.tsv", stringsAsFactors = FALSE)
+og_row <- sub("_[0-9]+$", "", rownames(M))[ord]                              # orthogroup per row, dendrogram order
+dif <- ag[ag$agreement == "differ", c("OrthoGroup", "genotype")]
+k_of <- match(dif$genotype, sp); r_of <- match(dif$OrthoGroup, og_row)
+if (anyNA(k_of) || anyNA(r_of)) stop("paralogue_agreement.tsv does not match the heatmap rows")
+gap_x <- sapply(1:6, function(k) xm((k * 5 + (k - 1) * gf + gf / 2) / tot_u))  # centre of the gap after species k
+mk <- data.frame(x = gap_x[k_of], y = ymap(r_of))
+p <- p + geom_point(data = mk, aes(x = x, y = y), shape = 17, size = 0.9, colour = "black") +
+  geom_point(data = data.frame(x = 0.912, y = 0.30), aes(x = x, y = y), shape = 17, size = 1.4, colour = "black") +
+  draw_label("clique genes\ndiffer in DE\ndirection", x = 0.922, y = 0.30, hjust = 0, vjust = 0.5, size = 7)
+cat("cells marked 'differ':", nrow(mk), "\n")
 
 pdf("Figure4.pdf", width = CW, height = CH, encoding = "ISOLatin1"); print(p); invisible(dev.off())
 ggsave("Figure4.png", p, width = CW, height = CH, dpi = 300, bg = "white")

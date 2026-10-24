@@ -3,9 +3,10 @@
 # not counted as conserved when its size alone makes a complete clique more likely than not. Run after
 # complete_cliques.R and before core_cliques.R, which takes this table as its second argument.
 #
-# Expressed genes per orthogroup: the genes of the orthogroup table (Arabidopsis, birch, Norway spruce, Scots pine,
-# aspen) that are rows of the six expression matrices; an Arabidopsis gene counts once whichever ecotype it is in (the
-# definition of scripts/validation/orthogroup_size_flag.R).
+# Expressed genes per orthogroup (D080): the genes of the orthogroup table (Arabidopsis, birch, Norway spruce, Scots
+# pine, aspen) that pass the ComPlEx expression filter in at least one of the six expression matrices, the filter of
+# scripts/ComPlEx/ComPlEx.R: standard deviation above 0, non-zero in at least three samples, and row mean above 1. An
+# Arabidopsis gene counts once whichever ecotype it passes in. (Before D080: every row of the expression matrices.)
 # Eligible orthogroups: at least one expressed gene in each of the five species.
 # Response: the orthogroup has a complete clique (complete_cliques.R: one gene per genotype, all 15 pairs co-expressologs).
 # Model: logistic regression of the response on log(expressed genes), over the eligible orthogroups. Even odds is the
@@ -30,8 +31,13 @@ GENOTYPES <- c("col0", "ost0", "aspen", "birch", "spruce", "pine")
 SPECIES <- c(Arabidopsis_thaliana = "arabidopsis", Betula_pendula = "birch", Picea_abies = "spruce",
              Pinus_sylvestris = "pine", Populus_tremula = "aspen")
 
-expressed <- unique(unlist(lapply(GENOTYPES, function(g)
-  read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", g))[[1]])))
+passes_complex_filter <- function(g) {                    # the filter of scripts/ComPlEx/ComPlEx.R
+  x <- read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", g))
+  m <- as.matrix(x[, -1])
+  keep <- matrixStats::rowSds(m) > 0 & rowSums(m != 0) >= 3 & rowMeans(m) > 1
+  x[[1]][keep]
+}
+expressed <- unique(unlist(lapply(GENOTYPES, passes_complex_filter)))
 og <- read.delim("data/ComPlEx/Orthogroups_20240613.tsv", check.names = FALSE, colClasses = "character")
 names(og)[1] <- "OrthoGroup"
 if (anyDuplicated(og$OrthoGroup)) stop("duplicated orthogroups")

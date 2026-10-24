@@ -25,5 +25,42 @@ clique_matrix <- function(core = "data/ComPlEx/cliques/conserved_genes_COMPLETE_
   M[stats::complete.cases(M), ]
 }
 
+# D082: one row per core orthogroup built from ALL genes that occur in any of its complete cliques. Per genotype, each
+# such gene's profile is computed as above (z-scored median expression over the five conditions); the cell is the
+# median of those profiles at each condition. Genes without a median-expression row are left out of the median.
+# Rows are named by the orthogroup's representative clique (core_cliques.R), so the cluster table keeps its cliqueID
+# key for the scripts that read it. Also returns the gene sets (attribute "genes": OrthoGroup, genotype, gene).
+clique_genes_by_genotype <- function(core = "data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS",
+                                     wide = "data/ComPlEx/cliques/conserved_genes_COMPLETE_wider.RDS") {
+  cl <- readRDS(core); w <- readRDS(wide); w <- w[w$OrthoGroup %in% cl$OrthoGroup, ]
+  do.call(rbind, lapply(clique_sp, function(s) unique(data.frame(OrthoGroup = w$OrthoGroup, genotype = s, gene = w[[s]],
+                                                                    stringsAsFactors = FALSE))))
+}
+gene_profiles <- function(s, genes) {          # z-scored median profile per gene, rows named by gene
+  e  <- as.data.frame(readr::read_delim(sprintf("data/expression/med_expression/%s_med.txt.gz", s), show_col_types = FALSE))
+  cc <- vapply(clique_conds, function(k) grep(paste0("_", k, "$"), colnames(e), value = TRUE)[1], character(1))
+  e  <- e[e$Genes %in% genes, ]
+  v  <- as.matrix(sapply(e[, cc], as.numeric)); rownames(v) <- e$Genes; colnames(v) <- clique_conds
+  z  <- t(apply(v, 1, function(r){ sdv <- sd(r); if (is.na(sdv) || sdv == 0) rep(0, length(r)) else (r - mean(r)) / sdv }))
+  colnames(z) <- clique_conds; z
+}
+family_matrix <- function(core = "data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS",
+                          wide = "data/ComPlEx/cliques/conserved_genes_COMPLETE_wider.RDS") {
+  cl <- readRDS(core); G <- clique_genes_by_genotype(core, wide)
+  M <- matrix(NA_real_, nrow(cl), length(clique_sp) * length(clique_conds), dimnames = list(cl$cliqueID,
+              as.vector(t(outer(clique_labs[clique_sp], clique_conds, paste, sep = ".")))))
+  for (s in clique_sp) {
+    z <- gene_profiles(s, G$gene[G$genotype == s])
+    for (i in seq_len(nrow(cl))) {
+      g <- intersect(G$gene[G$genotype == s & G$OrthoGroup == cl$OrthoGroup[i]], rownames(z))
+      if (length(g)) M[i, paste(clique_labs[[s]], clique_conds, sep = ".")] <- apply(z[g, , drop = FALSE], 2, median)
+    }
+  }
+  ok <- stats::complete.cases(M)
+  if (!all(ok)) message("family_matrix: rows left out (a genotype without a profiled gene): ", paste(rownames(M)[!ok], collapse = " "))
+  M <- M[ok, , drop = FALSE]; attr(M, "genes") <- G
+  M
+}
+
 # rows clustered on Euclidean distance with Ward.D2, as in the original analysis (E. van Zalen)
 clique_tree <- function(M) hclust(dist(M, method = "euclidean"), method = "ward.D2")

@@ -2,11 +2,13 @@
 # cluster_profiles.R — cluster-level cold response of the conserved-core cliques (Results, clusters 1 and 2).
 #
 # Produces the numbers quoted in the Results for manuscript clusters 1 and 2: per cluster, genotype and timepoint, the
-# median log2 fold change of the clique member genes, the equivalent fold, and how many genes rise, fall and change at
-# least two-fold. Also lists cluster 2's members with their Arabidopsis annotation, which is the basis for naming the
+# median log2 fold change, the equivalent fold, and how many orthogroups rise, fall and change at least two-fold. Each
+# orthogroup counts once (D082): its value is the median log2 fold change over that genotype's clique genes (every gene in
+# any of its complete cliques, as for the Fig. 4 rows); n_genes is the number of clique genes behind the cluster value.
+# (Before D082: the one representative member per genotype.) Also lists cluster 2's members with their Arabidopsis annotation, which is the basis for naming the
 # member classes in the text.
 #
-# Inputs (repository root): data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS and clique_HMcluster_list.rda
+# Inputs (repository root): data/ComPlEx/cliques/conserved_genes_COMPLETE_{filtered,wider}.RDS and clique_HMcluster_list.rda
 # (core cliques and their analysis clusters), data/ComPlEx/cliques/manuscript_cluster_map.tsv (manuscript numbering),
 # DE/de_results.tsv (scripts/DE/differential_expression.R: log2 fold change, DESeq2 MLE, not shrunken), and
 # <open dir>/orthogroup_annotation.tsv (Arabidopsis annotation of the orthogroups).
@@ -34,10 +36,13 @@ stopifnot(!anyNA(core$ms_cluster))
 cat("orthogroups per manuscript cluster:", paste(sprintf("%s=%d", names(table(core$ms_cluster)), table(core$ms_cluster)),
                                                 collapse = " "), "\n")
 
-# clique member genes: exactly the gene named per genotype in conserved_core.tsv
-long <- do.call(rbind, lapply(SP, function(s) data.frame(OrthoGroup = core$OrthoGroup, ms_cluster = core$ms_cluster,
-                                                          species = s, gene = core[[s]], stringsAsFactors = FALSE)))
+# clique genes (D082): every gene of the genotype in any of the orthogroup's complete cliques
+source("scripts/ComPlEx/clique_matrix.R")
+fam <- clique_genes_by_genotype()
+long <- data.frame(OrthoGroup = fam$OrthoGroup, ms_cluster = core$ms_cluster[match(fam$OrthoGroup, core$OrthoGroup)],
+                   species = fam$genotype, gene = fam$gene, stringsAsFactors = FALSE)
 long <- long[!is.na(long$gene) & nzchar(long$gene), ]
+stopifnot(!anyNA(long$ms_cluster))
 key <- function(s, g) paste(s, g)
 stopifnot(!anyDuplicated(key(gi$species, gi$gene)))
 m <- cbind(long, gi[match(key(long$species, long$gene), key(gi$species, gi$gene)), paste0("lfc_", TPS)])
@@ -48,9 +53,11 @@ for (c in sort(unique(m$ms_cluster))) for (sp in SP) {
   d <- m[m$ms_cluster == c & m$species == sp, ]
   if (!nrow(d)) next
   for (t in TPS) {
-    x <- d[[paste0("lfc_", t)]]; x <- x[!is.na(x)]; md <- median(x)
+    v <- d[!is.na(d[[paste0("lfc_", t)]]), ]
+    og <- tapply(v[[paste0("lfc_", t)]], v$OrthoGroup, median)          # per orthogroup: median over its clique genes
+    x <- unname(og); md <- median(x)
     rows[[length(rows) + 1]] <- data.frame(
-      ms_cluster = c, species = sp, timepoint = t, n = length(x), median_log2fc = round(md, 3),
+      ms_cluster = c, species = sp, timepoint = t, n = length(x), n_genes = nrow(v), median_log2fc = round(md, 3),
       fold = if (md >= 0) round(2^md, 2) else round(-2^-md, 2),
       n_up = sum(x > 0), n_down = sum(x < 0), n_abs_log2fc_ge1 = sum(abs(x) >= 1))
   }

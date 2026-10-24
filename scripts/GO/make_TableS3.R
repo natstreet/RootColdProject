@@ -2,9 +2,9 @@
 # make_TableS3.R — Table S3: GO (biological-process) enrichment of the conserved-core clique
 # clusters, per species (manuscript cluster numbering).
 #
-# The 116 conserved-core cliques (one gene per species, every pair a co-expressolog) are grouped
-# into four clusters by the co-expression heatmap (Fig. 4). For each cluster x species the member
-# genes are tested for GO enrichment.
+# The conserved-core orthogroups are grouped into four clusters by the co-expression heatmap (Fig. 4). For each
+# cluster x species, the orthogroups' clique genes (every gene in any of their complete cliques, D082) are tested
+# for GO enrichment.
 #
 # Enrichment: topGO, **classic** Fisher's exact test, BH adjustment, padj < 0.05 (consistent with
 # Table S1). Default nodeSize (1). scores = -log10(p). The Table_S3.xlsx p-value column
@@ -34,12 +34,16 @@ ld <- function(f, o = NULL) { e <- new.env(); load(f, envir = e); if (is.null(o)
 ## --- clique cluster membership -> per (analysis cluster, species) gene sets ---
 cc  <- ld(Sys.glob("data/*/cliques/clique_HMcluster_list.rda")[1])          # ID, Cluster (analysis)
 cg  <- readRDS(Sys.glob("data/*/cliques/clique_genes_filterable_COMPLETE.RDS")[1])
-# long pairwise table -> one gene per (cliqueID, species)
+cg  <- cg[cg$OriginalCliqueSize == 15, ]                                     # complete cliques only
+# D082: every gene of a core orthogroup that occurs in any of its complete cliques; the orthogroup's cluster is that of
+# its representative clique (the cluster table's ID). (Before D082: the representative clique's genes only.)
+og_cluster <- setNames(cc$Cluster, sub("_[0-9]+$", "", cc$ID))
 glong <- unique(rbind(
-  data.frame(cliqueID = cg$cliqueID, sp = cg$Species1, gene = cg$GeneSpecies1, stringsAsFactors = FALSE),
-  data.frame(cliqueID = cg$cliqueID, sp = cg$Species2, gene = cg$GeneSpecies2, stringsAsFactors = FALSE)))
-glong$Cluster <- cc$Cluster[match(glong$cliqueID, cc$ID)]
+  data.frame(OrthoGroup = cg$OrthoGroup, sp = cg$Species1, gene = cg$GeneSpecies1, stringsAsFactors = FALSE),
+  data.frame(OrthoGroup = cg$OrthoGroup, sp = cg$Species2, gene = cg$GeneSpecies2, stringsAsFactors = FALSE)))
+glong$Cluster <- unname(og_cluster[glong$OrthoGroup])
 glong <- glong[!is.na(glong$Cluster), ]
+stopifnot(setequal(unique(glong$OrthoGroup), names(og_cluster)))
 gene_set <- function(anaclust, sp) unique(glong$gene[glong$Cluster == anaclust & glong$sp == sp])
 
 ## --- per-species GO annotation restricted to the enrichment background ---

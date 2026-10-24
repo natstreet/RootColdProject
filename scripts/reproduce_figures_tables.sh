@@ -17,7 +17,8 @@
 #
 # Usage: bash scripts/reproduce_figures_tables.sh <working dir> [Rscript for DESeq2 steps]
 #   RSCRIPT: the Rscript to use (default: Rscript on the PATH). The second argument names an Rscript with DESeq2 for
-#   tf_clique_directions.R (default: the same).
+#   tf_clique_directions.R (default: the same). FIG4_CAPTIONS=none draws Fig. 4 without GO captions (while the
+#   clusters are provisional, D081).
 set -euo pipefail
 W=$1; R=${RSCRIPT:-Rscript}; RD=${2:-$R}
 cd "$W"; mkdir -p logs tables results
@@ -30,8 +31,13 @@ run Fig4_caption_cand     $R scripts/figures/fig4_caption_candidates.R
 run Fig1                  $R scripts/figures/make_Fig1.R
 run Fig2                  $R scripts/figures/make_Fig2.R
 run Fig3                  $R scripts/figures/make_Fig3.R
-run Fig4_captions          $R scripts/figures/fig4_captions_from_terms.R                # the approved terms (D008), matched to Table S3
-run Fig4                  $R scripts/figures/make_Fig4.R Fig4_captions_approved.tsv
+run paralogue_agreement   $R scripts/analysis/paralogue_agreement.R results              # D083, drawn on Fig. 4
+if [ "${FIG4_CAPTIONS:-approved}" = none ]; then                                           # clusters not yet numbered/captioned (D081)
+  run Fig4                $R scripts/figures/make_Fig4.R none
+else
+  run Fig4_captions       $R scripts/figures/fig4_captions_from_terms.R                # the approved terms (D008), matched to Table S3
+  run Fig4                $R scripts/figures/make_Fig4.R Fig4_captions_approved.tsv
+fi
 run size_rule             $R scripts/ComPlEx/size_rule.R                                   # D026 even-odds rule table
 run size_flag             $R scripts/validation/orthogroup_size_flag.R
 run hog_N1msa             $R scripts/analysis/hog_clique_consistency.R data/orthofinder/N1_msa.tsv results/hog_N1msa data/orthofinder/Orthogroups.tsv

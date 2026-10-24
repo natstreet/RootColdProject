@@ -1,6 +1,6 @@
 quantity	value
-conserved-core orthogroups	133
-core orthogroups with more than one complete clique	127
+conserved-core orthogroups	130
+core orthogroups with more than one complete clique	124
 median complete cliques per core orthogroup	18
 minimum	1
-maximum	78184
+maximum	20461

@@ -8,10 +8,11 @@
 # collected by index rather than appended (same order). Every orthogroup is searched: the original left out eight
 # large orthogroups by a hand-made list, which is removed here (NRS, 2026-10-05); orthogroup size is reported as a flag
 # instead (scripts/validation/orthogroup_size_flag.R). Every maximal clique is enumerated, with no cap. Kept as it was:
-# orthogroups need at least three co-expressolog pairs, and MeanCliqueSum is the mean Max.p.val over the clique's six genes, each gene taking the Max.p.val
-# of its first listed pair in the clique (dplyr::distinct keeps the first row per gene). Cliques with exactly equal
-# MeanCliqueSum are ordered by clique number (the original left their order to row order, so the conserved-core
-# step, which takes the first, could pick either; this reproduces the published pick in 115 of 116 orthogroups).
+# orthogroups need at least three co-expressolog pairs. MeanCliqueSum is the mean Max.p.val over all 15 pairs of the
+# complete clique (D079). The original took the mean over the clique's six genes, each gene taking the Max.p.val of its
+# first listed pair (dplyr::distinct keeps the first row per gene), which is six of the 15 pairs. Cliques with exactly
+# equal MeanCliqueSum are ordered by clique number (the original left their order to row order, so the conserved-core
+# step, which takes the first, could pick either).
 #
 # Input:  data/ComPlEx/all_expressed_genes.RData (scripts/ComPlEx/coexpressolog_tables.R)
 # Output: <out>/clique_genes_filterable_COMPLETE.RDS  every pair of every clique (cliqueID, species_pair, OriginalCliqueSize)
@@ -75,13 +76,16 @@ spc1 <- caas %>% dplyr::select(Species1, GeneSpecies1, OrthoGroup, cliqueID, Max
 spc2 <- caas %>% dplyr::select(Species2, GeneSpecies2, OrthoGroup, cliqueID, MaxpVal) %>%
   dplyr::mutate(UGeneSpecies2 = paste0(caas$Species2, "-", caas$GeneSpecies2)) %>%
   dplyr::rename(Genes = GeneSpecies2, UGenes = UGeneSpecies2, Species = Species2)
+pair_means <- caas %>% dplyr::group_by(cliqueID) %>%                              # all 15 pairs (D079)
+  dplyr::summarise(MeanCliqueSum = mean(MaxpVal), n_pairs = dplyr::n(), .groups = "drop")
+stopifnot(all(pair_means$n_pairs == 15))
 caas_wider <- rbind(spc1, spc2) %>%
   dplyr::group_by(cliqueID) %>%
   dplyr::distinct(UGenes, .keep_all = TRUE) %>%
-  dplyr::mutate(MeanCliqueSum = mean(MaxpVal)) %>%
   dplyr::ungroup() %>%
   dplyr::select(-c(UGenes, MaxpVal)) %>%
   tidyr::pivot_wider(names_from = Species, values_from = Genes) %>%
+  dplyr::left_join(pair_means %>% dplyr::select(cliqueID, MeanCliqueSum), by = "cliqueID") %>%
   dplyr::select(OrthoGroup, cliqueID, MeanCliqueSum, col0, ost0, aspen, birch, spruce, pine) %>%
   dplyr::group_by(OrthoGroup) %>%
   dplyr::arrange(OrthoGroup, MeanCliqueSum, as.integer(sub("^.*_", "", cliqueID))) %>%   # exact ties: lower clique number
