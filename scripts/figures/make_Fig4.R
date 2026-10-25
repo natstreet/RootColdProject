@@ -108,7 +108,11 @@ y_cap <- c((1 - topm + y_top[1]) / 2, y_bot[-NB] - hG / 2)
 y_tp <- y_bot[NB] - hT / 2; y_sp <- y_bot[NB] - hT - hS / 2
 
 ## one dendrogram across the blocks: leaf position -> canvas y, gaps built in
-yj <- unlist(lapply(seq_len(NB), function(b) y_top[b] - (seq_len(nb[b]) - 0.5) / nb[b] * bh[b]))
+## the matrix sits inside each block's gtable between fixed top and bottom margins (pheatmap: 5 bigpts each); R068 F01: leaves and
+## triangles were spaced over the whole block height, so they drifted by up to about one row at the block ends
+habs <- sapply(seq_along(gb[[1]]$heights), function(k) convertHeight(gb[[1]]$heights[[k]], "in", valueOnly = TRUE))
+mt <- sum(habs[seq_len(L$t[mi] - 1)]) / CH; mb <- sum(habs[-seq_len(L$b[mi])]) / CH                 # canvas fractions
+yj <- unlist(lapply(seq_len(NB), function(b) (y_top[b] - mt) - (seq_len(nb[b]) - 0.5) / nb[b] * (bh[b] - mt - mb)))
 ymap <- approxfun(seq_along(yj), yj, rule = 2)
 lp <- match(seq_len(nrow(M)), tr$order); nodex <- numeric(nrow(tr$merge)); H <- tr$height
 gx <- function(k) if (k < 0) lp[-k] else nodex[k]; gy <- function(k) if (k < 0) 0 else H[k]

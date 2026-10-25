@@ -24,6 +24,7 @@ W=$1; R=${RSCRIPT:-Rscript}; RD=${2:-$R}
 cd "$W"; mkdir -p logs tables results
 run() { local name=$1; shift; echo "== $name"; if "$@" > "logs/$name.log" 2>&1; then tail -3 "logs/$name.log"; else echo "FAILED: $name (logs/$name.log)"; tail -5 "logs/$name.log"; exit 1; fi; }
 run genotype_colours      $R scripts/figures/genotype_colours.R
+run med_expression        $R scripts/expression/med_expression.R                         # R068 F02: per-timepoint VST medians (read by Figs 1, 4, S1 and the clusters)
 run cluster_numbering     $R scripts/ComPlEx/manuscript_cluster_map.R --numbering            # D095: one numbering file (scripts/ComPlEx/cluster_numbering.tsv)
 run cluster_origin        $R scripts/analysis/cluster_origin.R
 run TableS1               $R scripts/GO/make_TableS1.R

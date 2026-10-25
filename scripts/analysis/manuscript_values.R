@@ -99,6 +99,9 @@ for (i in seq_len(nrow(ad))) add(paste0("aspen_degs_", ad$timepoint[i]), ad$stud
   "aspen_timepoint_degs.tsv: the study's DEG call (lfcThreshold 0, padj <= 0.05, |log2FC| >= 1); DE results and lfc0 list agree")
 # the study's call must not be confused with the two-fold-null test (ledger A052): at some time point they must differ
 stopifnot(any(ad$study_degs != ad$twofold_null_padj_below_0.05))
+# Fig. 1a: orthogroups expressed in all 12 condition sets (Results, first paragraph; R068)
+f1 <- fread("Figure1_panel_values.tsv"); stopifnot(f1[panel == "a", .N] == 1)
+add("fig1a_common_orthogroups", f1[panel == "a", count], "Figure1_panel_values.tsv: panel a")
 # conifer-only defence (R064, R066; Discussion sentence D094)
 cd <- fread("tables/conifer_only_defence_summary.tsv")
 for (i in seq_len(nrow(cd))) { cf <- cd$conifer[i]
