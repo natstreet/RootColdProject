@@ -32,17 +32,23 @@ fits <- list(); per_level <- list(); out <- list()
 for (i in seq_len(nrow(series))) {
   s <- series[i]; key <- s$obj
   if (is.null(fits[[key]])) { d <- ld1(file.path(A, sprintf("dds_%s.rda", key))); fits[[key]] <- DESeq(d, quiet = TRUE) }
-  d <- fits[[key]]; genes <- list(c1 = intersect(rep[ms == 1][[s$sp]], rownames(d)), c2 = intersect(rep[ms == 2][[s$sp]], rownames(d)))
+  d <- fits[[key]]; genes <- list(c1 = intersect(rep[ms == 1][[s$sp]], rownames(d)), c2 = intersect(rep[ms == 2][[s$sp]], rownames(d)),
+                                   c4 = intersect(rep[ms == 4][[s$sp]], rownames(d)))                     # cluster 4 (cell wall; D088)
   L <- sapply(s$lev[[1]], function(l) results(d, contrast = c(s$var, l, s$ctrl))$log2FoldChange); rownames(L) <- rownames(d)
   for (l in colnames(L)) per_level[[length(per_level) + 1]] <- data.table(sp = s$sp, tissue = s$tissue, trt = s$trt, level = l,
-      c1_median = median(L[genes$c1, l], na.rm = TRUE), c2_median = median(L[genes$c2, l], na.rm = TRUE))
+      c1_median = median(L[genes$c1, l], na.rm = TRUE), c2_median = median(L[genes$c2, l], na.rm = TRUE),
+      c4_median = median(L[genes$c4, l], na.rm = TRUE))
   m1 <- rowMeans(L[genes$c1, , drop = FALSE], na.rm = TRUE); m2 <- rowMeans(L[genes$c2, , drop = FALSE], na.rm = TRUE)
+  m4 <- rowMeans(L[genes$c4, , drop = FALSE], na.rm = TRUE)
   out[[i]] <- data.table(sp = s$sp, tissue = s$tissue, trt = s$trt, n_c1 = sum(!is.na(m1)), n_c2 = sum(!is.na(m2)),
     c1_median = median(m1, na.rm = TRUE), c2_median = median(m2, na.rm = TRUE),
-    T1_P = wilcox.test(m1, mu = 0, alternative = "less")$p.value, T2_P = wilcox.test(m2, m1, alternative = "greater")$p.value)
+    T1_P = wilcox.test(m1, mu = 0, alternative = "less")$p.value, T2_P = wilcox.test(m2, m1, alternative = "greater")$p.value,
+    n_c4 = sum(!is.na(m4)), c4_median = median(m4, na.rm = TRUE),                                  # D088: the same tests for cluster 4
+    T1c4_P = wilcox.test(m4, mu = 0, alternative = "less")$p.value, T2c4_P = wilcox.test(m2, m4, alternative = "greater")$p.value)
   message(s$sp, " ", s$tissue, " ", s$trt, " done")
 }
 res <- rbindlist(out); res[, `:=`(T1_q = p.adjust(T1_P, "BH"), T2_q = p.adjust(T2_P, "BH"))]; res[, pattern := T1_q < 0.05 & T2_q < 0.05]
+res[, `:=`(T1c4_q = p.adjust(T1c4_P, "BH"), T2c4_q = p.adjust(T2c4_P, "BH"))]; res[, pattern_c4 := T1c4_q < 0.05 & T2c4_q < 0.05]
 dir.create("results", showWarnings = FALSE)
 fwrite(res, "results/a2_series_tests.tsv", sep = "\t"); fwrite(rbindlist(per_level), "results/a2_per_level_medians.tsv", sep = "\t")
 ctl <- res[sp == "spruce" & tissue == "root" & trt == "5C"]; cat("POSITIVE CONTROL (spruce root 5C) pattern:", ctl$pattern, "\n")

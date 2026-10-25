@@ -70,3 +70,18 @@ check_xlsx_parts <- function(file) {
   if (length(bad)) stop("xlsx has dangling part references: ", paste(bad, collapse = "; "))
   invisible(TRUE)
 }
+
+# size_matched_p(): exact P of observing at least `obs` term-carrying units among a study set drawn at random within size
+#                   strata (stratum s: n[s] units drawn without replacement from N[s], of which K[t, s] carry term t), i.e.
+#                   the distribution of a sum of hypergeometric counts, by convolution. The exact form of a size-matched
+#                   random-draw null, without Monte Carlo error. Returns P and the expected count per term.
+size_matched_p <- function(obs, K, N, n) {
+  stopifnot(length(obs) == nrow(K), ncol(K) == length(N), length(N) == length(n), all(n <= N))
+  res <- t(vapply(seq_along(obs), function(t) {
+    pmf <- 1
+    for (s in seq_along(N)) if (n[s] > 0) pmf <- convolve(pmf, rev(dhyper(0:n[s], K[t, s], N[s] - K[t, s], n[s])), type = "open")
+    pmf <- pmax(pmf, 0); pmf <- pmf / sum(pmf)
+    c(p = min(1, sum(pmf[seq_along(pmf) - 1 >= obs[t]])), expected = sum(n * K[t, ] / N))
+  }, c(p = 0, expected = 0)))
+  data.frame(p = res[, "p"], expected = res[, "expected"])
+}

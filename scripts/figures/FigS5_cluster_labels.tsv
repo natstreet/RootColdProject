@@ -1,0 +1,4 @@
+cluster	go_id	note
+1	GO:0051301	as Fig5_cluster_labels.tsv (ledger R043)
+2	GO:0006412	as Fig5_cluster_labels.tsv (ledger R043)
+4	GO:0071554	cell-wall cluster (D088); provisional label chosen by CODE (R063): significant under the majority rule in Ost-0, aspen, birch, Norway spruce, Scots pine; SCI to confirm

@@ -26,7 +26,10 @@ run() { local name=$1; shift; echo "== $name"; if "$@" > "logs/$name.log" 2>&1; 
 run genotype_colours      $R scripts/figures/genotype_colours.R
 run TableS1               $R scripts/GO/make_TableS1.R
 run TableS2               $R scripts/GO/make_TableS2.R
-run TableS3               $R scripts/GO/make_TableS3.R
+run size_rule             $R scripts/ComPlEx/size_rule.R                                   # D026 even-odds rule table (D080); read by Table S3
+run TableS3               $R scripts/GO/make_TableS3.R                                     # gene level (kept for comparison)
+run TableS3_family        $R scripts/GO/tableS3_family_level.R tables/TableS3_cliqueClusterGO_classic.tsv tables/family_level ${S3_NULL_DRAWS:-5000}
+run TableS3_install       bash -c 'cp tables/TableS3_cliqueClusterGO_classic.tsv tables/TableS3_gene_level.tsv && cp tables/Table_S3.xlsx tables/Table_S3_gene_level.xlsx && cp tables/family_level/TableS3_family_level.tsv tables/TableS3_cliqueClusterGO_classic.tsv && cp tables/family_level/Table_S3_family_level.xlsx tables/Table_S3.xlsx && echo "Table S3 = family level (D086, D087); gene level kept as tables/TableS3_gene_level.*"'
 run Fig4_caption_cand     $R scripts/figures/fig4_caption_candidates.R
 run Fig1                  $R scripts/figures/make_Fig1.R
 run Fig2                  $R scripts/figures/make_Fig2.R
@@ -38,7 +41,6 @@ else
   run Fig4_captions       $R scripts/figures/fig4_captions_from_terms.R                # the approved terms (D008), matched to Table S3
   run Fig4                $R scripts/figures/make_Fig4.R Fig4_captions_approved.tsv
 fi
-run size_rule             $R scripts/ComPlEx/size_rule.R                                   # D026 even-odds rule table
 run size_flag             $R scripts/validation/orthogroup_size_flag.R
 run hog_N1msa             $R scripts/analysis/hog_clique_consistency.R data/orthofinder/N1_msa.tsv results/hog_N1msa data/orthofinder/Orthogroups.tsv
 run orthology_class       $R scripts/analysis/orthology_class.R results/hog_N1msa data/orthofinder/msa_trees

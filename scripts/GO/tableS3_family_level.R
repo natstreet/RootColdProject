@@ -10,19 +10,21 @@
 #   genes in that genotype (D082), for any other family its genes in that genotype that pass the ComPlEx expression
 #   filter (size_rule.R). Gene annotation: the files of make_TableS3.R. Families with no annotated gene are not tested
 #   (as topGO leaves out unannotated genes). Study set = the families of one cluster. One-sided Fisher's exact test, BH
-#   over the terms with at least one study family, per cluster x genotype; padj < 0.05.
-# Step 3, size-matched null: per cluster x genotype, NULL_DRAWS draws of as many annotated background families as the
-#   cluster has, matched on size (deciles of the size rule's expressed_genes, sampled within decile without replacement);
-#   empirical P = (1 + draws with at least the observed number of study families carrying the term) / (1 + draws), BH over
-#   the same terms. Reported for the terms tested in step 2, with whether the two tests agree at padj < 0.05.
+#   over every term of the universe's GO graph (as topGO and Tables S1-S3), per cluster x genotype; padj < 0.05.
+# Majority rule (D087): the same Fisher test with a stricter family annotation: a family carries a term in a genotype only when
+#   at least half of its genes there (the same genes as above, annotated or not) carry it after propagation. Same universe.
+# Step 3, size-matched null: per cluster x genotype, the cluster's families redrawn at random from the annotated background
+#   within size strata (deciles of the size rule's expressed_genes, without replacement); P of at least the observed number
+#   of term-carrying families, computed exactly as a sum of hypergeometric counts (size_matched_p() in go_table_utils.R;
+#   no Monte Carlo floor), BH with the same number of terms as the Fisher test (terms without a study family have P = 1). Reported for the terms tested in step 2, with whether the two tests agree at padj < 0.05.
 #
 # Inputs (working tree): data/ComPlEx/cliques/{conserved_genes_COMPLETE_filtered,conserved_genes_COMPLETE_wider}.RDS,
 #   clique_HMcluster_list.rda, manuscript_cluster_map.tsv; data/ComPlEx/Orthogroups_20240613.tsv;
 #   data/expression/<genotype>_root_cold_stress_expression.txt; data/annotation/*go_ids*; results/orthogroup_size_rule.tsv;
 #   <gene-level Table S3 tsv> (first argument).
 # Outputs (second argument, a directory): step1_family_count.tsv, step1_cell_summary.tsv, TableS3_family_level.tsv,
-#   Table_S3_family_level.xlsx (legend sheet), step3_size_matched.tsv
-# Usage: Rscript scripts/GO/tableS3_family_level.R <gene-level TableS3 tsv> <out dir> [null draws, default 5000]
+#   Table_S3_family_level.xlsx (legend sheet), step3_size_matched.tsv, majority_rule.tsv (every tested term, both rules)
+# Usage: Rscript scripts/GO/tableS3_family_level.R <gene-level TableS3 tsv> <out dir> [ignored; kept for the driver's call]
 suppressPackageStartupMessages({ library(data.table); library(Matrix) })
 source("scripts/GO/go_table_utils.R"); source("scripts/ComPlEx/clique_matrix.R")
 a <- commandArgs(trailingOnly = TRUE); S3 <- a[1]; OUT <- a[2]; NULL_DRAWS <- if (length(a) >= 3) as.integer(a[3]) else 5000L
@@ -71,10 +73,9 @@ term_members <- function(unit2go) {
 fisher_terms <- function(mem, units, study) {
   st <- intersect(study, units); N <- length(units); n <- length(st)
   r <- rbindlist(lapply(names(mem), function(t) { m <- mem[[t]]; k <- length(m); x <- sum(m %in% st)
-    if (x == 0) return(NULL)
     data.table(GO.ID = t, Annotated = k, Significant = x, Expected = round(n * k / N, 2),
                p = phyper(x - 1, k, N - k, n, lower.tail = FALSE)) }))
-  r[, padj := p.adjust(p, "BH")][order(padj, p, GO.ID)]
+  r[, padj := p.adjust(p, "BH")][Significant > 0][order(padj, p, GO.ID)]   # BH over every term of the graph, as topGO / Tables S1-S3
 }
 
 ## step 1
@@ -100,7 +101,7 @@ cat("step 1:", nrow(s1), "significant gene-level terms;", sum(s1$rests_on_1_or_2
 
 ## steps 2 and 3
 bins <- setNames(cut(sr$expressed_genes, unique(quantile(sr$expressed_genes, 0:10 / 10)), include.lowest = TRUE, labels = FALSE), sr$OrthoGroup)
-res2 <- list(); res3 <- list()
+res2 <- list(); res3 <- list(); resm <- list()
 for (g in GT) {
   fg <- fam_genes(g); a2 <- ANN[[g]]
   f2go <- lapply(split(fg$gene, fg$OrthoGroup), function(gs) unique(unlist(a2[intersect(gs, names(a2))], use.names = FALSE)))
@@ -108,22 +109,34 @@ for (g in GT) {
   tm <- term_members(f2go); U <- tm$units
   terms <- names(tm$members); M <- sparseMatrix(i = match(unlist(tm$members), U), j = rep(seq_along(terms), lengths(tm$members)),
                                                 x = 1, dims = c(length(U), length(terms)), dimnames = list(U, terms))
+  ## majority rule: gene-level propagation over the families' annotated genes, then share of each family's genes per term
+  ga <- a2[intersect(unique(fg$gene), names(a2))]; ga <- ga[lengths(ga) > 0]
+  gm <- term_members(ga); fgu <- unique(fg[OrthoGroup %in% U])
+  ngen <- fgu[, .N, by = OrthoGroup]; ngen <- setNames(ngen$N, ngen$OrthoGroup)[U]
+  Fg <- sparseMatrix(i = match(fgu$OrthoGroup, U), j = match(fgu$gene, unique(fgu$gene)), x = 1,
+                     dims = c(length(U), uniqueN(fgu$gene)), dimnames = list(U, unique(fgu$gene)))
+  gt <- intersect(names(gm$members), terms); gl <- lapply(gm$members[gt], intersect, colnames(Fg))
+  Gt <- sparseMatrix(i = match(unlist(gl), colnames(Fg)), j = rep(seq_along(gt), lengths(gl)), x = 1,
+                     dims = c(ncol(Fg), length(gt)), dimnames = list(colnames(Fg), gt))
+  share <- as.matrix(Fg %*% Gt) / ngen
+  maj <- lapply(setNames(gt, gt), function(t) U[share[, t] >= 0.5])
   for (k in sort(unique(core$cluster))) {
     study <- core[cluster == k, OrthoGroup]; st <- intersect(study, U)
+    rm_ <- fisher_terms(maj, U, st)
+    resm[[paste(g, k)]] <- rm_[, .(cluster = k, genotype = g, GO.ID, Significant_majority = Significant, Annotated_majority = Annotated,
+                                   p_majority = p, padj_majority = padj)]
     r <- fisher_terms(tm$members, U, st)
     r[, `:=`(cluster = k, genotype = g, families_study = length(st), families_background = length(U),
              family_ids = vapply(GO.ID, function(t) paste(sort(intersect(tm$members[[t]], st)), collapse = ","), ""))]
     res2[[paste(g, k)]] <- r
     ## size-matched null
-    obs <- colSums(M[st, r$GO.ID, drop = FALSE]); b <- bins[U]; need <- table(bins[st])
-    pool <- split(U, b); cnt <- matrix(0, NULL_DRAWS, nrow(r)); Mr <- M[, r$GO.ID, drop = FALSE]
-    for (d in seq_len(NULL_DRAWS)) {
-      pick <- unlist(lapply(names(need), function(z) sample(pool[[z]], need[[z]])))
-      cnt[d, ] <- colSums(Mr[pick, , drop = FALSE])
-    }
-    emp <- (1 + colSums(sweep(cnt, 2, obs, ">="))) / (1 + NULL_DRAWS)
-    res3[[paste(g, k)]] <- data.table(cluster = k, genotype = g, GO.ID = r$GO.ID, observed = obs, null_mean = round(colMeans(cnt), 2),
-                                      empirical_p = emp, padj_size_matched = p.adjust(emp, "BH"), padj_fisher = r$padj)
+    obs <- colSums(M[st, r$GO.ID, drop = FALSE]); b <- bins[U]; lv <- sort(unique(b))
+    Ns <- as.numeric(table(factor(b, lv))); ns <- as.numeric(table(factor(bins[st], lv)))
+    Ks <- sapply(lv, function(z) colSums(M[U[b == z], r$GO.ID, drop = FALSE]))
+    Ks <- matrix(Ks, nrow = nrow(r))                                         # terms x size strata
+    sm <- size_matched_p(obs, Ks, Ns, ns)                                    # exact (go_table_utils.R)
+    res3[[paste(g, k)]] <- data.table(cluster = k, genotype = g, GO.ID = r$GO.ID, observed = obs, null_mean = round(sm$expected, 2),
+                                      p_size_matched = sm$p, padj_size_matched = p.adjust(sm$p, "BH", n = length(tm$members)), padj_fisher = r$padj)
     cat(sprintf("  %s cluster %d: %d study families (of %d annotated); terms tested %d; Fisher padj<0.05 %d; size-matched padj<0.05 %d\n",
                 g, k, length(st), length(U), nrow(r), sum(r$padj < 0.05), sum(res3[[paste(g, k)]]$padj_size_matched < 0.05)))
   }
@@ -131,10 +144,18 @@ for (g in GT) {
 R2 <- rbindlist(res2); R2[, Term := unname(AnnotationDbi::Term(GO.db::GOTERM[GO.ID]))]
 R3 <- rbindlist(res3); R3[, Term := R2$Term[match(GO.ID, R2$GO.ID)]]
 R3[, agree := (padj_fisher < 0.05) == (padj_size_matched < 0.05)]
-sig <- R2[padj < 0.05, .(`Cluster (manuscript)` = cluster, Species = LAB[genotype], GO.ID, Term, Annotated, Significant, Expected,
+RM <- rbindlist(resm)
+MJ <- merge(R2[, .(cluster, genotype, GO.ID, Term, padj_fisher = padj)], RM, by = c("cluster", "genotype", "GO.ID"), all.x = TRUE)
+MJ[is.na(padj_majority), `:=`(Significant_majority = 0L, padj_majority = 1)]
+fwrite(MJ[order(cluster, genotype, padj_fisher)], file.path(OUT, "majority_rule.tsv"), sep = "\t")
+sig <- R2[padj < 0.05, .(`Cluster (manuscript)` = cluster, Species = LAB[genotype], genotype, GO.ID, Term, Annotated, Significant, Expected,
                          classicFisher = p, padj, families_study, families_background, family_ids)]
-sig <- merge(sig, R3[, .(`Cluster (manuscript)` = cluster, Species = LAB[genotype], GO.ID, padj_size_matched)],
-             by = c("Cluster (manuscript)", "Species", "GO.ID"), all.x = TRUE)[order(`Cluster (manuscript)`, Species, padj)]
+sig <- merge(sig, R3[, .(`Cluster (manuscript)` = cluster, genotype, GO.ID, padj_size_matched)],
+             by = c("Cluster (manuscript)", "genotype", "GO.ID"), all.x = TRUE)
+sig <- merge(sig, MJ[, .(`Cluster (manuscript)` = cluster, genotype, GO.ID, padj_majority)], by = c("Cluster (manuscript)", "genotype", "GO.ID"), all.x = TRUE)
+sig[, call := fifelse(padj_size_matched < 0.05, "both", "Fisher only")]                       # D087
+sig[, majority := padj_majority < 0.05]
+sig <- sig[order(`Cluster (manuscript)`, Species, -(call == "both"), padj)][, genotype := NULL]
 fwrite(sig, file.path(OUT, "TableS3_family_level.tsv"), sep = "\t")
 fwrite(R3, file.path(OUT, "step3_size_matched.tsv"), sep = "\t")
 write_supp_xlsx(as.data.frame(sig), file.path(OUT, "Table_S3_family_level.xlsx"), "Table S3", sig_cols = c("classicFisher", "padj", "padj_size_matched"),
@@ -143,5 +164,7 @@ write_supp_xlsx(as.data.frame(sig), file.path(OUT, "Table_S3_family_level.xlsx")
     "biological process): its clique genes for core orthogroups, its genes passing the co-expression expression filter otherwise.",
     "Study set: the cluster's orthogroups; background: the orthogroups eligible for the core. One-sided Fisher's exact test,",
     "BH within each cluster and species; terms with padj < 0.05 are listed. padj_size_matched: the same terms against",
-    NULL_DRAWS, "size-matched random sets of eligible orthogroups (BH). Annotated and Significant count orthogroups."))
+    "random sets of eligible orthogroups matched on size (exact; BH); call: 'both' when also significant there, otherwise 'Fisher only'.",
+    "majority: significant (padj < 0.05) when an orthogroup carries a term only if at least half of its genes in that species carry it.",
+    "Annotated and Significant count orthogroups."))
 cat("family-level Table S3:", nrow(sig), "rows; size-matched disagreements (padj 0.05):", R3[agree == FALSE, .N], "of", nrow(R3), "tested terms\n")
