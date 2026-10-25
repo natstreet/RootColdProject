@@ -5,13 +5,13 @@
 # per series, the core representative spruce or pine members of the cell-division and translation clusters (selected by role, D095); DESeq2 Wald log2FC (MLE, unshrunk) of each
 # level vs its control; per gene the mean over the series' levels; T1 one-sided one-sample Wilcoxon cell-division cluster < 0; T2 one-sided rank-sum
 # translation cluster > cell-division cluster; BH over the 12 series within each test; pattern present if both q < 0.05; positive control spruce root 5 C.
-# Usage (working tree): Rscript scripts/companion/a2_tissue_stress_specificity.R <companion dds dir> [--exclude-unexpressed|--default] [out dir]
+# Usage (working tree): Rscript scripts/companion/a2_tissue_stress_specificity.R <companion dds dir> [--include-unexpressed|--default] [out dir]   (default excludes unexpressed genes, D096)
 # Outputs: results/a2_series_tests.tsv, results/a2_per_level_medians.tsv
 suppressPackageStartupMessages({ library(DESeq2); library(data.table); library(BiocParallel) })
 register(SerialParam())
 ARGS <- commandArgs(trailingOnly = TRUE); A <- ARGS[1]; T <- "."
-EXCL <- length(ARGS) >= 2 && ARGS[2] == "--exclude-unexpressed"   # R068 sensitivity: a gene with zero counts in both groups of a contrast
-OUTD <- if (length(ARGS) >= 3) ARGS[3] else "results"             #   gets NA instead of DESeq2's log2FC of exactly 0 (default: off, as N159)
+EXCL <- !(length(ARGS) >= 2 && ARGS[2] == "--include-unexpressed")  # D096: a gene with zero counts in both groups of a contrast gets NA
+OUTD <- if (length(ARGS) >= 3) ARGS[3] else "results"               #   instead of DESeq2's log2FC of exactly 0 (--include-unexpressed: as N159)
 ld1 <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], e) }
 rep <- as.data.table(readRDS(file.path(T, "data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS")))
 hm  <- as.data.table(ld1(file.path(T, "data/ComPlEx/cliques/clique_HMcluster_list.rda"))); mp <- fread(file.path(T, "data/ComPlEx/cliques/manuscript_cluster_map.tsv"))

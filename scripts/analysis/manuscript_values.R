@@ -89,6 +89,11 @@ for (i in seq_len(nrow(a2))) add(sprintf("a2_%s_%s_%s", a2$sp[i], a2$tissue[i], 
   sprintf("cluster %d median %.2f, cluster %d median %.2f; T1 q %.2g, T2 q %.2g; pattern %s", KR[["cd"]], a2[[sprintf("c%d_median", KR[["cd"]])]][i],
           KR[["tr"]], a2[[sprintf("c%d_median", KR[["tr"]])]][i], a2$T1_q[i], a2$T2_q[i], a2$pattern[i]), "a2_series_tests.tsv")
 add("a2_series_with_pattern", sprintf("%d of %d", sum(a2$pattern), nrow(a2)), "a2_series_tests.tsv")
+KEP <- cluster_of("epidermal_root_hair")                                         # D088/D096: the same tests for the epidermal cluster
+add(sprintf("a2_cluster%d_series_with_pattern", KEP), sprintf("%d of %d", sum(a2[[sprintf("pattern_c%d", KEP)]]), nrow(a2)), "a2_series_tests.tsv")
+for (i in seq_len(nrow(a2))) add(sprintf("a2_cluster%d_%s_%s_%s", KEP, a2$sp[i], a2$tissue[i], a2$trt[i]),
+  sprintf("median %.2f; T1 q %.2g, T2 q %.2g; pattern %s", a2[[sprintf("c%d_median", KEP)]][i], a2[[sprintf("T1c%d_q", KEP)]][i],
+          a2[[sprintf("T2c%d_q", KEP)]][i], a2[[sprintf("pattern_c%d", KEP)]][i]), "a2_series_tests.tsv")
 ad <- fread("results/aspen_timepoint_degs.tsv")
 for (i in seq_len(nrow(ad))) add(paste0("aspen_degs_", ad$timepoint[i]), ad$study_degs[i],
   "aspen_timepoint_degs.tsv: the study's DEG call (lfcThreshold 0, padj <= 0.05, |log2FC| >= 1); DE results and lfc0 list agree")
