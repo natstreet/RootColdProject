@@ -29,6 +29,11 @@ run cluster_origin        $R scripts/analysis/cluster_origin.R
 run TableS1               $R scripts/GO/make_TableS1.R
 run TableS2               $R scripts/GO/make_TableS2.R
 run size_rule             $R scripts/ComPlEx/size_rule.R                                   # D026 even-odds rule table (D080); read by Table S3
+run conifer_only          $R scripts/GO/conifer_only_go.R results/conifer_only            # R064 (D089): conifer-only co-expressologs, no DEG restriction
+if [ -n "${HR_DOMAINS_INPUTS:-}" ]; then                                                  # R066: hmmscan needs Pfam-A and the proteomes ("<Pfam-A.hmm> <spruce aa> <pine aa>")
+  run hr_domains          $R scripts/analysis/hr_family_domains.R results/hr_family_domains results/conifer_only $HR_DOMAINS_INPUTS
+else echo "== hr_domains: HR_DOMAINS_INPUTS not set; results/hr_family_domains copied from data/hr_family_domains"; mkdir -p results/hr_family_domains; cp data/hr_family_domains/*.tsv results/hr_family_domains/; fi
+run conifer_defence       $R scripts/deposit/conifer_defence_tables.R                      # R068: deposit tables for the D094 sentence
 run TableS3_genotypes     $R scripts/GO/make_TableS3.R                                     # per genotype, gene level (supplementary comparison)
 run TableS3_family_gt     $R scripts/GO/tableS3_family_level.R tables/TableS3_cliqueClusterGO_classic.tsv tables/family_level ${S3_NULL_DRAWS:-5000}
 run TableS3               $R scripts/GO/tableS3_arabidopsis.R tables/arabidopsis            # D090: one test per cluster on the Col-0 annotation

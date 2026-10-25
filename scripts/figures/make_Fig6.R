@@ -13,8 +13,8 @@
 #   data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS orthogroup -> per-species clique member
 #   data/expression/<species>_root_cold_stress_expression.txt  per-sample VST
 #   data/DEGs/DEGs_<species>.RData                         per-species DEG sets (for the stars)
-#   results/orthogroup_size_flag.tsv (scripts/validation/orthogroup_size_flag.R): each panel's label carries its
-#   orthogroup's number of expressed genes (NRS, 2026-10-05)
+#   results/orthogroup_size_rule.tsv (scripts/ComPlEx/size_rule.R): each panel's label carries its orthogroup's number of genes
+#   passing the expression filter (D080; R068: was the unfiltered count of orthogroup_size_flag.tsv)
 #   results/orthology_class.tsv (scripts/analysis/orthology_class.R): and its orthology class (D043)
 #   results/core_stability_label.tsv (scripts/analysis/core_stability_label.R): and its sample-stability label (D066)
 # Output: Figure6.pdf, Figure6.png
@@ -47,7 +47,7 @@ EXP <- lapply(names(species), function(sp)
   read.delim(sprintf("data/expression/%s_root_cold_stress_expression.txt", sp), check.names = FALSE, row.names = 1))
 names(EXP) <- names(species)
 
-SIZE <- read.delim("results/orthogroup_size_flag.tsv")
+SIZE <- read.delim("results/orthogroup_size_rule.tsv")                       # D080 count (genes passing the ComPlEx filter), as the size rule; R068
 if (!all(TFC$OrthoGroup %in% SIZE$OrthoGroup)) stop("a transcription-factor clique has no size flag")
 OCL <- read.delim("results/orthology_class.tsv")
 if (!all(TFC$OrthoGroup %in% OCL$OrthoGroup)) stop("a transcription-factor clique has no orthology class")

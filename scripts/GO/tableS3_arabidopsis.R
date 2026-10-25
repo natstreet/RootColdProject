@@ -20,7 +20,7 @@
 #   manuscript_cluster_map.tsv; data/ComPlEx/Orthogroups_20240613.tsv; data/expression/col0_root_cold_stress_expression.txt;
 #   data/annotation/{Athal,Potra02,Betpen}_go_ids.tsv, {Picab02,Pinsy01}_go_ids.csv; results/orthogroup_size_rule.tsv
 # Outputs (out dir): TableS3_gene_level.tsv, TableS3_family_level.tsv (padj < 0.05 rows; with size-matched and majority),
-#   all_terms_gene_level.tsv, all_terms_family_level.tsv, Table_S3.xlsx (Legend, gene level, family level),
+#   all_terms_gene_level.tsv, all_terms_family_level.tsv, Table_S3.xlsx (Legend, gene level, family level, annotation coverage),
 #   annotation_coverage.tsv, annotation_coverage_summary.tsv
 # Usage (working tree): Rscript scripts/GO/tableS3_arabidopsis.R <out dir>
 suppressPackageStartupMessages({ library(data.table); library(Matrix) })
@@ -112,17 +112,6 @@ source("scripts/figures/cluster_labels.R"); APL <- approved_labels()            
 stopifnot(all(vapply(seq_len(nrow(APL)), function(i) FS[`Cluster (manuscript)` == APL$cluster[i] & GO.ID == APL$go_id[i], .N] == 1, TRUE)))
 GS[, Species := "Col0"]; FS[, Species := "Col0"]                                 # readers filter on cluster and GO ID
 fwrite(GS, file.path(OUT, "TableS3_gene_level.tsv"), sep = "\t"); fwrite(FS, file.path(OUT, "TableS3_family_level.tsv"), sep = "\t")
-write_supp_xlsx(list(`Table S3 gene level` = as.data.frame(GS), `Table S3 family level` = as.data.frame(FS)), file.path(OUT, "Table_S3.xlsx"),
-  sheet = NULL, sig_cols = c("classicFisher", "padj", "padj_size_matched", "padj_majority"),
-  legend = paste("Table S3 GO enrichment (biological process) of the conserved-core clusters, one test per cluster on the Arabidopsis",
-    "(Col-0) annotation of the cliques. Gene level: the Col-0 genes in the cluster's complete cliques against the Col-0 genes of the",
-    "orthogroups eligible for the core; asks which functions are over-represented among the cluster's genes (paralogues count",
-    "separately). Family level: orthogroups, an orthogroup carrying a term when any of its Col-0 genes does, against the eligible",
-    "orthogroups; asks which kinds of gene family are over-represented. topGO classic Fisher's exact test, Benjamini-Hochberg within each",
-    "cluster over every term of the GO graph, padj < 0.05. Family level also: size_matched (the same test against random sets of",
-    "eligible orthogroups matched on size, exact) and majority (an orthogroup carries a term only when at least half of its Col-0 genes do).",
-    if (nrow(APL)) paste0("Cluster names: ", paste(sprintf("cluster %d, %s (%s)", APL$cluster, tolower(APL$label), APL$go_id), collapse = "; "), ".") else ""))
-
 ## annotation coverage (supplementary)
 ANN <- list(col0 = athal, ost0 = athal, aspen = read_go_mapping("data/annotation/Potra02_go_ids.tsv"),
             birch = read_go_mapping("data/annotation/Betpen_go_ids.tsv"),
@@ -139,5 +128,19 @@ fwrite(cov, file.path(OUT, "annotation_coverage.tsv"), sep = "\t")
 cs <- cov[, .(families = .N, clique_genes = sum(clique_genes), annotated_share = round(sum(annotated_genes) / sum(clique_genes), 3),
               families_without_annotation = sum(annotated_genes == 0), median_jaccard_with_col0 = median(jaccard_with_col0, na.rm = TRUE)), by = genotype]
 fwrite(cs, file.path(OUT, "annotation_coverage_summary.tsv"), sep = "\t"); print(cs)
+write_supp_xlsx(list(`Table S3 gene level` = as.data.frame(GS), `Table S3 family level` = as.data.frame(FS),
+                     `Table S3 annotation coverage` = as.data.frame(cov)), file.path(OUT, "Table_S3.xlsx"),
+  sheet = NULL, sig_cols = c("classicFisher", "padj", "padj_size_matched", "padj_majority"),
+  legend = paste("Table S3 GO enrichment (biological process) of the conserved-core clusters, one test per cluster on the Arabidopsis",
+    "(Col-0) annotation of the cliques. Gene level: the Col-0 genes in the cluster's complete cliques against the Col-0 genes of the",
+    "orthogroups eligible for the core; asks which functions are over-represented among the cluster's genes (paralogues count",
+    "separately). Family level: orthogroups, an orthogroup carrying a term when any of its Col-0 genes does, against the eligible",
+    "orthogroups; asks which kinds of gene family are over-represented. topGO classic Fisher's exact test, Benjamini-Hochberg within each",
+    "cluster over every term of the GO graph, padj < 0.05. Family level also: size_matched (the same test against random sets of",
+    "eligible orthogroups matched on size, exact) and majority (an orthogroup carries a term only when at least half of its Col-0 genes do).",
+    "Annotation coverage: per core family and genotype, its clique genes, those with any GO term, their distinct terms, and the",
+    "Jaccard index of those terms with the Col-0 clique genes' terms.",
+    if (nrow(APL)) paste0("Cluster names: ", paste(sprintf("cluster %d, %s (%s)", APL$cluster, tolower(APL$label), APL$go_id), collapse = "; "), ".") else ""))
+
 cat(sprintf("gene level: %d terms padj<0.05 over %d clusters; family level: %d (size-matched %d, majority %d, both %d)\n",
     nrow(GS), uniqueN(GS$`Cluster (manuscript)`), nrow(FS), sum(FS$size_matched), sum(FS$majority), sum(FS$size_matched & FS$majority)))

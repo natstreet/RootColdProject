@@ -5,11 +5,13 @@
 # per series, the core representative spruce or pine members of the cell-division and translation clusters (selected by role, D095); DESeq2 Wald log2FC (MLE, unshrunk) of each
 # level vs its control; per gene the mean over the series' levels; T1 one-sided one-sample Wilcoxon cell-division cluster < 0; T2 one-sided rank-sum
 # translation cluster > cell-division cluster; BH over the 12 series within each test; pattern present if both q < 0.05; positive control spruce root 5 C.
-# Usage (working tree): Rscript scripts/companion/a2_tissue_stress_specificity.R <companion dds dir>
+# Usage (working tree): Rscript scripts/companion/a2_tissue_stress_specificity.R <companion dds dir> [--exclude-unexpressed|--default] [out dir]
 # Outputs: results/a2_series_tests.tsv, results/a2_per_level_medians.tsv
 suppressPackageStartupMessages({ library(DESeq2); library(data.table); library(BiocParallel) })
 register(SerialParam())
-A  <- commandArgs(trailingOnly = TRUE)[1]; T <- "."
+ARGS <- commandArgs(trailingOnly = TRUE); A <- ARGS[1]; T <- "."
+EXCL <- length(ARGS) >= 2 && ARGS[2] == "--exclude-unexpressed"   # R068 sensitivity: a gene with zero counts in both groups of a contrast
+OUTD <- if (length(ARGS) >= 3) ARGS[3] else "results"             #   gets NA instead of DESeq2's log2FC of exactly 0 (default: off, as N159)
 ld1 <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], e) }
 rep <- as.data.table(readRDS(file.path(T, "data/ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS")))
 hm  <- as.data.table(ld1(file.path(T, "data/ComPlEx/cliques/clique_HMcluster_list.rda"))); mp <- fread(file.path(T, "data/ComPlEx/cliques/manuscript_cluster_map.tsv"))
@@ -37,6 +39,8 @@ for (i in seq_len(nrow(series))) {
   if (is.null(fits[[key]])) { d <- ld1(file.path(A, sprintf("dds_%s.rda", key))); fits[[key]] <- DESeq(d, quiet = TRUE) }
   d <- fits[[key]]; genes <- lapply(K, function(k) intersect(rep[ms == k][[s$sp]], rownames(d)))      # cd, tr, ep (ep: D088, D093)
   L <- sapply(s$lev[[1]], function(l) results(d, contrast = c(s$var, l, s$ctrl))$log2FoldChange); rownames(L) <- rownames(d)
+  if (EXCL) { cn0 <- counts(d); grp <- colData(d)[[s$var]]
+    for (l in colnames(L)) L[rowSums(cn0[, grp %in% c(l, s$ctrl), drop = FALSE]) == 0, l] <- NA }
   for (l in colnames(L)) per_level[[length(per_level) + 1]] <- as.data.table(c(list(sp = s$sp, tissue = s$tissue, trt = s$trt, level = l),
       setNames(lapply(names(K), function(r) median(L[genes[[r]], l], na.rm = TRUE)), sapply(names(K), function(r) cn("c%d_median", r)))))
   m <- lapply(genes, function(g) rowMeans(L[g, , drop = FALSE], na.rm = TRUE))
@@ -53,7 +57,7 @@ for (i in seq_len(nrow(series))) {
 res <- rbindlist(out); res[, `:=`(T1_q = p.adjust(T1_P, "BH"), T2_q = p.adjust(T2_P, "BH"))]; res[, pattern := T1_q < 0.05 & T2_q < 0.05]
 res[, (cn("T1c%d_q", "ep")) := p.adjust(get(cn("T1c%d_P", "ep")), "BH")][, (cn("T2c%d_q", "ep")) := p.adjust(get(cn("T2c%d_P", "ep")), "BH")]
 res[, (cn("pattern_c%d", "ep")) := get(cn("T1c%d_q", "ep")) < 0.05 & get(cn("T2c%d_q", "ep")) < 0.05]
-dir.create("results", showWarnings = FALSE)
-fwrite(res, "results/a2_series_tests.tsv", sep = "\t"); fwrite(rbindlist(per_level), "results/a2_per_level_medians.tsv", sep = "\t")
+dir.create(OUTD, showWarnings = FALSE, recursive = TRUE)
+fwrite(res, file.path(OUTD, "a2_series_tests.tsv"), sep = "\t"); fwrite(rbindlist(per_level), file.path(OUTD, "a2_per_level_medians.tsv"), sep = "\t")
 ctl <- res[sp == "spruce" & tissue == "root" & trt == "5C"]; cat("POSITIVE CONTROL (spruce root 5C) pattern:", ctl$pattern, "\n")
 print(res[, c("sp", "tissue", "trt", cn("c%d_median", "cd"), cn("c%d_median", "tr"), "T1_q", "T2_q", "pattern"), with = FALSE])

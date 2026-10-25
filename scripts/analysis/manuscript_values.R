@@ -94,4 +94,11 @@ for (i in seq_len(nrow(ad))) add(paste0("aspen_degs_", ad$timepoint[i]), ad$stud
   "aspen_timepoint_degs.tsv: the study's DEG call (lfcThreshold 0, padj <= 0.05, |log2FC| >= 1); DE results and lfc0 list agree")
 # the study's call must not be confused with the two-fold-null test (ledger A052): at some time point they must differ
 stopifnot(any(ad$study_degs != ad$twofold_null_padj_below_0.05))
+# conifer-only defence (R064, R066; Discussion sentence D094)
+cd <- fread("tables/conifer_only_defence_summary.tsv")
+for (i in seq_len(nrow(cd))) { cf <- cd$conifer[i]
+  add(sprintf("hr_%s_gene_level", cf), sprintf("%d genes, %d orthogroups, padj %.2g", cd$gene_level_study_genes[i], cd$gene_level_orthogroups[i], cd$gene_level_padj[i]), "conifer_only_defence_summary.tsv")
+  add(sprintf("hr_%s_family_level", cf), sprintf("%d of %d families, padj %.2g, size-matched %.2g", cd$family_level_study_families[i], cd$family_level_background_families[i], cd$family_level_padj[i], cd$family_level_padj_size_matched[i]), "conifer_only_defence_summary.tsv")
+  add(sprintf("hr_%s_in_nlr_families", cf), sprintf("%d/%d", cd$study_genes_in_nlr_families[i], cd$study_genes[i]), "conifer_only_defence_summary.tsv: R066 domain sets")
+  add(sprintf("hr_%s_in_nlr_families_ext", cf), sprintf("%d/%d", cd$study_genes_in_nlr_families_ext[i], cd$study_genes[i]), "conifer_only_defence_summary.tsv: extended Pfam NLR models") }
 out <- rbindlist(V); fwrite(out, "results/manuscript_values.tsv", sep = "\t"); cat(nrow(out), "values written\n")
