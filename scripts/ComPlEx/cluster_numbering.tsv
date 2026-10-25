@@ -1,0 +1,5 @@
+manuscript_cluster	analysis_cluster	identity_go	role	decision
+1	2	GO:0006412	translation	D095
+2	3	GO:0010345	suberin_chitin	D095
+3	4	GO:0051301	cell_division	D095
+4	1	GO:0090627	epidermal_root_hair	D095 (D093 name)

@@ -1,15 +1,15 @@
 by	level	agreement	N
-cluster	1	agree	116
-cluster	1	differ	25
-cluster	1	none DE	111
-cluster	2	agree	53
-cluster	2	differ	2
-cluster	2	none DE	185
-cluster	3	agree	75
-cluster	3	differ	14
-cluster	3	none DE	43
-cluster	4	agree	44
-cluster	4	differ	1
+cluster	1	agree	53
+cluster	1	differ	2
+cluster	1	none DE	185
+cluster	2	agree	75
+cluster	2	differ	14
+cluster	2	none DE	43
+cluster	3	agree	44
+cluster	3	differ	1
+cluster	3	none DE	111
+cluster	4	agree	116
+cluster	4	differ	25
 cluster	4	none DE	111
 genotype	aspen	agree	70
 genotype	aspen	differ	22

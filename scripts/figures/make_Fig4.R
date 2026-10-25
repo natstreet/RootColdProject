@@ -6,7 +6,7 @@
 # their DE direction (D083, results/paralogue_agreement.tsv from scripts/analysis/paralogue_agreement.R). Rows are clustered (Euclidean distance, Ward.D2)
 # and cut into four clusters, as in the original analysis (E. van Zalen). The figure shows one block per
 # manuscript cluster, in the order the dendrogram places them, joined by one dendrogram; colours are capped at
-# |z| = 1.5.
+# |z| = 1.5, and the colour key carries a one-line title saying so (R067).
 #
 # Each block is captioned with GO terms listed by ID per manuscript cluster in a caption table (default
 # scripts/figures/Fig4_captions.tsv; fig4_caption_candidates.R proposes terms). Term names are read from the
@@ -124,7 +124,9 @@ p <- ggdraw() + theme(plot.background = element_rect(fill = "white", colour = NA
 for (b in seq_len(NB)) p <- p + draw_grob(gb[[b]], x = BX, y = y_bot[b], width = BW, height = bh[b]) +
   draw_label(go_label[b], x = mL + 0.004, y = y_cap[b], hjust = 0, vjust = 0.5, size = 11, fontface = "bold") +
   draw_label(tag[b], x = mR - 0.004, y = y_cap[b], hjust = 1, vjust = 0.5, size = 11.5, fontface = "bold", colour = "#8C8C8C")
-p <- p + draw_grob(leg, x = 0.905, y = 0.34, width = 0.09, height = 0.34) +
+key_title <- "Median over clique genes of z-scored time-point medians (clipped at \u00B1 1.5)"   # R067: what each cell is
+p <- p + draw_label(key_title, x = 0.900, y = 0.51, angle = 90, hjust = 0.5, vjust = 0.5, size = 7.5) +
+  draw_grob(leg, x = 0.905, y = 0.34, width = 0.09, height = 0.34) +
   geom_segment(data = segdf, aes(x = x, y = y, xend = xend, yend = yend), linewidth = 0.22, colour = "grey35")
 for (c in 1:30) p <- p + draw_label(rep(conds, 6)[c], x = xm(tp_cen[c]), y = y_tp, angle = 90, hjust = 1, vjust = 0.5, size = 8)
 for (k in 1:6)  p <- p + draw_label(labs[[k]], x = xm(sp_cen[k]), y = y_sp, hjust = 0.5, vjust = 0.5, size = 10, fontface = "bold")

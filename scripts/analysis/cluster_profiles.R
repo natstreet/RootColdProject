@@ -12,7 +12,7 @@
 # (core cliques and their analysis clusters), data/ComPlEx/cliques/manuscript_cluster_map.tsv (manuscript numbering),
 # DE/de_results.tsv (scripts/DE/differential_expression.R: log2 fold change, DESeq2 MLE, not shrunken), and
 # <open dir>/orthogroup_annotation.tsv (Arabidopsis annotation of the orthogroups).
-# Outputs: <out>/cluster_profiles.tsv, <out>/cluster2_members.tsv
+# Outputs: <out>/cluster_profiles.tsv, <out>/translation_cluster_members.tsv (the translation cluster, D095 role)
 #
 # Usage: Rscript scripts/analysis/cluster_profiles.R <dir with orthogroup_annotation.tsv> <output dir>
 
@@ -65,8 +65,9 @@ for (c in sort(unique(m$ms_cluster))) for (sp in SP) {
 P <- do.call(rbind, rows)
 write.table(P, file.path(OUT, "cluster_profiles.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
 
-mem <- core[core$ms_cluster == 2, c("OrthoGroup", SP)]
+source("scripts/ComPlEx/cluster_roles.R"); KTR <- cluster_of("translation")      # D095: the translation cluster, by role
+mem <- core[core$ms_cluster == KTR, c("OrthoGroup", SP)]
 mem <- merge(mem, ann[, c("OrthoGroup", "Arabidopsis", "Symbol", "Name")], by = "OrthoGroup", all.x = TRUE, sort = FALSE)
-mem <- mem[match(core$OrthoGroup[core$ms_cluster == 2], mem$OrthoGroup), ]
-write.table(mem, file.path(OUT, "cluster2_members.tsv"), sep = "\t", quote = FALSE, row.names = FALSE, na = "")
-cat(sprintf("cluster_profiles.tsv: %d rows | cluster2_members.tsv: %d orthogroups\n", nrow(P), nrow(mem)))
+mem <- mem[match(core$OrthoGroup[core$ms_cluster == KTR], mem$OrthoGroup), ]
+write.table(mem, file.path(OUT, "translation_cluster_members.tsv"), sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+cat(sprintf("cluster_profiles.tsv: %d rows | translation_cluster_members.tsv (cluster %d): %d orthogroups\n", nrow(P), KTR, nrow(mem)))

@@ -45,7 +45,8 @@ for (st in c("stable", "sensitive")) { o <- as.integer(readLines(file.path(S, pa
 ctl <- fread("results/external_validation/external_validation_control.tsv")
 add("external_control_fold", round(ctl$fold, 2), "external_validation_control.tsv"); add("external_control_p", signif(ctl$p, 3), "external_validation_control.tsv")
 ev <- fread("results/external_validation/external_validation.tsv")[members_definition == "representative"]
-for (st in c("stable", "sensitive", "all")) for (cl in c("cluster_2", "all_clusters")) for (se in c("calixto_up", "calixto_all_de", "zhao_cbf", "jia_cbf")) {
+source("scripts/ComPlEx/cluster_roles.R"); KR <- c(cd = cluster_of("cell_division"), tr = cluster_of("translation"))   # D095: by role
+for (st in c("stable", "sensitive", "all")) for (cl in c(sprintf("cluster_%d", KR[["tr"]]), "all_clusters")) for (se in c("calixto_up", "calixto_all_de", "zhao_cbf", "jia_cbf")) {
   r <- ev[stratum == st & cluster == cl & set == se]
   add(sprintf("ext_%s_%s_%s", st, cl, se), sprintf("%d/%d; expected %.2f; fold %.2f; q %.2g; %s", r$overlap, r$members, r$expected, r$fold, r$q, r$call),
       "external_validation.tsv: representative members") }
@@ -82,10 +83,11 @@ add("a1_paralogue_opposed", sprintf("%d/%d", a1$paralogue_opposed, a1$paralogue_
 add("a1_orthologue_opposed", sprintf("%d/%d", a1$orthologue_opposed, a1$orthologue_total), "a1_rewiring_duplication.tsv")
 add("a1_fisher", sprintf("OR %.2f (95%% CI %.2f-%.2f), P %.2g", a1$fisher_or, a1$fisher_ci_low, a1$fisher_ci_high, a1$fisher_p), "a1_rewiring_duplication.tsv")
 add("a1_adjusted", sprintf("coefficient %.2f, P %.2g", a1$adjusted_coef, a1$adjusted_p), "a1_rewiring_duplication.tsv")
-add("a1_cluster1_opposed", sprintf("%d/%d", a1$cluster1_opposed, a1$cluster1_with_direction), "a1_rewiring_duplication.tsv"); add("a1_verdict", a1$verdict, "a1_rewiring_duplication.tsv")
+add(sprintf("a1_cluster%d_opposed", a1$cell_division_cluster), sprintf("%d/%d", a1$cell_division_opposed, a1$cell_division_with_direction), "a1_rewiring_duplication.tsv"); add("a1_verdict", a1$verdict, "a1_rewiring_duplication.tsv")
 a2 <- fread("results/a2_series_tests.tsv")
 for (i in seq_len(nrow(a2))) add(sprintf("a2_%s_%s_%s", a2$sp[i], a2$tissue[i], a2$trt[i]),
-  sprintf("cluster 1 median %.2f, cluster 2 median %.2f; T1 q %.2g, T2 q %.2g; pattern %s", a2$c1_median[i], a2$c2_median[i], a2$T1_q[i], a2$T2_q[i], a2$pattern[i]), "a2_series_tests.tsv")
+  sprintf("cluster %d median %.2f, cluster %d median %.2f; T1 q %.2g, T2 q %.2g; pattern %s", KR[["cd"]], a2[[sprintf("c%d_median", KR[["cd"]])]][i],
+          KR[["tr"]], a2[[sprintf("c%d_median", KR[["tr"]])]][i], a2$T1_q[i], a2$T2_q[i], a2$pattern[i]), "a2_series_tests.tsv")
 add("a2_series_with_pattern", sprintf("%d of %d", sum(a2$pattern), nrow(a2)), "a2_series_tests.tsv")
 ad <- fread("results/aspen_timepoint_degs.tsv")
 for (i in seq_len(nrow(ad))) add(paste0("aspen_degs_", ad$timepoint[i]), ad$study_degs[i],

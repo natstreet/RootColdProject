@@ -101,6 +101,13 @@ GS <- G1[padj < 0.05, .(`Cluster (manuscript)` = cluster, GO.ID, Term, Annotated
                          orthogroups, study_genes, background_genes)]
 FS <- F1[padj < 0.05, .(`Cluster (manuscript)` = cluster, GO.ID, Term, Annotated, Significant, Expected, classicFisher = p, padj,
                          padj_size_matched, size_matched, padj_majority, majority, study_families, background_families, family_ids)]
+## D095: each manuscript cluster keeps its identity term: significant at family level for that cluster, and with its lowest padj there
+source("scripts/ComPlEx/cluster_roles.R"); NB <- cluster_numbering()
+for (i in seq_len(nrow(NB))) { h <- F1[GO.ID == NB$identity_go[i]]
+  if (!nrow(h) || h[cluster == NB$manuscript_cluster[i], !length(padj) || padj >= 0.05] || h[which.min(padj), cluster] != NB$manuscript_cluster[i])
+    stop("cluster ", NB$manuscript_cluster[i], " (", NB$role[i], "): identity term ", NB$identity_go[i], " is not significant there, or is ",
+         "more significant in another cluster; the numbering (cluster_numbering.tsv) no longer matches the clusters") }
+cat("D095 identity check: each of", nrow(NB), "clusters has its identity term significant, lowest padj in that cluster\n")
 source("scripts/figures/cluster_labels.R"); APL <- approved_labels()             # approved cluster names (D093), for the legend
 stopifnot(all(vapply(seq_len(nrow(APL)), function(i) FS[`Cluster (manuscript)` == APL$cluster[i] & GO.ID == APL$go_id[i], .N] == 1, TRUE)))
 GS[, Species := "Col0"]; FS[, Species := "Col0"]                                 # readers filter on cluster and GO ID

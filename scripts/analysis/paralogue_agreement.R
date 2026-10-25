@@ -8,9 +8,9 @@
 #                 "differ" (DEGs in both directions, counting a gene that is up at one time point and down at another)
 #   median_r      median pairwise Pearson r of the genes' profiles (z-scored median expression over the five conditions,
 #                 clique_matrix.R); NA with fewer than two profiled genes
-#   cluster       the orthogroup's cluster (clique_clusters.R, analysis numbering)
+#   cluster       the orthogroup's manuscript cluster (manuscript_cluster_map.tsv, D095)
 # Inputs: data/ComPlEx/cliques/{conserved_genes_COMPLETE_filtered,conserved_genes_COMPLETE_wider}.RDS,
-#         data/ComPlEx/cliques/clique_HMcluster_list.rda, data/expression/med_expression/, data/open/differential_expression.tsv
+#         data/ComPlEx/cliques/clique_HMcluster_list.rda, data/ComPlEx/cliques/manuscript_cluster_map.tsv, data/expression/med_expression/, data/open/differential_expression.tsv
 # Outputs: <out dir>/paralogue_agreement.tsv (one row per orthogroup x genotype), <out dir>/paralogue_agreement_summary.tsv
 #          (counts of each agreement value per genotype and per cluster)
 # Usage (working tree): Rscript scripts/analysis/paralogue_agreement.R [out dir, default results]
@@ -22,6 +22,8 @@ core <- as.data.table(readRDS("data/ComPlEx/cliques/conserved_genes_COMPLETE_fil
 G <- as.data.table(clique_genes_by_genotype())
 e <- new.env(); load("data/ComPlEx/cliques/clique_HMcluster_list.rda", envir = e)
 cl <- as.data.table(get(ls(e)[1], e))[, .(cliqueID = ID, cluster = Cluster)]
+mp <- fread("data/ComPlEx/cliques/manuscript_cluster_map.tsv")                         # D095: report manuscript numbers
+cl[, cluster := mp$manuscript_cluster[match(cluster, mp$analysis_cluster)]]; stopifnot(!anyNA(cl$cluster))
 cl <- merge(cl, core[, .(cliqueID, OrthoGroup)], by = "cliqueID")
 de <- fread("data/open/differential_expression.tsv")[is_deg == TRUE]
 if (!all(clique_sp %in% unique(fread("data/open/differential_expression.tsv", select = "species")$species)))

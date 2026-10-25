@@ -1,10 +1,10 @@
 test	cluster	genes	core_pairs	observed	null_mean	null_sd	fold	empirical_P
 all clusters	all	91	564	563	164.09	17.77	3.43	0.0001999600079984
-all clusters, per cluster	1	23		40	34.7	15.09	1.15	0.317736452709458
-all clusters, per cluster	2	39		515	101.89	29.28	5.05	0.0001999600079984
-all clusters, per cluster	3	16		4	16.71	9.21	0.24	0.975604879024195
+all clusters, per cluster	1	39		515	101.89	29.28	5.05	0.0001999600079984
+all clusters, per cluster	2	16		4	16.71	9.21	0.24	0.975604879024195
+all clusters, per cluster	3	23		40	34.7	15.09	1.15	0.317736452709458
 all clusters, per cluster	4	13		4	10.79	6.72	0.37	0.887022595480904
-cluster 2 excluded	1,3,4	52	49	48	16.77	3.38	2.86	0.0001999600079984
-cluster 2 excluded, genes per cluster	1	23		40	9.46	4.4		0.0001999600079984
-cluster 2 excluded, genes per cluster	3	16		4	4.4	2.92		0.554889022195561
-cluster 2 excluded, genes per cluster	4	13		4	2.91	2.32		0.320735852829434
+cluster 1 excluded	2,3,4	52	49	48	16.77	3.38	2.86	0.0001999600079984
+cluster 1 excluded, genes per cluster	2	16		4	4.4	2.92		0.554889022195561
+cluster 1 excluded, genes per cluster	3	23		40	9.46	4.4		0.0001999600079984
+cluster 1 excluded, genes per cluster	4	13		4	2.91	2.32		0.320735852829434

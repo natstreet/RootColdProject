@@ -1,4 +1,4 @@
 cluster	go_id	note
-1	GO:0051301	as Fig5_cluster_labels.tsv (ledger R043)
-2	GO:0006412	as Fig5_cluster_labels.tsv (ledger R043)
+3	GO:0051301	cell-division cluster, as Fig5_cluster_labels.tsv (D095 number 3)
+1	GO:0006412	translation cluster, as Fig5_cluster_labels.tsv (D095 number 1)
 4	GO:0090627	cluster 4 named for epidermal and root-hair differentiation (D093; label text in cluster_labels_approved.tsv)

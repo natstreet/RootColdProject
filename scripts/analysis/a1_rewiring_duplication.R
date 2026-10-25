@@ -9,6 +9,7 @@
 #   supported    primary OR > 1 with P < 0.05 AND adjusted paralogue coefficient > 0 with P < 0.05
 # Output: results/a1_rewiring_duplication.tsv. Usage (working tree): Rscript scripts/analysis/a1_rewiring_duplication.R
 suppressPackageStartupMessages(library(data.table))
+source("scripts/ComPlEx/cluster_roles.R"); KCD <- cluster_of("cell_division")   # D095: reported by role, named by number
 rp <- fread("tables/core_response_patterns.tsv"); oc <- fread("results/orthology_class.tsv")
 x <- merge(rp[, .(OrthoGroup, cluster, direction)], oc[, .(OrthoGroup, orthology_class, expressed_genes)], by = "OrthoGroup")
 stopifnot(nrow(x) == nrow(rp))
@@ -21,6 +22,6 @@ res <- data.table(orthogroups_with_direction = nrow(x),
   paralogue_opposed = t["TRUE", "TRUE"], paralogue_total = sum(t["TRUE", ]), orthologue_opposed = t["FALSE", "TRUE"], orthologue_total = sum(t["FALSE", ]),
   fisher_or = unname(f$estimate), fisher_ci_low = f$conf.int[1], fisher_ci_high = f$conf.int[2], fisher_p = f$p.value,
   adjusted_coef = co[["Estimate"]], adjusted_p = co[["Pr(>|z|)"]],
-  cluster1_opposed = x[cluster == 1, sum(opposed)], cluster1_with_direction = x[cluster == 1, .N])
+  cell_division_cluster = KCD, cell_division_opposed = x[cluster == KCD, sum(opposed)], cell_division_with_direction = x[cluster == KCD, .N])
 res[, verdict := ifelse(fisher_or > 1 & fisher_p < 0.05 & adjusted_coef > 0 & adjusted_p < 0.05, "supported", "not supported")]
 fwrite(res, "results/a1_rewiring_duplication.tsv", sep = "\t"); print(t(res))

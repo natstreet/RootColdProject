@@ -4,6 +4,7 @@
 # cluster (clique_HMcluster_list.rda) sharing most of its orthogroups; the match must be one-to-one.
 # Read by make_TableS3.R, make_Fig4.R, manuscript_clusters.R, cluster_profiles.R, string_by_cluster.R.
 # Usage (repository root): Rscript scripts/ComPlEx/manuscript_cluster_map.R [--renumber [a1,a2,a3,a4]]   (D081: numbering only)
+#                          Rscript scripts/ComPlEx/manuscript_cluster_map.R --numbering [file]          (D095: from cluster_numbering.tsv)
 # Output: data/ComPlEx/cliques/manuscript_cluster_map.tsv (manuscript_cluster, analysis_cluster, shared, analysis_size)
 ref <- read.delim("scripts/ComPlEx/reference/published_manuscript_clusters.tsv")
 e <- new.env(); load("data/ComPlEx/cliques/clique_HMcluster_list.rda", envir = e); x <- get("clique_cluster_order", e)
@@ -11,6 +12,21 @@ cur <- data.frame(orthogroup = sub("_[0-9]+$", "", x$ID), analysis_cluster = x$C
 m <- merge(ref, cur, by = "orthogroup")
 tab <- table(m$manuscript_cluster, m$analysis_cluster)
 cargs <- commandArgs(trailingOnly = TRUE)
+if (length(cargs) && cargs[1] == "--numbering") {
+  # D095: the numbering is read from one committed file (default scripts/ComPlEx/cluster_numbering.tsv: manuscript_cluster,
+  # analysis_cluster, identity_go, role, decision). Numbering only (membership unchanged). Each identity GO term is checked against
+  # Table S3 by tableS3_arabidopsis.R, so a rerun that relabels the analysis clusters stops instead of swapping the numbers.
+  nf <- if (length(cargs) >= 2) cargs[2] else "scripts/ComPlEx/cluster_numbering.tsv"
+  nb <- read.delim(nf, colClasses = c(manuscript_cluster = "integer", analysis_cluster = "integer"))
+  sz <- table(cur$analysis_cluster)
+  if (!setequal(nb$analysis_cluster, as.integer(names(sz))) || anyDuplicated(nb$analysis_cluster) || !identical(sort(nb$manuscript_cluster), seq_len(nrow(nb))))
+    stop(nf, ": each analysis cluster and each manuscript number 1..", length(sz), " must appear once")
+  nb <- nb[order(nb$manuscript_cluster), ]
+  out <- data.frame(manuscript_cluster = nb$manuscript_cluster, analysis_cluster = nb$analysis_cluster,
+                    shared = NA_integer_, analysis_size = as.integer(sz[as.character(nb$analysis_cluster)]))
+  write.table(out, "data/ComPlEx/cliques/manuscript_cluster_map.tsv", sep = "\t", quote = FALSE, row.names = FALSE, na = "NA")
+  print(out, row.names = FALSE); quit(save = "no")
+}
 if (length(cargs) && cargs[1] == "--renumber") {
   # D081: the clusters were rebuilt and are not matched to the published four. Numbering only (membership unchanged):
   # an optional second argument gives the analysis cluster for manuscript clusters 1..4 (e.g. 4,2,3,1); without it each
