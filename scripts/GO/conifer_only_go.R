@@ -15,6 +15,7 @@
 #    One-sided Fisher, BH over every term of the universe's GO graph (as topGO); and a size-matched null: the conifer-only families
 #    redrawn within deciles of the number of tested genes, P computed exactly (size_matched_p(), go_table_utils.R), BH.
 # Outputs (out dir): gene_level_<conifer>.tsv (every tested term), gene_level_family_count_<conifer>.tsv (significant terms),
+#   gene_level_study_genes_<conifer>.tsv (the annotated study genes of each significant term, with their orthogroup),
 #   family_level_<conifer>.tsv (every tested term, Fisher and size-matched), summary.txt
 # Usage (working tree): Rscript scripts/GO/conifer_only_go.R <out dir> [threshold, default 0.1] [null draws, default 5000]
 suppressPackageStartupMessages({ library(data.table); library(Matrix) })
@@ -61,6 +62,8 @@ for (cf in c("spruce", "pine")) {
                share_largest_orthogroup = round(max(table(unique(h)$OrthoGroup)) / uniqueN(h$gene), 3)) }))
   if (nrow(fc)) fc <- merge(g1[padj < 0.05, .(GO.ID, Term, padj)], fc, by = "GO.ID")[order(padj)]
   fwrite(fc, file.path(OUT, sprintf("gene_level_family_count_%s.tsv", cf)), sep = "\t")
+  sg <- rbindlist(lapply(g1[padj < 0.05, GO.ID], function(t) study[[cf]][gene %in% intersect(tm$members[[t]], st)][, GO.ID := t]))
+  fwrite(sg[order(GO.ID, OrthoGroup, gene), .(GO.ID, gene, OrthoGroup)], file.path(OUT, sprintf("gene_level_study_genes_%s.tsv", cf)), sep = "\t")
   ## 2. family level
   fg <- rbind(tested[[cf]][!OrthoGroup %in% Conly], study[[cf]][, .(OrthoGroup, gene)])
   f2go <- lapply(split(fg$gene, fg$OrthoGroup), function(gs) unique(unlist(ANNf[[cf]][intersect(gs, names(ANNf[[cf]]))], use.names = FALSE)))

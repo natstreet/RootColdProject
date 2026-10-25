@@ -17,8 +17,8 @@
 #
 # Usage: bash scripts/reproduce_figures_tables.sh <working dir> [Rscript for DESeq2 steps]
 #   RSCRIPT: the Rscript to use (default: Rscript on the PATH). The second argument names an Rscript with DESeq2 for
-#   tf_clique_directions.R (default: the same). FIG4_CAPTIONS=none draws Fig. 4 without GO captions (while the
-#   clusters are provisional, D081).
+#   tf_clique_directions.R (default: the same). FIG4_CAPTIONS chooses the Fig. 4 captions: family_level (default;
+#   fig4_captions_family_level.R on Table S3, D090), approved (Fig4_terms_approved.tsv, D008) or none.
 set -euo pipefail
 W=$1; R=${RSCRIPT:-Rscript}; RD=${2:-$R}
 cd "$W"; mkdir -p logs tables results
@@ -27,20 +27,21 @@ run genotype_colours      $R scripts/figures/genotype_colours.R
 run TableS1               $R scripts/GO/make_TableS1.R
 run TableS2               $R scripts/GO/make_TableS2.R
 run size_rule             $R scripts/ComPlEx/size_rule.R                                   # D026 even-odds rule table (D080); read by Table S3
-run TableS3               $R scripts/GO/make_TableS3.R                                     # gene level (kept for comparison)
-run TableS3_family        $R scripts/GO/tableS3_family_level.R tables/TableS3_cliqueClusterGO_classic.tsv tables/family_level ${S3_NULL_DRAWS:-5000}
-run TableS3_install       bash -c 'cp tables/TableS3_cliqueClusterGO_classic.tsv tables/TableS3_gene_level.tsv && cp tables/Table_S3.xlsx tables/Table_S3_gene_level.xlsx && cp tables/family_level/TableS3_family_level.tsv tables/TableS3_cliqueClusterGO_classic.tsv && cp tables/family_level/Table_S3_family_level.xlsx tables/Table_S3.xlsx && echo "Table S3 = family level (D086, D087); gene level kept as tables/TableS3_gene_level.*"'
-run Fig4_caption_cand     $R scripts/figures/fig4_caption_candidates.R
+run TableS3_genotypes     $R scripts/GO/make_TableS3.R                                     # per genotype, gene level (supplementary comparison)
+run TableS3_family_gt     $R scripts/GO/tableS3_family_level.R tables/TableS3_cliqueClusterGO_classic.tsv tables/family_level ${S3_NULL_DRAWS:-5000}
+run TableS3               $R scripts/GO/tableS3_arabidopsis.R tables/arabidopsis            # D090: one test per cluster on the Col-0 annotation
+run TableS3_install       bash -c 'mkdir -p tables/per_genotype && mv tables/TableS3_cliqueClusterGO_classic.tsv tables/per_genotype/TableS3_gene_level.tsv && mv tables/Table_S3.xlsx tables/per_genotype/Table_S3_gene_level.xlsx && cp tables/family_level/TableS3_family_level.tsv tables/per_genotype/TableS3_family_level.tsv && cp tables/family_level/Table_S3_family_level.xlsx tables/per_genotype/Table_S3_family_level.xlsx && cp tables/arabidopsis/TableS3_family_level.tsv tables/TableS3_cliqueClusterGO_classic.tsv && cp tables/arabidopsis/TableS3_gene_level.tsv tables/TableS3_gene_level.tsv && cp tables/arabidopsis/Table_S3.xlsx tables/Table_S3.xlsx && cp tables/arabidopsis/annotation_coverage.tsv tables/TableS3_annotation_coverage.tsv && cp tables/arabidopsis/annotation_coverage_summary.tsv tables/TableS3_annotation_coverage_summary.tsv && echo "Table S3 = Col-0 annotation, family level (D090); gene level tables/TableS3_gene_level.tsv; per-genotype runs in tables/per_genotype/"'
 run Fig1                  $R scripts/figures/make_Fig1.R
 run Fig2                  $R scripts/figures/make_Fig2.R
 run Fig3                  $R scripts/figures/make_Fig3.R
 run paralogue_agreement   $R scripts/analysis/paralogue_agreement.R results              # D083, drawn on Fig. 4
-if [ "${FIG4_CAPTIONS:-approved}" = none ]; then                                           # clusters not yet numbered/captioned (D081)
-  run Fig4                $R scripts/figures/make_Fig4.R none
-else
-  run Fig4_captions       $R scripts/figures/fig4_captions_from_terms.R                # the approved terms (D008), matched to Table S3
-  run Fig4                $R scripts/figures/make_Fig4.R Fig4_captions_approved.tsv
-fi
+case "${FIG4_CAPTIONS:-family_level}" in                                                  # D090 captions (provisional until approved)
+  none)     run Fig4      $R scripts/figures/make_Fig4.R none ;;
+  approved) run Fig4_captions $R scripts/figures/fig4_captions_from_terms.R                # the approved terms (D008), matched to Table S3
+            run Fig4      $R scripts/figures/make_Fig4.R Fig4_captions_approved.tsv ;;
+  *)        run Fig4_captions $R scripts/figures/fig4_captions_family_level.R tables/TableS3_cliqueClusterGO_classic.tsv Fig4_captions_family_level.tsv 2
+            run Fig4      $R scripts/figures/make_Fig4.R Fig4_captions_family_level.tsv ;;
+esac
 run size_flag             $R scripts/validation/orthogroup_size_flag.R
 run hog_N1msa             $R scripts/analysis/hog_clique_consistency.R data/orthofinder/N1_msa.tsv results/hog_N1msa data/orthofinder/Orthogroups.tsv
 run orthology_class       $R scripts/analysis/orthology_class.R results/hog_N1msa data/orthofinder/msa_trees

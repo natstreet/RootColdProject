@@ -37,11 +37,14 @@ go_result <- function(GOdata, res, alpha = 0.05) {
 write_supp_xlsx <- function(tab, file, sheet, legend, sig_cols) {
   # padj to four significant figures, so that a value just below the 0.05 cut-off (e.g. 0.04995) does not
   # display as 0.05; the other statistics to three
-  for (k in sig_cols) tab[[k]] <- signif(tab[[k]], if (k == "padj") 4 else 3)
+  # tab may be one table (written to `sheet`) or a named list of tables (one sheet each; `sheet` is then ignored)
+  tabs <- if (is.data.frame(tab)) stats::setNames(list(tab), sheet) else tab
+  for (s in names(tabs)) for (k in intersect(sig_cols, names(tabs[[s]])))
+    tabs[[s]][[k]] <- signif(tabs[[s]][[k]], if (startsWith(k, "padj")) 4 else 3)
   # writexl writes only the parts a workbook uses. The Legend sheet is a one-cell sheet: a zero-row table whose
   # only header is the legend text.
   leg <- stats::setNames(data.frame(matrix(nrow = 0, ncol = 1)), legend)
-  sheets <- list(Legend = leg); sheets[[sheet]] <- tab
+  sheets <- c(list(Legend = leg), tabs)
   writexl::write_xlsx(sheets, file, format_headers = FALSE)
   check_xlsx_parts(file)
 }
