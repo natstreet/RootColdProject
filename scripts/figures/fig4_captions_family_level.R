@@ -6,6 +6,8 @@
 # set of families equals that of a term already chosen for the cluster is skipped (parent/child terms carried by the same
 # families). The basis of each caption is recorded. Captions are provisional until NRS/SCI approve them.
 # Input: the family-level Table S3 tsv (tableS3_arabidopsis.R). Output: a caption table (cluster, GO.ID, Term, basis, padj).
+# A cluster with an approved name (scripts/figures/cluster_labels_approved.tsv, cluster_labels.R) gets that one caption instead, its
+# GO term required to be significant for the cluster in Table S3; the label column carries the approved name.
 # Usage: Rscript scripts/figures/fig4_captions_family_level.R <TableS3_family_level.tsv> <out tsv> [N, default 2]
 suppressPackageStartupMessages(library(data.table))
 a <- commandArgs(trailingOnly = TRUE); N <- if (length(a) >= 3) as.integer(a[3]) else 2L
@@ -20,4 +22,11 @@ out <- rbindlist(lapply(sort(unique(f$cluster)), function(k) {
     keep <- c(keep, i); seen <- c(seen, d$family_ids[i]) }
   d[keep, .(cluster, GO.ID, Term, basis, padj)]
 }))
-fwrite(out, a[2], sep = "\t"); print(out)
+source("scripts/figures/cluster_labels.R"); ap <- approved_labels()
+out[, label := NA_character_]
+for (i in seq_len(nrow(ap))) {
+  h <- f[cluster == ap$cluster[i] & GO.ID == ap$go_id[i]]
+  if (nrow(h) != 1) stop("approved label for cluster ", ap$cluster[i], ": ", ap$go_id[i], " is not significant in Table S3")
+  out <- rbind(out[cluster != ap$cluster[i]], h[, .(cluster, GO.ID, Term, basis = paste("approved name,", ap$decision[i]), padj, label = ap$label[i])])
+}
+setorder(out, cluster); fwrite(out, a[2], sep = "\t"); print(out)

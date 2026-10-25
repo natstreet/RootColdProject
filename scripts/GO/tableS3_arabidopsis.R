@@ -101,6 +101,8 @@ GS <- G1[padj < 0.05, .(`Cluster (manuscript)` = cluster, GO.ID, Term, Annotated
                          orthogroups, study_genes, background_genes)]
 FS <- F1[padj < 0.05, .(`Cluster (manuscript)` = cluster, GO.ID, Term, Annotated, Significant, Expected, classicFisher = p, padj,
                          padj_size_matched, size_matched, padj_majority, majority, study_families, background_families, family_ids)]
+source("scripts/figures/cluster_labels.R"); APL <- approved_labels()             # approved cluster names (D093), for the legend
+stopifnot(all(vapply(seq_len(nrow(APL)), function(i) FS[`Cluster (manuscript)` == APL$cluster[i] & GO.ID == APL$go_id[i], .N] == 1, TRUE)))
 GS[, Species := "Col0"]; FS[, Species := "Col0"]                                 # readers filter on cluster and GO ID
 fwrite(GS, file.path(OUT, "TableS3_gene_level.tsv"), sep = "\t"); fwrite(FS, file.path(OUT, "TableS3_family_level.tsv"), sep = "\t")
 write_supp_xlsx(list(`Table S3 gene level` = as.data.frame(GS), `Table S3 family level` = as.data.frame(FS)), file.path(OUT, "Table_S3.xlsx"),
@@ -111,7 +113,8 @@ write_supp_xlsx(list(`Table S3 gene level` = as.data.frame(GS), `Table S3 family
     "separately). Family level: orthogroups, an orthogroup carrying a term when any of its Col-0 genes does, against the eligible",
     "orthogroups; asks which kinds of gene family are over-represented. topGO classic Fisher's exact test, Benjamini-Hochberg within each",
     "cluster over every term of the GO graph, padj < 0.05. Family level also: size_matched (the same test against random sets of",
-    "eligible orthogroups matched on size, exact) and majority (an orthogroup carries a term only when at least half of its Col-0 genes do)."))
+    "eligible orthogroups matched on size, exact) and majority (an orthogroup carries a term only when at least half of its Col-0 genes do).",
+    if (nrow(APL)) paste0("Cluster names: ", paste(sprintf("cluster %d, %s (%s)", APL$cluster, tolower(APL$label), APL$go_id), collapse = "; "), ".") else ""))
 
 ## annotation coverage (supplementary)
 ANN <- list(col0 = athal, ost0 = athal, aspen = read_go_mapping("data/annotation/Potra02_go_ids.tsv"),

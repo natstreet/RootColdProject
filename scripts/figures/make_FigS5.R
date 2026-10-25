@@ -10,7 +10,8 @@ args <- commandArgs(trailingOnly = TRUE); inp <- if (length(args) > 0) args[1] e
 lab <- fread("scripts/figures/FigS5_cluster_labels.tsv"); t3 <- fread("tables/TableS3_cliqueClusterGO_classic.tsv")
 lab[, term := vapply(seq_len(.N), function(i) { h <- t3[`Cluster (manuscript)` == cluster[i] & GO.ID == go_id[i], unique(Term)]
   if (length(h) != 1) stop("GO term ", go_id[i], " is not enriched for cluster ", cluster[i], " in Table S3"); h }, "")]
-clab <- sprintf("%s (Cluster %d)", paste0(toupper(substr(lab$term, 1, 1)), substring(lab$term, 2)), lab$cluster)
+source("scripts/figures/cluster_labels.R")                                       # approved names (D093)
+clab <- sprintf("%s (Cluster %d)", mapply(label_for, lab$cluster, lab$go_id, lab$term), lab$cluster)
 d <- fread(inp)
 lv <- list("5C" = paste0("5C_", c("6h","24h","3d","10d")), "-5C" = paste0("neg5C_", c("6h","24h","3d","10d")))
 lab_cold <- c("6 h","24 h","3 d","10 d"); lab_dr <- c("60%","40%","30%","30%, 7 d","Collapse","Collapse, 2 d")

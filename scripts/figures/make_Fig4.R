@@ -69,7 +69,9 @@ go_label <- if (no_caps) rep("", length(blk_cl)) else sapply(blk_cl, function(mc
   miss <- setdiff(ids, hit$GO.ID)
   if (length(miss)) stop("caption table: not significant in Table S3 for cluster ", mc, ": ", paste(miss, collapse = ", "))
   nm <- hit$Term[match(ids, hit$GO.ID)]
-  paste(paste0(toupper(substr(nm, 1, 1)), substring(nm, 2)), collapse = "\n") })
+  nm <- paste0(toupper(substr(nm, 1, 1)), substring(nm, 2))
+  if ("label" %in% names(cap)) { lb <- cap$label[cap$cluster == mc]; nm <- ifelse(is.na(lb) | lb == "", nm, lb) }   # approved names (D093)
+  paste(nm, collapse = "\n") })
 tag <- paste("Cluster", blk_cl)
 
 ## ---- drawing ----

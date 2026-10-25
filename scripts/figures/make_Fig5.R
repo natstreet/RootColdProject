@@ -16,7 +16,7 @@ col <- unlist(fromJSON("scripts/figures/genotype_colours.json"))
 lab <- fread("scripts/figures/Fig5_cluster_labels.tsv"); t3 <- fread("tables/TableS3_cliqueClusterGO_classic.tsv")
 lab[, term := vapply(seq_len(.N), function(i) { h <- t3[`Cluster (manuscript)` == cluster[i] & GO.ID == go_id[i], unique(Term)]
   if (length(h) != 1) stop("GO term ", go_id[i], " is not enriched for cluster ", cluster[i], " in Table S3"); h }, "")]
-lab[, display := paste0(toupper(substr(term, 1, 1)), substring(term, 2))]
+source("scripts/figures/cluster_labels.R"); lab[, display := mapply(label_for, cluster, go_id, term)]   # approved names (D093)
 geno <- c(col0 = "Col-0", ost0 = "Ost-0", aspen = "Aspen", birch = "Birch", spruce = "Norway spruce", pine = "Scots pine")
 tps  <- c("0", "6h", "24h", "3d", "10d"); tlab <- c("0", "6 h", "24 h", "3 d", "10 d")
 d <- cp[ms_cluster %in% lab$cluster, .(cluster = ms_cluster, species, timepoint, n, median_log2fc)]
