@@ -102,6 +102,18 @@ stopifnot(any(ad$study_degs != ad$twofold_null_padj_below_0.05))
 # Fig. 1a: orthogroups expressed in all 12 condition sets (Results, first paragraph; R068)
 f1 <- fread("Figure1_panel_values.tsv"); stopifnot(f1[panel == "a", .N] == 1)
 add("fig1a_common_orthogroups", f1[panel == "a", count], "Figure1_panel_values.tsv: panel a")
+rng <- function(v) sprintf("%.1f-%.1f%%", min(v), max(v))                       # R072: every Fig. 1 / Table S1 number the text quotes
+add("fig1b_share_range", rng(f1[panel == "b", percent]), "Figure1_panel_values.tsv: panel b, percent over genotypes")
+for (ct in unique(f1[panel == "c", category])) add(paste0("fig1c_", gsub("[^a-z]+", "_", tolower(ct)), "_range"), rng(f1[panel == "c" & category == ct, percent]),
+  sprintf("Figure1_panel_values.tsv: panel c, %s, percent over genotypes", ct))
+add("fig1d_share_range", rng(f1[panel == "d", percent]), "Figure1_panel_values.tsv: panel d, percent over genotypes")
+co <- fread("results/common_orthogroups.tsv"); cv <- setNames(co$value, co$quantity)
+add("common_deg_orthogroups", cv[["common_orthogroups"]], "common_orthogroups.tsv: DEG in all six genotypes (D101 map)")
+add("common_deg_orthogroups_ge20_genes", sprintf("%d (%.1f%%)", as.integer(cv[["common_with_at_least_20_genes"]]), cv[["common_pct_at_least_20_genes"]]), "common_orthogroups.tsv")
+add("all_six_orthogroups_ge20_genes", sprintf("%d of %d (%.1f%%)", as.integer(cv[["of_those_with_at_least_20_genes"]]), as.integer(cv[["orthogroups_with_genes_in_all_six_genotypes"]]), cv[["of_those_pct_at_least_20_genes"]]), "common_orthogroups.tsv")
+t1 <- fread("tables/TableS1_commonDEG_GO_classic.tsv")
+add("tableS1_terms", nrow(t1), "TableS1_commonDEG_GO_classic.tsv: rows (padj < 0.05)")
+add("tableS1_top_terms", paste(head(t1[order(padj, GO.ID)], 6)[, sprintf("%s (%s, padj %.2g)", Term, GO.ID, padj)], collapse = "; "), "TableS1_commonDEG_GO_classic.tsv: six lowest padj")
 # conifer-only defence (R064, R066; Discussion sentence D094)
 cd <- fread("tables/conifer_only_defence_summary.tsv")
 for (i in seq_len(nrow(cd))) { cf <- cd$conifer[i]

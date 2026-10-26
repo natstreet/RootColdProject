@@ -27,6 +27,8 @@ run genotype_colours      $R scripts/figures/genotype_colours.R
 run med_expression        $R scripts/expression/med_expression.R                         # R068 F02: per-timepoint VST medians (read by Figs 1, 4, S1 and the clusters)
 run cluster_numbering     $R scripts/ComPlEx/manuscript_cluster_map.R --numbering            # D095: one numbering file (scripts/ComPlEx/cluster_numbering.tsv)
 run cluster_origin        $R scripts/analysis/cluster_origin.R
+run og_summary            $R scripts/DE/og_summary.R                                        # D101: deposited gene-to-orthogroup map (og_map.R)
+run common_orthogroups    $R scripts/validation/common_orthogroups.R
 run TableS1               $R scripts/GO/make_TableS1.R
 run TableS2               $R scripts/GO/make_TableS2.R
 run size_rule             $R scripts/ComPlEx/size_rule.R                                   # D026 even-odds rule table (D080); read by Table S3

@@ -29,6 +29,7 @@ og_summary <- M %>% group_by(OrthoGroup) %>%
   summarise(species_with_genes = list(sp[sp %in% unique(species)]),
             species_with_DEGs  = list(sp[sp %in% unique(species[deg])]), .groups = "drop") %>%
   mutate(n_species_with_genes = lengths(species_with_genes), n_species_with_DEGs = lengths(species_with_DEGs))
+stopifnot(all(grepl("^OG[0-9]+$", og_summary$OrthoGroup)))                       # no placeholder orthogroup counted (D101)
 dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
 save(og_summary, file = out)
 cat("og_summary:", nrow(og_summary), "orthogroups ->", out, "\n")

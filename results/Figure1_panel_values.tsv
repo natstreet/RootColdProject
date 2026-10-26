@@ -1,45 +1,45 @@
 panel	species	category	count	denominator	percent
-a	all	expressed orthogroups shared by all 12 condition sets	6503	19421	33.48
-b	Col-0	expressed genes in common orthogroups	14678	26573	55.24
-b	Ost-0	expressed genes in common orthogroups	14664	26331	55.69
-b	Aspen	expressed genes in common orthogroups	17943	31066	57.76
-b	Birch	expressed genes in common orthogroups	12862	21122	60.89
-b	Spruce	expressed genes in common orthogroups	17346	37489	46.27
-b	Pine	expressed genes in common orthogroups	18412	43605	42.22
-c	Col-0	DEG across all	857	4900	17.49
-c	Col-0	DEG in some	3836	4900	78.29
-c	Col-0	Species-specific DEG	175	4900	3.57
-c	Col-0	Singletons	32	4900	0.65
-c	Ost-0	DEG across all	1061	7029	15.09
-c	Ost-0	DEG in some	5309	7029	75.53
-c	Ost-0	Species-specific DEG	616	7029	8.76
-c	Ost-0	Singletons	43	7029	0.61
-c	Aspen	DEG across all	1489	10866	13.7
-c	Aspen	DEG in some	6910	10866	63.59
-c	Aspen	Species-specific DEG	1787	10866	16.45
-c	Aspen	Singletons	680	10866	6.26
-c	Birch	DEG across all	575	3107	18.51
-c	Birch	DEG in some	2068	3107	66.56
-c	Birch	Species-specific DEG	334	3107	10.75
-c	Birch	Singletons	130	3107	4.18
-c	Spruce	DEG across all	1163	5833	19.94
-c	Spruce	DEG in some	3433	5833	58.85
-c	Spruce	Species-specific DEG	836	5833	14.33
-c	Spruce	Singletons	401	5833	6.87
-c	Pine	DEG across all	851	4324	19.68
-c	Pine	DEG in some	2424	4324	56.06
-c	Pine	Species-specific DEG	505	4324	11.68
-c	Pine	Singletons	544	4324	12.58
-d	Col-0	DEGs in common orthogroups	857	5689	15.06
-d	Ost-0	DEGs in common orthogroups	1061	8047	13.19
-d	Aspen	DEGs in common orthogroups	1489	11729	12.7
-d	Birch	DEGs in common orthogroups	575	3312	17.36
-d	Spruce	DEGs in common orthogroups	1163	6353	18.31
-d	Pine	DEGs in common orthogroups	851	4717	18.04
-d/b	Col-0	DEGs in common orthogroups per expressed gene in common orthogroups	857	14678	5.84
-d/b	Ost-0	DEGs in common orthogroups per expressed gene in common orthogroups	1061	14664	7.24
-d/b	Aspen	DEGs in common orthogroups per expressed gene in common orthogroups	1489	17943	8.3
-d/b	Birch	DEGs in common orthogroups per expressed gene in common orthogroups	575	12862	4.47
-d/b	Spruce	DEGs in common orthogroups per expressed gene in common orthogroups	1163	17346	6.7
-d/b	Pine	DEGs in common orthogroups per expressed gene in common orthogroups	851	18412	4.62
-c/d	all	orthogroups with a DEG in all six species	270	20692	NA
+a	all	expressed orthogroups shared by all 12 condition sets	7045	20183	34.91
+b	Col-0	expressed genes in common orthogroups	16687	26573	62.8
+b	Ost-0	expressed genes in common orthogroups	16651	26331	63.24
+b	Aspen	expressed genes in common orthogroups	20355	31066	65.52
+b	Birch	expressed genes in common orthogroups	14703	21122	69.61
+b	Spruce	expressed genes in common orthogroups	20457	37489	54.57
+b	Pine	expressed genes in common orthogroups	21719	43605	49.81
+c	Col-0	DEG across all	1125	5087	22.12
+c	Col-0	DEG in some	3774	5087	74.19
+c	Col-0	Species-specific DEG	188	5087	3.7
+c	Col-0	Singletons	0	5087	0
+c	Ost-0	DEG across all	1401	7293	19.21
+c	Ost-0	DEG in some	5259	7293	72.11
+c	Ost-0	Species-specific DEG	633	7293	8.68
+c	Ost-0	Singletons	0	7293	0
+c	Aspen	DEG across all	1999	11344	17.62
+c	Aspen	DEG in some	6821	11344	60.13
+c	Aspen	Species-specific DEG	1819	11344	16.03
+c	Aspen	Singletons	705	11344	6.21
+c	Birch	DEG across all	771	3223	23.92
+c	Birch	DEG in some	1979	3223	61.4
+c	Birch	Species-specific DEG	343	3223	10.64
+c	Birch	Singletons	130	3223	4.03
+c	Spruce	DEG across all	1531	6139	24.94
+c	Spruce	DEG in some	3380	6139	55.06
+c	Spruce	Species-specific DEG	849	6139	13.83
+c	Spruce	Singletons	379	6139	6.17
+c	Pine	DEG across all	1055	4496	23.47
+c	Pine	DEG in some	2419	4496	53.8
+c	Pine	Species-specific DEG	561	4496	12.48
+c	Pine	Singletons	461	4496	10.25
+d	Col-0	DEGs in common orthogroups	1125	5689	19.78
+d	Ost-0	DEGs in common orthogroups	1401	8047	17.41
+d	Aspen	DEGs in common orthogroups	1999	11729	17.04
+d	Birch	DEGs in common orthogroups	771	3312	23.28
+d	Spruce	DEGs in common orthogroups	1531	6353	24.1
+d	Pine	DEGs in common orthogroups	1055	4717	22.37
+d/b	Col-0	DEGs in common orthogroups per expressed gene in common orthogroups	1125	16687	6.74
+d/b	Ost-0	DEGs in common orthogroups per expressed gene in common orthogroups	1401	16651	8.41
+d/b	Aspen	DEGs in common orthogroups per expressed gene in common orthogroups	1999	20355	9.82
+d/b	Birch	DEGs in common orthogroups per expressed gene in common orthogroups	771	14703	5.24
+d/b	Spruce	DEGs in common orthogroups per expressed gene in common orthogroups	1531	20457	7.48
+d/b	Pine	DEGs in common orthogroups per expressed gene in common orthogroups	1055	21719	4.86
+c/d	all	orthogroups with a DEG in all six species	341	24899	NA
