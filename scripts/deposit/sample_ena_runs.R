@@ -9,7 +9,7 @@
 # the "TechRepComb_" spruce files that combine technical replicates) is matched on the library number alone, so it
 # takes every run of that library: each spruce sample has two runs, and pine sample 120 was merged from two.
 #
-# Run metadata come from the ENA portal API (read_count = read pairs, instrument_model, submitted and FASTQ file
+# Run metadata come from the ENA portal API (read_count and base_count -> read pairs, see pairs_of(); instrument_model, submitted and FASTQ file
 # names). For each run the first read of each FASTQ file (mate 1 and mate 2) is read from the first 64 kB of the file:
 # the sequencer's instrument and flowcell fields from its header, and the read length from its sequence. ENA's
 # instrument_model is the value submitted; the header is what the sequencer wrote. (ENA's base_count is not used: for
@@ -33,7 +33,16 @@
 suppressMessages(library(curl))
 STUDIES <- c("PRJEB104117", "PRJEB104118", "PRJEB104119", "PRJEB104120", "PRJEB26918")   # Data availability
 API <- "https://www.ebi.ac.uk/ena/portal/api/search"
-FIELDS <- "run_accession,study_accession,read_count,instrument_model,submitted_ftp,fastq_ftp"
+FIELDS <- "run_accession,study_accession,read_count,base_count,instrument_model,submitted_ftp,fastq_ftp"
+# R072 (D102): ENA's read_count is the number of read pairs for some runs and the number of reads (both mates) for others. A direct count
+# of one R1 FASTQ per batch (results/read_depth_check.tsv) showed read_count = 2 x pairs for both NovaSeq batches and = pairs for the
+# HiSeq batch. Per run, base_count / read_count equals one mate's length when read_count counts reads, and both mates' lengths when it
+# counts pairs; read_pairs follows from that, and any other ratio stops the script.
+pairs_of <- function(read_count, base_count, read_length) {
+  len <- as.numeric(strsplit(read_length, "+", fixed = TRUE)[[1]]); r <- as.numeric(base_count) / as.numeric(read_count)
+  if (abs(r - sum(len)) <= 1) return(as.numeric(read_count))
+  if (abs(r - mean(len)) <= 1) return(as.numeric(read_count) / 2)
+  stop("base_count / read_count = ", r, " fits neither one mate nor both (read lengths ", read_length, ")") }
 BATCH_LABEL <- c(novogene = "Novogene NovaSeq 6000", P21452 = "NGI NovaSeq 6000", P1406 = "HiSeq 2500")
 
 rd <- function(p) read.delim(p, colClasses = "character", check.names = FALSE, quote = "")
@@ -95,20 +104,25 @@ for (i in seq_len(nrow(samples))) {
   b <- unique(vapply(keys$k, batch_of, "")); stopifnot(length(b) == 1)
   left_out <- sort(setdiff(runs$run_accession[runs$lib %in% unique(rr$lib)], rr$run_accession))
   used <- c(used, rr$run_accession)
+  rr$pairs <- NA_real_
   for (j in seq_len(nrow(rr))) {
-    s <- sequencer_fields(rr$fastq_ftp[j])
+    s <- sequencer_fields(rr$fastq_ftp[j]); rr$pairs[j] <- pairs_of(rr$read_count[j], rr$base_count[j], s$read_length)
     run_rows[[length(run_rows) + 1]] <- data.frame(
       run = rr$run_accession[j], study = rr$study_accession[j], sample_id = sid, species = sp, library = lib,
-      read_pairs = as.numeric(rr$read_count[j]), read_length = s$read_length,
+      read_pairs = rr$pairs[j], ena_read_count = as.numeric(rr$read_count[j]), read_length = s$read_length,
       ena_instrument_model = rr$instrument_model[j], header_instrument = s$instrument, header_flowcell = s$flowcell,
       batch = BATCH_LABEL[[b]])
   }
   sample_rows[[length(sample_rows) + 1]] <- data.frame(
     sample_id = sid, species = sp, ena_runs = paste(sort(rr$run_accession), collapse = ";"),
-    read_pairs = sum(as.numeric(rr$read_count)), batch = BATCH_LABEL[[b]],
+    read_pairs = sum(rr$pairs), batch = BATCH_LABEL[[b]],
     runs_of_same_library_not_used = paste(left_out, collapse = ";"))
 }
 run_rows <- do.call(rbind, run_rows); sample_rows <- do.call(rbind, sample_rows)
+if (file.exists("results/read_depth_check.tsv")) {                              # known answer: direct FASTQ counts (R072)
+  kc <- rd("results/read_depth_check.tsv"); got <- run_rows$read_pairs[match(kc$run, run_rows$run)]
+  if (anyNA(got) || any(got != as.numeric(kc$reads_R1))) stop("read pairs disagree with the direct FASTQ counts in results/read_depth_check.tsv")
+  cat("direct-count check:", nrow(kc), "runs agree\n") }
 
 prefix <- sub("^([A-Za-z-]+).*", "\\1", run_rows$header_instrument)
 pref <- tapply(prefix, run_rows$batch, function(x) sort(unique(x)))
