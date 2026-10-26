@@ -38,9 +38,8 @@ labs <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spru
 key  <- c(col0="col0", ost0="ost0", aspen="aspen", birch="birch", spruce="spruce", pine="pine")
 
 # gene -> orthogroup maps (objects OG_Col0, OG_Ost0, OG_aspen, OG_birch, OG_spruce, OG_pine)
-for (f in c("Col0","Ost0","aspen","birch","spruce","pine"))
-  load(sprintf("data/ComPlEx/gene2OG/gene2OG_%s.rda", f))
-OGm <- list(col0=OG_Col0, ost0=OG_Ost0, aspen=OG_aspen, birch=OG_birch, spruce=OG_spruce, pine=OG_pine)
+source("scripts/DE/og_map.R")                                                  # OG_MAP: gene2OG (default) or open (R070)
+OGm <- setNames(lapply(sp, og_map), sp)
 
 # ── panel a: expressed-orthogroup sets per condition + UpSet ──────────────────
 ctl <- list(); trt <- list()

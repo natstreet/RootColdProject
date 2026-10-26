@@ -9,7 +9,7 @@
 #         the path given as the first argument.
 # Read by: make_Fig1.R, make_TableS1.R, common_orthogroups.R
 # Usage:  Rscript scripts/DE/og_summary.R [output.RData]
-suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(dplyr)); source("scripts/DE/og_map.R")
 args <- commandArgs(trailingOnly = TRUE)
 out  <- if (length(args)) args[1] else "data/DEGs/og_summary.RData"
 ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e) }
@@ -17,7 +17,7 @@ ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e)
 sp <- c("col0", "ost0", "aspen", "birch", "spruce", "pine")
 fn <- c(col0 = "Col0", ost0 = "Ost0", aspen = "aspen", birch = "birch", spruce = "spruce", pine = "pine")
 M <- bind_rows(lapply(sp, function(s) {
-  d <- ld(sprintf("data/ComPlEx/gene2OG/gene2OG_%s.rda", fn[s])); names(d)[1:2] <- c("OrthoGroup", "gene")
+  d <- og_map(s); names(d)[1:2] <- c("OrthoGroup", "gene")                       # OG_MAP: gene2OG (default) or open (og_map.R)
   data.frame(OrthoGroup = d$OrthoGroup, gene = d$gene, species = s) }))
 degs <- setNames(lapply(sp, function(s) {
   v <- ld(sprintf("data/DEGs/DEGs_%s.RData", s))
