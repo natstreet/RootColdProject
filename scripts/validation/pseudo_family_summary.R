@@ -17,7 +17,7 @@ toy <- CJ(i = 1:6, j = 1:6)[i < j][, .(g1 = paste0(GENO[i], ":x"), g2 = paste0(G
 stopifnot(has_clique(toy), !has_clique(toy[-3]))
 files <- list.files(IN, "^coexpressologs_.*[.]tsv[.]gz$", full.names = TRUE); stopifnot(length(files) == 15)
 pairs <- rbindlist(lapply(files, function(f) { p <- strsplit(sub("^coexpressologs_(.*)[.]tsv[.]gz$", "\\1", basename(f)), "-")[[1]]
-  x <- fread(f); if (!nrow(x)) return(NULL); x[, `:=`(g1 = paste0(p[1], ":", gene1), g2 = paste0(p[2], ":", gene2), cmp = paste(p, collapse = "-"))] }))
+  x <- fread(cmd = paste("gzip -dc", shQuote(f))); if (!nrow(x)) return(NULL); x[, `:=`(g1 = paste0(p[1], ":", gene1), g2 = paste0(p[2], ":", gene2), cmp = paste(p, collapse = "-"))] }))
 rates <- rbindlist(lapply(list.files(IN, "^rate_.*[.]tsv$", full.names = TRUE), function(f) fread(f)[, cmp := sub("^rate_(.*)[.]tsv$", "\\1", basename(f))]))
 reps <- sort(unique(rates[set == "pseudo", replicate])); stopifnot(rates[set == "pseudo", .N, by = cmp][, all(N == length(reps))])
 sr <- fread("results/orthogroup_size_rule.tsv")
