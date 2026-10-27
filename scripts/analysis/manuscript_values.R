@@ -42,6 +42,9 @@ for (i in seq_len(nrow(dm))) add(sprintf("design_%s_%s_%s", dm$measure[i], dm$ty
 for (st in c("stable", "sensitive")) { o <- as.integer(readLines(file.path(S, paste0(st, "_string_obs.txt")))); nl <- fread(file.path(S, paste0(st, "_string_null.csv")))$null
   add(paste0("string_", st, "_within_pairs"), o, paste0(st, "_string_obs.txt")); add(paste0("string_", st, "_null_mean"), round(mean(nl), 1), paste0(st, "_string_null.csv"))
   add(paste0("string_", st, "_fold"), round(o / mean(nl), 2), "obs / null mean"); add(paste0("string_", st, "_p"), signif((sum(nl >= o) + 1) / (length(nl) + 1), 3), "empirical, (k + 1) / (N + 1)") }
+o <- as.integer(readLines("string_obs.txt")); nl <- fread("string_null.csv")$null                  # Fig. S4b: all core clusters (R073)
+add("string_all_within_pairs", o, "string_obs.txt"); add("string_all_null_mean", round(mean(nl), 1), "string_null.csv")
+add("string_all_fold", round(o / mean(nl), 2), "obs / null mean"); add("string_all_p", signif((sum(nl >= o) + 1) / (length(nl) + 1), 3), "empirical, (k + 1) / (N + 1)")
 ctl <- fread("results/external_validation/external_validation_control.tsv")
 add("external_control_fold", round(ctl$fold, 2), "external_validation_control.tsv"); add("external_control_p", signif(ctl$p, 3), "external_validation_control.tsv")
 ev <- fread("results/external_validation/external_validation.tsv")[members_definition == "representative"]
