@@ -1,4 +1,5 @@
 /data/*
+!/data/pseudo_family_null/
 !/data/expression/
 /data/expression/*
 !/data/expression/med_expression/

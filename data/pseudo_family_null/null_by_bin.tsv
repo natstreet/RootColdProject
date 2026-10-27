@@ -1,0 +1,25 @@
+bin	statistic	observed	null_mean	null_max	min_genes	max_genes	orthogroups
+	all15	0	0	0			
+	clique	0	0	0			
+	clique_rule	0	0	0			
+1	all15	4	0	0	5	6	2758
+1	clique	4	0	0	5	6	2758
+1	clique_rule	4	0	0	5	6	2758
+2	all15	3	0	0	7	7	743
+2	clique	3	0	0	7	7	743
+2	clique_rule	3	0	0	7	7	743
+3	all15	9	0	0	8	9	875
+3	clique	8	0	0	8	9	875
+3	clique_rule	8	0	0	8	9	875
+4	all15	17	0	0	10	11	620
+4	clique	17	0	0	10	11	620
+4	clique_rule	17	0	0	10	11	620
+5	all15	25	0	0	12	14	598
+5	clique	22	0	0	12	14	598
+5	clique_rule	22	0	0	12	14	598
+6	all15	25	0.03	1	15	20	610
+6	clique	18	0	0	15	20	610
+6	clique_rule	18	0	0	15	20	610
+7	all15	181	51.18	66	21	747	685
+7	clique	65	2.45	7	21	747	685
+7	clique_rule	58	2.35	7	21	747	685

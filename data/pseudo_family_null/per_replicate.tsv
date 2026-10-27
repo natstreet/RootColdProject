@@ -1,0 +1,2401 @@
+replicate	statistic	bin	n
+1	all15	1	0
+1	all15	2	0
+1	all15	3	0
+1	all15	4	0
+1	all15	5	0
+1	all15	6	0
+1	all15	7	60
+1	all15		0
+1	clique	1	0
+1	clique	2	0
+1	clique	3	0
+1	clique	4	0
+1	clique	5	0
+1	clique	6	0
+1	clique	7	3
+1	clique		0
+1	clique_rule	1	0
+1	clique_rule	2	0
+1	clique_rule	3	0
+1	clique_rule	4	0
+1	clique_rule	5	0
+1	clique_rule	6	0
+1	clique_rule	7	3
+1	clique_rule		0
+2	all15	1	0
+2	all15	2	0
+2	all15	3	0
+2	all15	4	0
+2	all15	5	0
+2	all15	6	0
+2	all15	7	54
+2	all15		0
+2	clique	1	0
+2	clique	2	0
+2	clique	3	0
+2	clique	4	0
+2	clique	5	0
+2	clique	6	0
+2	clique	7	3
+2	clique		0
+2	clique_rule	1	0
+2	clique_rule	2	0
+2	clique_rule	3	0
+2	clique_rule	4	0
+2	clique_rule	5	0
+2	clique_rule	6	0
+2	clique_rule	7	3
+2	clique_rule		0
+3	all15	1	0
+3	all15	2	0
+3	all15	3	0
+3	all15	4	0
+3	all15	5	0
+3	all15	6	0
+3	all15	7	57
+3	all15		0
+3	clique	1	0
+3	clique	2	0
+3	clique	3	0
+3	clique	4	0
+3	clique	5	0
+3	clique	6	0
+3	clique	7	1
+3	clique		0
+3	clique_rule	1	0
+3	clique_rule	2	0
+3	clique_rule	3	0
+3	clique_rule	4	0
+3	clique_rule	5	0
+3	clique_rule	6	0
+3	clique_rule	7	1
+3	clique_rule		0
+4	all15	1	0
+4	all15	2	0
+4	all15	3	0
+4	all15	4	0
+4	all15	5	0
+4	all15	6	0
+4	all15	7	51
+4	all15		0
+4	clique	1	0
+4	clique	2	0
+4	clique	3	0
+4	clique	4	0
+4	clique	5	0
+4	clique	6	0
+4	clique	7	3
+4	clique		0
+4	clique_rule	1	0
+4	clique_rule	2	0
+4	clique_rule	3	0
+4	clique_rule	4	0
+4	clique_rule	5	0
+4	clique_rule	6	0
+4	clique_rule	7	3
+4	clique_rule		0
+5	all15	1	0
+5	all15	2	0
+5	all15	3	0
+5	all15	4	0
+5	all15	5	0
+5	all15	6	0
+5	all15	7	40
+5	all15		0
+5	clique	1	0
+5	clique	2	0
+5	clique	3	0
+5	clique	4	0
+5	clique	5	0
+5	clique	6	0
+5	clique	7	3
+5	clique		0
+5	clique_rule	1	0
+5	clique_rule	2	0
+5	clique_rule	3	0
+5	clique_rule	4	0
+5	clique_rule	5	0
+5	clique_rule	6	0
+5	clique_rule	7	3
+5	clique_rule		0
+6	all15	1	0
+6	all15	2	0
+6	all15	3	0
+6	all15	4	0
+6	all15	5	0
+6	all15	6	0
+6	all15	7	50
+6	all15		0
+6	clique	1	0
+6	clique	2	0
+6	clique	3	0
+6	clique	4	0
+6	clique	5	0
+6	clique	6	0
+6	clique	7	1
+6	clique		0
+6	clique_rule	1	0
+6	clique_rule	2	0
+6	clique_rule	3	0
+6	clique_rule	4	0
+6	clique_rule	5	0
+6	clique_rule	6	0
+6	clique_rule	7	1
+6	clique_rule		0
+7	all15	1	0
+7	all15	2	0
+7	all15	3	0
+7	all15	4	0
+7	all15	5	0
+7	all15	6	0
+7	all15	7	56
+7	all15		0
+7	clique	1	0
+7	clique	2	0
+7	clique	3	0
+7	clique	4	0
+7	clique	5	0
+7	clique	6	0
+7	clique	7	5
+7	clique		0
+7	clique_rule	1	0
+7	clique_rule	2	0
+7	clique_rule	3	0
+7	clique_rule	4	0
+7	clique_rule	5	0
+7	clique_rule	6	0
+7	clique_rule	7	5
+7	clique_rule		0
+8	all15	1	0
+8	all15	2	0
+8	all15	3	0
+8	all15	4	0
+8	all15	5	0
+8	all15	6	0
+8	all15	7	42
+8	all15		0
+8	clique	1	0
+8	clique	2	0
+8	clique	3	0
+8	clique	4	0
+8	clique	5	0
+8	clique	6	0
+8	clique	7	3
+8	clique		0
+8	clique_rule	1	0
+8	clique_rule	2	0
+8	clique_rule	3	0
+8	clique_rule	4	0
+8	clique_rule	5	0
+8	clique_rule	6	0
+8	clique_rule	7	3
+8	clique_rule		0
+9	all15	1	0
+9	all15	2	0
+9	all15	3	0
+9	all15	4	0
+9	all15	5	0
+9	all15	6	0
+9	all15	7	52
+9	all15		0
+9	clique	1	0
+9	clique	2	0
+9	clique	3	0
+9	clique	4	0
+9	clique	5	0
+9	clique	6	0
+9	clique	7	2
+9	clique		0
+9	clique_rule	1	0
+9	clique_rule	2	0
+9	clique_rule	3	0
+9	clique_rule	4	0
+9	clique_rule	5	0
+9	clique_rule	6	0
+9	clique_rule	7	2
+9	clique_rule		0
+10	all15	1	0
+10	all15	2	0
+10	all15	3	0
+10	all15	4	0
+10	all15	5	0
+10	all15	6	1
+10	all15	7	50
+10	all15		0
+10	clique	1	0
+10	clique	2	0
+10	clique	3	0
+10	clique	4	0
+10	clique	5	0
+10	clique	6	0
+10	clique	7	3
+10	clique		0
+10	clique_rule	1	0
+10	clique_rule	2	0
+10	clique_rule	3	0
+10	clique_rule	4	0
+10	clique_rule	5	0
+10	clique_rule	6	0
+10	clique_rule	7	3
+10	clique_rule		0
+11	all15	1	0
+11	all15	2	0
+11	all15	3	0
+11	all15	4	0
+11	all15	5	0
+11	all15	6	0
+11	all15	7	54
+11	all15		0
+11	clique	1	0
+11	clique	2	0
+11	clique	3	0
+11	clique	4	0
+11	clique	5	0
+11	clique	6	0
+11	clique	7	1
+11	clique		0
+11	clique_rule	1	0
+11	clique_rule	2	0
+11	clique_rule	3	0
+11	clique_rule	4	0
+11	clique_rule	5	0
+11	clique_rule	6	0
+11	clique_rule	7	1
+11	clique_rule		0
+12	all15	1	0
+12	all15	2	0
+12	all15	3	0
+12	all15	4	0
+12	all15	5	0
+12	all15	6	0
+12	all15	7	53
+12	all15		0
+12	clique	1	0
+12	clique	2	0
+12	clique	3	0
+12	clique	4	0
+12	clique	5	0
+12	clique	6	0
+12	clique	7	2
+12	clique		0
+12	clique_rule	1	0
+12	clique_rule	2	0
+12	clique_rule	3	0
+12	clique_rule	4	0
+12	clique_rule	5	0
+12	clique_rule	6	0
+12	clique_rule	7	1
+12	clique_rule		0
+13	all15	1	0
+13	all15	2	0
+13	all15	3	0
+13	all15	4	0
+13	all15	5	0
+13	all15	6	0
+13	all15	7	63
+13	all15		0
+13	clique	1	0
+13	clique	2	0
+13	clique	3	0
+13	clique	4	0
+13	clique	5	0
+13	clique	6	0
+13	clique	7	3
+13	clique		0
+13	clique_rule	1	0
+13	clique_rule	2	0
+13	clique_rule	3	0
+13	clique_rule	4	0
+13	clique_rule	5	0
+13	clique_rule	6	0
+13	clique_rule	7	3
+13	clique_rule		0
+14	all15	1	0
+14	all15	2	0
+14	all15	3	0
+14	all15	4	0
+14	all15	5	0
+14	all15	6	0
+14	all15	7	53
+14	all15		0
+14	clique	1	0
+14	clique	2	0
+14	clique	3	0
+14	clique	4	0
+14	clique	5	0
+14	clique	6	0
+14	clique	7	1
+14	clique		0
+14	clique_rule	1	0
+14	clique_rule	2	0
+14	clique_rule	3	0
+14	clique_rule	4	0
+14	clique_rule	5	0
+14	clique_rule	6	0
+14	clique_rule	7	1
+14	clique_rule		0
+15	all15	1	0
+15	all15	2	0
+15	all15	3	0
+15	all15	4	0
+15	all15	5	0
+15	all15	6	0
+15	all15	7	44
+15	all15		0
+15	clique	1	0
+15	clique	2	0
+15	clique	3	0
+15	clique	4	0
+15	clique	5	0
+15	clique	6	0
+15	clique	7	4
+15	clique		0
+15	clique_rule	1	0
+15	clique_rule	2	0
+15	clique_rule	3	0
+15	clique_rule	4	0
+15	clique_rule	5	0
+15	clique_rule	6	0
+15	clique_rule	7	4
+15	clique_rule		0
+16	all15	1	0
+16	all15	2	0
+16	all15	3	0
+16	all15	4	0
+16	all15	5	0
+16	all15	6	0
+16	all15	7	48
+16	all15		0
+16	clique	1	0
+16	clique	2	0
+16	clique	3	0
+16	clique	4	0
+16	clique	5	0
+16	clique	6	0
+16	clique	7	2
+16	clique		0
+16	clique_rule	1	0
+16	clique_rule	2	0
+16	clique_rule	3	0
+16	clique_rule	4	0
+16	clique_rule	5	0
+16	clique_rule	6	0
+16	clique_rule	7	2
+16	clique_rule		0
+17	all15	1	0
+17	all15	2	0
+17	all15	3	0
+17	all15	4	0
+17	all15	5	0
+17	all15	6	0
+17	all15	7	48
+17	all15		0
+17	clique	1	0
+17	clique	2	0
+17	clique	3	0
+17	clique	4	0
+17	clique	5	0
+17	clique	6	0
+17	clique	7	2
+17	clique		0
+17	clique_rule	1	0
+17	clique_rule	2	0
+17	clique_rule	3	0
+17	clique_rule	4	0
+17	clique_rule	5	0
+17	clique_rule	6	0
+17	clique_rule	7	2
+17	clique_rule		0
+18	all15	1	0
+18	all15	2	0
+18	all15	3	0
+18	all15	4	0
+18	all15	5	0
+18	all15	6	0
+18	all15	7	58
+18	all15		0
+18	clique	1	0
+18	clique	2	0
+18	clique	3	0
+18	clique	4	0
+18	clique	5	0
+18	clique	6	0
+18	clique	7	2
+18	clique		0
+18	clique_rule	1	0
+18	clique_rule	2	0
+18	clique_rule	3	0
+18	clique_rule	4	0
+18	clique_rule	5	0
+18	clique_rule	6	0
+18	clique_rule	7	2
+18	clique_rule		0
+19	all15	1	0
+19	all15	2	0
+19	all15	3	0
+19	all15	4	0
+19	all15	5	0
+19	all15	6	0
+19	all15	7	45
+19	all15		0
+19	clique	1	0
+19	clique	2	0
+19	clique	3	0
+19	clique	4	0
+19	clique	5	0
+19	clique	6	0
+19	clique	7	0
+19	clique		0
+19	clique_rule	1	0
+19	clique_rule	2	0
+19	clique_rule	3	0
+19	clique_rule	4	0
+19	clique_rule	5	0
+19	clique_rule	6	0
+19	clique_rule	7	0
+19	clique_rule		0
+20	all15	1	0
+20	all15	2	0
+20	all15	3	0
+20	all15	4	0
+20	all15	5	0
+20	all15	6	0
+20	all15	7	51
+20	all15		0
+20	clique	1	0
+20	clique	2	0
+20	clique	3	0
+20	clique	4	0
+20	clique	5	0
+20	clique	6	0
+20	clique	7	3
+20	clique		0
+20	clique_rule	1	0
+20	clique_rule	2	0
+20	clique_rule	3	0
+20	clique_rule	4	0
+20	clique_rule	5	0
+20	clique_rule	6	0
+20	clique_rule	7	3
+20	clique_rule		0
+21	all15	1	0
+21	all15	2	0
+21	all15	3	0
+21	all15	4	0
+21	all15	5	0
+21	all15	6	0
+21	all15	7	56
+21	all15		0
+21	clique	1	0
+21	clique	2	0
+21	clique	3	0
+21	clique	4	0
+21	clique	5	0
+21	clique	6	0
+21	clique	7	2
+21	clique		0
+21	clique_rule	1	0
+21	clique_rule	2	0
+21	clique_rule	3	0
+21	clique_rule	4	0
+21	clique_rule	5	0
+21	clique_rule	6	0
+21	clique_rule	7	2
+21	clique_rule		0
+22	all15	1	0
+22	all15	2	0
+22	all15	3	0
+22	all15	4	0
+22	all15	5	0
+22	all15	6	0
+22	all15	7	59
+22	all15		0
+22	clique	1	0
+22	clique	2	0
+22	clique	3	0
+22	clique	4	0
+22	clique	5	0
+22	clique	6	0
+22	clique	7	2
+22	clique		0
+22	clique_rule	1	0
+22	clique_rule	2	0
+22	clique_rule	3	0
+22	clique_rule	4	0
+22	clique_rule	5	0
+22	clique_rule	6	0
+22	clique_rule	7	2
+22	clique_rule		0
+23	all15	1	0
+23	all15	2	0
+23	all15	3	0
+23	all15	4	0
+23	all15	5	0
+23	all15	6	0
+23	all15	7	47
+23	all15		0
+23	clique	1	0
+23	clique	2	0
+23	clique	3	0
+23	clique	4	0
+23	clique	5	0
+23	clique	6	0
+23	clique	7	5
+23	clique		0
+23	clique_rule	1	0
+23	clique_rule	2	0
+23	clique_rule	3	0
+23	clique_rule	4	0
+23	clique_rule	5	0
+23	clique_rule	6	0
+23	clique_rule	7	5
+23	clique_rule		0
+24	all15	1	0
+24	all15	2	0
+24	all15	3	0
+24	all15	4	0
+24	all15	5	0
+24	all15	6	0
+24	all15	7	53
+24	all15		0
+24	clique	1	0
+24	clique	2	0
+24	clique	3	0
+24	clique	4	0
+24	clique	5	0
+24	clique	6	0
+24	clique	7	4
+24	clique		0
+24	clique_rule	1	0
+24	clique_rule	2	0
+24	clique_rule	3	0
+24	clique_rule	4	0
+24	clique_rule	5	0
+24	clique_rule	6	0
+24	clique_rule	7	4
+24	clique_rule		0
+25	all15	1	0
+25	all15	2	0
+25	all15	3	0
+25	all15	4	0
+25	all15	5	0
+25	all15	6	0
+25	all15	7	50
+25	all15		0
+25	clique	1	0
+25	clique	2	0
+25	clique	3	0
+25	clique	4	0
+25	clique	5	0
+25	clique	6	0
+25	clique	7	4
+25	clique		0
+25	clique_rule	1	0
+25	clique_rule	2	0
+25	clique_rule	3	0
+25	clique_rule	4	0
+25	clique_rule	5	0
+25	clique_rule	6	0
+25	clique_rule	7	4
+25	clique_rule		0
+26	all15	1	0
+26	all15	2	0
+26	all15	3	0
+26	all15	4	0
+26	all15	5	0
+26	all15	6	0
+26	all15	7	56
+26	all15		0
+26	clique	1	0
+26	clique	2	0
+26	clique	3	0
+26	clique	4	0
+26	clique	5	0
+26	clique	6	0
+26	clique	7	1
+26	clique		0
+26	clique_rule	1	0
+26	clique_rule	2	0
+26	clique_rule	3	0
+26	clique_rule	4	0
+26	clique_rule	5	0
+26	clique_rule	6	0
+26	clique_rule	7	1
+26	clique_rule		0
+27	all15	1	0
+27	all15	2	0
+27	all15	3	0
+27	all15	4	0
+27	all15	5	0
+27	all15	6	0
+27	all15	7	49
+27	all15		0
+27	clique	1	0
+27	clique	2	0
+27	clique	3	0
+27	clique	4	0
+27	clique	5	0
+27	clique	6	0
+27	clique	7	2
+27	clique		0
+27	clique_rule	1	0
+27	clique_rule	2	0
+27	clique_rule	3	0
+27	clique_rule	4	0
+27	clique_rule	5	0
+27	clique_rule	6	0
+27	clique_rule	7	2
+27	clique_rule		0
+28	all15	1	0
+28	all15	2	0
+28	all15	3	0
+28	all15	4	0
+28	all15	5	0
+28	all15	6	0
+28	all15	7	55
+28	all15		0
+28	clique	1	0
+28	clique	2	0
+28	clique	3	0
+28	clique	4	0
+28	clique	5	0
+28	clique	6	0
+28	clique	7	6
+28	clique		0
+28	clique_rule	1	0
+28	clique_rule	2	0
+28	clique_rule	3	0
+28	clique_rule	4	0
+28	clique_rule	5	0
+28	clique_rule	6	0
+28	clique_rule	7	6
+28	clique_rule		0
+29	all15	1	0
+29	all15	2	0
+29	all15	3	0
+29	all15	4	0
+29	all15	5	0
+29	all15	6	0
+29	all15	7	53
+29	all15		0
+29	clique	1	0
+29	clique	2	0
+29	clique	3	0
+29	clique	4	0
+29	clique	5	0
+29	clique	6	0
+29	clique	7	3
+29	clique		0
+29	clique_rule	1	0
+29	clique_rule	2	0
+29	clique_rule	3	0
+29	clique_rule	4	0
+29	clique_rule	5	0
+29	clique_rule	6	0
+29	clique_rule	7	3
+29	clique_rule		0
+30	all15	1	0
+30	all15	2	0
+30	all15	3	0
+30	all15	4	0
+30	all15	5	0
+30	all15	6	0
+30	all15	7	53
+30	all15		0
+30	clique	1	0
+30	clique	2	0
+30	clique	3	0
+30	clique	4	0
+30	clique	5	0
+30	clique	6	0
+30	clique	7	5
+30	clique		0
+30	clique_rule	1	0
+30	clique_rule	2	0
+30	clique_rule	3	0
+30	clique_rule	4	0
+30	clique_rule	5	0
+30	clique_rule	6	0
+30	clique_rule	7	5
+30	clique_rule		0
+31	all15	1	0
+31	all15	2	0
+31	all15	3	0
+31	all15	4	0
+31	all15	5	0
+31	all15	6	0
+31	all15	7	39
+31	all15		0
+31	clique	1	0
+31	clique	2	0
+31	clique	3	0
+31	clique	4	0
+31	clique	5	0
+31	clique	6	0
+31	clique	7	1
+31	clique		0
+31	clique_rule	1	0
+31	clique_rule	2	0
+31	clique_rule	3	0
+31	clique_rule	4	0
+31	clique_rule	5	0
+31	clique_rule	6	0
+31	clique_rule	7	0
+31	clique_rule		0
+32	all15	1	0
+32	all15	2	0
+32	all15	3	0
+32	all15	4	0
+32	all15	5	0
+32	all15	6	0
+32	all15	7	56
+32	all15		0
+32	clique	1	0
+32	clique	2	0
+32	clique	3	0
+32	clique	4	0
+32	clique	5	0
+32	clique	6	0
+32	clique	7	3
+32	clique		0
+32	clique_rule	1	0
+32	clique_rule	2	0
+32	clique_rule	3	0
+32	clique_rule	4	0
+32	clique_rule	5	0
+32	clique_rule	6	0
+32	clique_rule	7	1
+32	clique_rule		0
+33	all15	1	0
+33	all15	2	0
+33	all15	3	0
+33	all15	4	0
+33	all15	5	0
+33	all15	6	0
+33	all15	7	49
+33	all15		0
+33	clique	1	0
+33	clique	2	0
+33	clique	3	0
+33	clique	4	0
+33	clique	5	0
+33	clique	6	0
+33	clique	7	4
+33	clique		0
+33	clique_rule	1	0
+33	clique_rule	2	0
+33	clique_rule	3	0
+33	clique_rule	4	0
+33	clique_rule	5	0
+33	clique_rule	6	0
+33	clique_rule	7	4
+33	clique_rule		0
+34	all15	1	0
+34	all15	2	0
+34	all15	3	0
+34	all15	4	0
+34	all15	5	0
+34	all15	6	0
+34	all15	7	51
+34	all15		0
+34	clique	1	0
+34	clique	2	0
+34	clique	3	0
+34	clique	4	0
+34	clique	5	0
+34	clique	6	0
+34	clique	7	4
+34	clique		0
+34	clique_rule	1	0
+34	clique_rule	2	0
+34	clique_rule	3	0
+34	clique_rule	4	0
+34	clique_rule	5	0
+34	clique_rule	6	0
+34	clique_rule	7	4
+34	clique_rule		0
+35	all15	1	0
+35	all15	2	0
+35	all15	3	0
+35	all15	4	0
+35	all15	5	0
+35	all15	6	0
+35	all15	7	55
+35	all15		0
+35	clique	1	0
+35	clique	2	0
+35	clique	3	0
+35	clique	4	0
+35	clique	5	0
+35	clique	6	0
+35	clique	7	0
+35	clique		0
+35	clique_rule	1	0
+35	clique_rule	2	0
+35	clique_rule	3	0
+35	clique_rule	4	0
+35	clique_rule	5	0
+35	clique_rule	6	0
+35	clique_rule	7	0
+35	clique_rule		0
+36	all15	1	0
+36	all15	2	0
+36	all15	3	0
+36	all15	4	0
+36	all15	5	0
+36	all15	6	0
+36	all15	7	39
+36	all15		0
+36	clique	1	0
+36	clique	2	0
+36	clique	3	0
+36	clique	4	0
+36	clique	5	0
+36	clique	6	0
+36	clique	7	4
+36	clique		0
+36	clique_rule	1	0
+36	clique_rule	2	0
+36	clique_rule	3	0
+36	clique_rule	4	0
+36	clique_rule	5	0
+36	clique_rule	6	0
+36	clique_rule	7	4
+36	clique_rule		0
+37	all15	1	0
+37	all15	2	0
+37	all15	3	0
+37	all15	4	0
+37	all15	5	0
+37	all15	6	0
+37	all15	7	41
+37	all15		0
+37	clique	1	0
+37	clique	2	0
+37	clique	3	0
+37	clique	4	0
+37	clique	5	0
+37	clique	6	0
+37	clique	7	0
+37	clique		0
+37	clique_rule	1	0
+37	clique_rule	2	0
+37	clique_rule	3	0
+37	clique_rule	4	0
+37	clique_rule	5	0
+37	clique_rule	6	0
+37	clique_rule	7	0
+37	clique_rule		0
+38	all15	1	0
+38	all15	2	0
+38	all15	3	0
+38	all15	4	0
+38	all15	5	0
+38	all15	6	0
+38	all15	7	53
+38	all15		0
+38	clique	1	0
+38	clique	2	0
+38	clique	3	0
+38	clique	4	0
+38	clique	5	0
+38	clique	6	0
+38	clique	7	5
+38	clique		0
+38	clique_rule	1	0
+38	clique_rule	2	0
+38	clique_rule	3	0
+38	clique_rule	4	0
+38	clique_rule	5	0
+38	clique_rule	6	0
+38	clique_rule	7	5
+38	clique_rule		0
+39	all15	1	0
+39	all15	2	0
+39	all15	3	0
+39	all15	4	0
+39	all15	5	0
+39	all15	6	0
+39	all15	7	51
+39	all15		0
+39	clique	1	0
+39	clique	2	0
+39	clique	3	0
+39	clique	4	0
+39	clique	5	0
+39	clique	6	0
+39	clique	7	2
+39	clique		0
+39	clique_rule	1	0
+39	clique_rule	2	0
+39	clique_rule	3	0
+39	clique_rule	4	0
+39	clique_rule	5	0
+39	clique_rule	6	0
+39	clique_rule	7	2
+39	clique_rule		0
+40	all15	1	0
+40	all15	2	0
+40	all15	3	0
+40	all15	4	0
+40	all15	5	0
+40	all15	6	0
+40	all15	7	56
+40	all15		0
+40	clique	1	0
+40	clique	2	0
+40	clique	3	0
+40	clique	4	0
+40	clique	5	0
+40	clique	6	0
+40	clique	7	3
+40	clique		0
+40	clique_rule	1	0
+40	clique_rule	2	0
+40	clique_rule	3	0
+40	clique_rule	4	0
+40	clique_rule	5	0
+40	clique_rule	6	0
+40	clique_rule	7	3
+40	clique_rule		0
+41	all15	1	0
+41	all15	2	0
+41	all15	3	0
+41	all15	4	0
+41	all15	5	0
+41	all15	6	0
+41	all15	7	60
+41	all15		0
+41	clique	1	0
+41	clique	2	0
+41	clique	3	0
+41	clique	4	0
+41	clique	5	0
+41	clique	6	0
+41	clique	7	7
+41	clique		0
+41	clique_rule	1	0
+41	clique_rule	2	0
+41	clique_rule	3	0
+41	clique_rule	4	0
+41	clique_rule	5	0
+41	clique_rule	6	0
+41	clique_rule	7	7
+41	clique_rule		0
+42	all15	1	0
+42	all15	2	0
+42	all15	3	0
+42	all15	4	0
+42	all15	5	0
+42	all15	6	0
+42	all15	7	51
+42	all15		0
+42	clique	1	0
+42	clique	2	0
+42	clique	3	0
+42	clique	4	0
+42	clique	5	0
+42	clique	6	0
+42	clique	7	2
+42	clique		0
+42	clique_rule	1	0
+42	clique_rule	2	0
+42	clique_rule	3	0
+42	clique_rule	4	0
+42	clique_rule	5	0
+42	clique_rule	6	0
+42	clique_rule	7	2
+42	clique_rule		0
+43	all15	1	0
+43	all15	2	0
+43	all15	3	0
+43	all15	4	0
+43	all15	5	0
+43	all15	6	0
+43	all15	7	50
+43	all15		0
+43	clique	1	0
+43	clique	2	0
+43	clique	3	0
+43	clique	4	0
+43	clique	5	0
+43	clique	6	0
+43	clique	7	3
+43	clique		0
+43	clique_rule	1	0
+43	clique_rule	2	0
+43	clique_rule	3	0
+43	clique_rule	4	0
+43	clique_rule	5	0
+43	clique_rule	6	0
+43	clique_rule	7	2
+43	clique_rule		0
+44	all15	1	0
+44	all15	2	0
+44	all15	3	0
+44	all15	4	0
+44	all15	5	0
+44	all15	6	0
+44	all15	7	47
+44	all15		0
+44	clique	1	0
+44	clique	2	0
+44	clique	3	0
+44	clique	4	0
+44	clique	5	0
+44	clique	6	0
+44	clique	7	3
+44	clique		0
+44	clique_rule	1	0
+44	clique_rule	2	0
+44	clique_rule	3	0
+44	clique_rule	4	0
+44	clique_rule	5	0
+44	clique_rule	6	0
+44	clique_rule	7	3
+44	clique_rule		0
+45	all15	1	0
+45	all15	2	0
+45	all15	3	0
+45	all15	4	0
+45	all15	5	0
+45	all15	6	0
+45	all15	7	64
+45	all15		0
+45	clique	1	0
+45	clique	2	0
+45	clique	3	0
+45	clique	4	0
+45	clique	5	0
+45	clique	6	0
+45	clique	7	2
+45	clique		0
+45	clique_rule	1	0
+45	clique_rule	2	0
+45	clique_rule	3	0
+45	clique_rule	4	0
+45	clique_rule	5	0
+45	clique_rule	6	0
+45	clique_rule	7	2
+45	clique_rule		0
+46	all15	1	0
+46	all15	2	0
+46	all15	3	0
+46	all15	4	0
+46	all15	5	0
+46	all15	6	0
+46	all15	7	53
+46	all15		0
+46	clique	1	0
+46	clique	2	0
+46	clique	3	0
+46	clique	4	0
+46	clique	5	0
+46	clique	6	0
+46	clique	7	3
+46	clique		0
+46	clique_rule	1	0
+46	clique_rule	2	0
+46	clique_rule	3	0
+46	clique_rule	4	0
+46	clique_rule	5	0
+46	clique_rule	6	0
+46	clique_rule	7	3
+46	clique_rule		0
+47	all15	1	0
+47	all15	2	0
+47	all15	3	0
+47	all15	4	0
+47	all15	5	0
+47	all15	6	0
+47	all15	7	49
+47	all15		0
+47	clique	1	0
+47	clique	2	0
+47	clique	3	0
+47	clique	4	0
+47	clique	5	0
+47	clique	6	0
+47	clique	7	2
+47	clique		0
+47	clique_rule	1	0
+47	clique_rule	2	0
+47	clique_rule	3	0
+47	clique_rule	4	0
+47	clique_rule	5	0
+47	clique_rule	6	0
+47	clique_rule	7	2
+47	clique_rule		0
+48	all15	1	0
+48	all15	2	0
+48	all15	3	0
+48	all15	4	0
+48	all15	5	0
+48	all15	6	0
+48	all15	7	46
+48	all15		0
+48	clique	1	0
+48	clique	2	0
+48	clique	3	0
+48	clique	4	0
+48	clique	5	0
+48	clique	6	0
+48	clique	7	1
+48	clique		0
+48	clique_rule	1	0
+48	clique_rule	2	0
+48	clique_rule	3	0
+48	clique_rule	4	0
+48	clique_rule	5	0
+48	clique_rule	6	0
+48	clique_rule	7	1
+48	clique_rule		0
+49	all15	1	0
+49	all15	2	0
+49	all15	3	0
+49	all15	4	0
+49	all15	5	0
+49	all15	6	0
+49	all15	7	55
+49	all15		0
+49	clique	1	0
+49	clique	2	0
+49	clique	3	0
+49	clique	4	0
+49	clique	5	0
+49	clique	6	0
+49	clique	7	2
+49	clique		0
+49	clique_rule	1	0
+49	clique_rule	2	0
+49	clique_rule	3	0
+49	clique_rule	4	0
+49	clique_rule	5	0
+49	clique_rule	6	0
+49	clique_rule	7	2
+49	clique_rule		0
+50	all15	1	0
+50	all15	2	0
+50	all15	3	0
+50	all15	4	0
+50	all15	5	0
+50	all15	6	0
+50	all15	7	53
+50	all15		0
+50	clique	1	0
+50	clique	2	0
+50	clique	3	0
+50	clique	4	0
+50	clique	5	0
+50	clique	6	0
+50	clique	7	1
+50	clique		0
+50	clique_rule	1	0
+50	clique_rule	2	0
+50	clique_rule	3	0
+50	clique_rule	4	0
+50	clique_rule	5	0
+50	clique_rule	6	0
+50	clique_rule	7	1
+50	clique_rule		0
+51	all15	1	0
+51	all15	2	0
+51	all15	3	0
+51	all15	4	0
+51	all15	5	0
+51	all15	6	0
+51	all15	7	49
+51	all15		0
+51	clique	1	0
+51	clique	2	0
+51	clique	3	0
+51	clique	4	0
+51	clique	5	0
+51	clique	6	0
+51	clique	7	2
+51	clique		0
+51	clique_rule	1	0
+51	clique_rule	2	0
+51	clique_rule	3	0
+51	clique_rule	4	0
+51	clique_rule	5	0
+51	clique_rule	6	0
+51	clique_rule	7	1
+51	clique_rule		0
+52	all15	1	0
+52	all15	2	0
+52	all15	3	0
+52	all15	4	0
+52	all15	5	0
+52	all15	6	1
+52	all15	7	48
+52	all15		0
+52	clique	1	0
+52	clique	2	0
+52	clique	3	0
+52	clique	4	0
+52	clique	5	0
+52	clique	6	0
+52	clique	7	2
+52	clique		0
+52	clique_rule	1	0
+52	clique_rule	2	0
+52	clique_rule	3	0
+52	clique_rule	4	0
+52	clique_rule	5	0
+52	clique_rule	6	0
+52	clique_rule	7	2
+52	clique_rule		0
+53	all15	1	0
+53	all15	2	0
+53	all15	3	0
+53	all15	4	0
+53	all15	5	0
+53	all15	6	1
+53	all15	7	52
+53	all15		0
+53	clique	1	0
+53	clique	2	0
+53	clique	3	0
+53	clique	4	0
+53	clique	5	0
+53	clique	6	0
+53	clique	7	3
+53	clique		0
+53	clique_rule	1	0
+53	clique_rule	2	0
+53	clique_rule	3	0
+53	clique_rule	4	0
+53	clique_rule	5	0
+53	clique_rule	6	0
+53	clique_rule	7	2
+53	clique_rule		0
+54	all15	1	0
+54	all15	2	0
+54	all15	3	0
+54	all15	4	0
+54	all15	5	0
+54	all15	6	0
+54	all15	7	50
+54	all15		0
+54	clique	1	0
+54	clique	2	0
+54	clique	3	0
+54	clique	4	0
+54	clique	5	0
+54	clique	6	0
+54	clique	7	1
+54	clique		0
+54	clique_rule	1	0
+54	clique_rule	2	0
+54	clique_rule	3	0
+54	clique_rule	4	0
+54	clique_rule	5	0
+54	clique_rule	6	0
+54	clique_rule	7	1
+54	clique_rule		0
+55	all15	1	0
+55	all15	2	0
+55	all15	3	0
+55	all15	4	0
+55	all15	5	0
+55	all15	6	0
+55	all15	7	50
+55	all15		0
+55	clique	1	0
+55	clique	2	0
+55	clique	3	0
+55	clique	4	0
+55	clique	5	0
+55	clique	6	0
+55	clique	7	2
+55	clique		0
+55	clique_rule	1	0
+55	clique_rule	2	0
+55	clique_rule	3	0
+55	clique_rule	4	0
+55	clique_rule	5	0
+55	clique_rule	6	0
+55	clique_rule	7	1
+55	clique_rule		0
+56	all15	1	0
+56	all15	2	0
+56	all15	3	0
+56	all15	4	0
+56	all15	5	0
+56	all15	6	0
+56	all15	7	43
+56	all15		0
+56	clique	1	0
+56	clique	2	0
+56	clique	3	0
+56	clique	4	0
+56	clique	5	0
+56	clique	6	0
+56	clique	7	1
+56	clique		0
+56	clique_rule	1	0
+56	clique_rule	2	0
+56	clique_rule	3	0
+56	clique_rule	4	0
+56	clique_rule	5	0
+56	clique_rule	6	0
+56	clique_rule	7	1
+56	clique_rule		0
+57	all15	1	0
+57	all15	2	0
+57	all15	3	0
+57	all15	4	0
+57	all15	5	0
+57	all15	6	0
+57	all15	7	48
+57	all15		0
+57	clique	1	0
+57	clique	2	0
+57	clique	3	0
+57	clique	4	0
+57	clique	5	0
+57	clique	6	0
+57	clique	7	4
+57	clique		0
+57	clique_rule	1	0
+57	clique_rule	2	0
+57	clique_rule	3	0
+57	clique_rule	4	0
+57	clique_rule	5	0
+57	clique_rule	6	0
+57	clique_rule	7	4
+57	clique_rule		0
+58	all15	1	0
+58	all15	2	0
+58	all15	3	0
+58	all15	4	0
+58	all15	5	0
+58	all15	6	0
+58	all15	7	56
+58	all15		0
+58	clique	1	0
+58	clique	2	0
+58	clique	3	0
+58	clique	4	0
+58	clique	5	0
+58	clique	6	0
+58	clique	7	2
+58	clique		0
+58	clique_rule	1	0
+58	clique_rule	2	0
+58	clique_rule	3	0
+58	clique_rule	4	0
+58	clique_rule	5	0
+58	clique_rule	6	0
+58	clique_rule	7	2
+58	clique_rule		0
+59	all15	1	0
+59	all15	2	0
+59	all15	3	0
+59	all15	4	0
+59	all15	5	0
+59	all15	6	0
+59	all15	7	48
+59	all15		0
+59	clique	1	0
+59	clique	2	0
+59	clique	3	0
+59	clique	4	0
+59	clique	5	0
+59	clique	6	0
+59	clique	7	2
+59	clique		0
+59	clique_rule	1	0
+59	clique_rule	2	0
+59	clique_rule	3	0
+59	clique_rule	4	0
+59	clique_rule	5	0
+59	clique_rule	6	0
+59	clique_rule	7	2
+59	clique_rule		0
+60	all15	1	0
+60	all15	2	0
+60	all15	3	0
+60	all15	4	0
+60	all15	5	0
+60	all15	6	0
+60	all15	7	52
+60	all15		0
+60	clique	1	0
+60	clique	2	0
+60	clique	3	0
+60	clique	4	0
+60	clique	5	0
+60	clique	6	0
+60	clique	7	2
+60	clique		0
+60	clique_rule	1	0
+60	clique_rule	2	0
+60	clique_rule	3	0
+60	clique_rule	4	0
+60	clique_rule	5	0
+60	clique_rule	6	0
+60	clique_rule	7	1
+60	clique_rule		0
+61	all15	1	0
+61	all15	2	0
+61	all15	3	0
+61	all15	4	0
+61	all15	5	0
+61	all15	6	0
+61	all15	7	54
+61	all15		0
+61	clique	1	0
+61	clique	2	0
+61	clique	3	0
+61	clique	4	0
+61	clique	5	0
+61	clique	6	0
+61	clique	7	2
+61	clique		0
+61	clique_rule	1	0
+61	clique_rule	2	0
+61	clique_rule	3	0
+61	clique_rule	4	0
+61	clique_rule	5	0
+61	clique_rule	6	0
+61	clique_rule	7	2
+61	clique_rule		0
+62	all15	1	0
+62	all15	2	0
+62	all15	3	0
+62	all15	4	0
+62	all15	5	0
+62	all15	6	0
+62	all15	7	66
+62	all15		0
+62	clique	1	0
+62	clique	2	0
+62	clique	3	0
+62	clique	4	0
+62	clique	5	0
+62	clique	6	0
+62	clique	7	6
+62	clique		0
+62	clique_rule	1	0
+62	clique_rule	2	0
+62	clique_rule	3	0
+62	clique_rule	4	0
+62	clique_rule	5	0
+62	clique_rule	6	0
+62	clique_rule	7	6
+62	clique_rule		0
+63	all15	1	0
+63	all15	2	0
+63	all15	3	0
+63	all15	4	0
+63	all15	5	0
+63	all15	6	0
+63	all15	7	46
+63	all15		0
+63	clique	1	0
+63	clique	2	0
+63	clique	3	0
+63	clique	4	0
+63	clique	5	0
+63	clique	6	0
+63	clique	7	2
+63	clique		0
+63	clique_rule	1	0
+63	clique_rule	2	0
+63	clique_rule	3	0
+63	clique_rule	4	0
+63	clique_rule	5	0
+63	clique_rule	6	0
+63	clique_rule	7	2
+63	clique_rule		0
+64	all15	1	0
+64	all15	2	0
+64	all15	3	0
+64	all15	4	0
+64	all15	5	0
+64	all15	6	0
+64	all15	7	51
+64	all15		0
+64	clique	1	0
+64	clique	2	0
+64	clique	3	0
+64	clique	4	0
+64	clique	5	0
+64	clique	6	0
+64	clique	7	0
+64	clique		0
+64	clique_rule	1	0
+64	clique_rule	2	0
+64	clique_rule	3	0
+64	clique_rule	4	0
+64	clique_rule	5	0
+64	clique_rule	6	0
+64	clique_rule	7	0
+64	clique_rule		0
+65	all15	1	0
+65	all15	2	0
+65	all15	3	0
+65	all15	4	0
+65	all15	5	0
+65	all15	6	0
+65	all15	7	58
+65	all15		0
+65	clique	1	0
+65	clique	2	0
+65	clique	3	0
+65	clique	4	0
+65	clique	5	0
+65	clique	6	0
+65	clique	7	2
+65	clique		0
+65	clique_rule	1	0
+65	clique_rule	2	0
+65	clique_rule	3	0
+65	clique_rule	4	0
+65	clique_rule	5	0
+65	clique_rule	6	0
+65	clique_rule	7	2
+65	clique_rule		0
+66	all15	1	0
+66	all15	2	0
+66	all15	3	0
+66	all15	4	0
+66	all15	5	0
+66	all15	6	0
+66	all15	7	45
+66	all15		0
+66	clique	1	0
+66	clique	2	0
+66	clique	3	0
+66	clique	4	0
+66	clique	5	0
+66	clique	6	0
+66	clique	7	0
+66	clique		0
+66	clique_rule	1	0
+66	clique_rule	2	0
+66	clique_rule	3	0
+66	clique_rule	4	0
+66	clique_rule	5	0
+66	clique_rule	6	0
+66	clique_rule	7	0
+66	clique_rule		0
+67	all15	1	0
+67	all15	2	0
+67	all15	3	0
+67	all15	4	0
+67	all15	5	0
+67	all15	6	0
+67	all15	7	56
+67	all15		0
+67	clique	1	0
+67	clique	2	0
+67	clique	3	0
+67	clique	4	0
+67	clique	5	0
+67	clique	6	0
+67	clique	7	2
+67	clique		0
+67	clique_rule	1	0
+67	clique_rule	2	0
+67	clique_rule	3	0
+67	clique_rule	4	0
+67	clique_rule	5	0
+67	clique_rule	6	0
+67	clique_rule	7	2
+67	clique_rule		0
+68	all15	1	0
+68	all15	2	0
+68	all15	3	0
+68	all15	4	0
+68	all15	5	0
+68	all15	6	0
+68	all15	7	50
+68	all15		0
+68	clique	1	0
+68	clique	2	0
+68	clique	3	0
+68	clique	4	0
+68	clique	5	0
+68	clique	6	0
+68	clique	7	1
+68	clique		0
+68	clique_rule	1	0
+68	clique_rule	2	0
+68	clique_rule	3	0
+68	clique_rule	4	0
+68	clique_rule	5	0
+68	clique_rule	6	0
+68	clique_rule	7	1
+68	clique_rule		0
+69	all15	1	0
+69	all15	2	0
+69	all15	3	0
+69	all15	4	0
+69	all15	5	0
+69	all15	6	0
+69	all15	7	58
+69	all15		0
+69	clique	1	0
+69	clique	2	0
+69	clique	3	0
+69	clique	4	0
+69	clique	5	0
+69	clique	6	0
+69	clique	7	3
+69	clique		0
+69	clique_rule	1	0
+69	clique_rule	2	0
+69	clique_rule	3	0
+69	clique_rule	4	0
+69	clique_rule	5	0
+69	clique_rule	6	0
+69	clique_rule	7	3
+69	clique_rule		0
+70	all15	1	0
+70	all15	2	0
+70	all15	3	0
+70	all15	4	0
+70	all15	5	0
+70	all15	6	0
+70	all15	7	48
+70	all15		0
+70	clique	1	0
+70	clique	2	0
+70	clique	3	0
+70	clique	4	0
+70	clique	5	0
+70	clique	6	0
+70	clique	7	3
+70	clique		0
+70	clique_rule	1	0
+70	clique_rule	2	0
+70	clique_rule	3	0
+70	clique_rule	4	0
+70	clique_rule	5	0
+70	clique_rule	6	0
+70	clique_rule	7	3
+70	clique_rule		0
+71	all15	1	0
+71	all15	2	0
+71	all15	3	0
+71	all15	4	0
+71	all15	5	0
+71	all15	6	0
+71	all15	7	63
+71	all15		0
+71	clique	1	0
+71	clique	2	0
+71	clique	3	0
+71	clique	4	0
+71	clique	5	0
+71	clique	6	0
+71	clique	7	2
+71	clique		0
+71	clique_rule	1	0
+71	clique_rule	2	0
+71	clique_rule	3	0
+71	clique_rule	4	0
+71	clique_rule	5	0
+71	clique_rule	6	0
+71	clique_rule	7	1
+71	clique_rule		0
+72	all15	1	0
+72	all15	2	0
+72	all15	3	0
+72	all15	4	0
+72	all15	5	0
+72	all15	6	0
+72	all15	7	40
+72	all15		0
+72	clique	1	0
+72	clique	2	0
+72	clique	3	0
+72	clique	4	0
+72	clique	5	0
+72	clique	6	0
+72	clique	7	4
+72	clique		0
+72	clique_rule	1	0
+72	clique_rule	2	0
+72	clique_rule	3	0
+72	clique_rule	4	0
+72	clique_rule	5	0
+72	clique_rule	6	0
+72	clique_rule	7	4
+72	clique_rule		0
+73	all15	1	0
+73	all15	2	0
+73	all15	3	0
+73	all15	4	0
+73	all15	5	0
+73	all15	6	0
+73	all15	7	48
+73	all15		0
+73	clique	1	0
+73	clique	2	0
+73	clique	3	0
+73	clique	4	0
+73	clique	5	0
+73	clique	6	0
+73	clique	7	3
+73	clique		0
+73	clique_rule	1	0
+73	clique_rule	2	0
+73	clique_rule	3	0
+73	clique_rule	4	0
+73	clique_rule	5	0
+73	clique_rule	6	0
+73	clique_rule	7	3
+73	clique_rule		0
+74	all15	1	0
+74	all15	2	0
+74	all15	3	0
+74	all15	4	0
+74	all15	5	0
+74	all15	6	0
+74	all15	7	46
+74	all15		0
+74	clique	1	0
+74	clique	2	0
+74	clique	3	0
+74	clique	4	0
+74	clique	5	0
+74	clique	6	0
+74	clique	7	0
+74	clique		0
+74	clique_rule	1	0
+74	clique_rule	2	0
+74	clique_rule	3	0
+74	clique_rule	4	0
+74	clique_rule	5	0
+74	clique_rule	6	0
+74	clique_rule	7	0
+74	clique_rule		0
+75	all15	1	0
+75	all15	2	0
+75	all15	3	0
+75	all15	4	0
+75	all15	5	0
+75	all15	6	0
+75	all15	7	49
+75	all15		0
+75	clique	1	0
+75	clique	2	0
+75	clique	3	0
+75	clique	4	0
+75	clique	5	0
+75	clique	6	0
+75	clique	7	1
+75	clique		0
+75	clique_rule	1	0
+75	clique_rule	2	0
+75	clique_rule	3	0
+75	clique_rule	4	0
+75	clique_rule	5	0
+75	clique_rule	6	0
+75	clique_rule	7	1
+75	clique_rule		0
+76	all15	1	0
+76	all15	2	0
+76	all15	3	0
+76	all15	4	0
+76	all15	5	0
+76	all15	6	0
+76	all15	7	55
+76	all15		0
+76	clique	1	0
+76	clique	2	0
+76	clique	3	0
+76	clique	4	0
+76	clique	5	0
+76	clique	6	0
+76	clique	7	3
+76	clique		0
+76	clique_rule	1	0
+76	clique_rule	2	0
+76	clique_rule	3	0
+76	clique_rule	4	0
+76	clique_rule	5	0
+76	clique_rule	6	0
+76	clique_rule	7	3
+76	clique_rule		0
+77	all15	1	0
+77	all15	2	0
+77	all15	3	0
+77	all15	4	0
+77	all15	5	0
+77	all15	6	0
+77	all15	7	50
+77	all15		0
+77	clique	1	0
+77	clique	2	0
+77	clique	3	0
+77	clique	4	0
+77	clique	5	0
+77	clique	6	0
+77	clique	7	1
+77	clique		0
+77	clique_rule	1	0
+77	clique_rule	2	0
+77	clique_rule	3	0
+77	clique_rule	4	0
+77	clique_rule	5	0
+77	clique_rule	6	0
+77	clique_rule	7	1
+77	clique_rule		0
+78	all15	1	0
+78	all15	2	0
+78	all15	3	0
+78	all15	4	0
+78	all15	5	0
+78	all15	6	0
+78	all15	7	49
+78	all15		0
+78	clique	1	0
+78	clique	2	0
+78	clique	3	0
+78	clique	4	0
+78	clique	5	0
+78	clique	6	0
+78	clique	7	2
+78	clique		0
+78	clique_rule	1	0
+78	clique_rule	2	0
+78	clique_rule	3	0
+78	clique_rule	4	0
+78	clique_rule	5	0
+78	clique_rule	6	0
+78	clique_rule	7	2
+78	clique_rule		0
+79	all15	1	0
+79	all15	2	0
+79	all15	3	0
+79	all15	4	0
+79	all15	5	0
+79	all15	6	0
+79	all15	7	47
+79	all15		0
+79	clique	1	0
+79	clique	2	0
+79	clique	3	0
+79	clique	4	0
+79	clique	5	0
+79	clique	6	0
+79	clique	7	0
+79	clique		0
+79	clique_rule	1	0
+79	clique_rule	2	0
+79	clique_rule	3	0
+79	clique_rule	4	0
+79	clique_rule	5	0
+79	clique_rule	6	0
+79	clique_rule	7	0
+79	clique_rule		0
+80	all15	1	0
+80	all15	2	0
+80	all15	3	0
+80	all15	4	0
+80	all15	5	0
+80	all15	6	0
+80	all15	7	52
+80	all15		0
+80	clique	1	0
+80	clique	2	0
+80	clique	3	0
+80	clique	4	0
+80	clique	5	0
+80	clique	6	0
+80	clique	7	1
+80	clique		0
+80	clique_rule	1	0
+80	clique_rule	2	0
+80	clique_rule	3	0
+80	clique_rule	4	0
+80	clique_rule	5	0
+80	clique_rule	6	0
+80	clique_rule	7	1
+80	clique_rule		0
+81	all15	1	0
+81	all15	2	0
+81	all15	3	0
+81	all15	4	0
+81	all15	5	0
+81	all15	6	0
+81	all15	7	59
+81	all15		0
+81	clique	1	0
+81	clique	2	0
+81	clique	3	0
+81	clique	4	0
+81	clique	5	0
+81	clique	6	0
+81	clique	7	5
+81	clique		0
+81	clique_rule	1	0
+81	clique_rule	2	0
+81	clique_rule	3	0
+81	clique_rule	4	0
+81	clique_rule	5	0
+81	clique_rule	6	0
+81	clique_rule	7	5
+81	clique_rule		0
+82	all15	1	0
+82	all15	2	0
+82	all15	3	0
+82	all15	4	0
+82	all15	5	0
+82	all15	6	0
+82	all15	7	48
+82	all15		0
+82	clique	1	0
+82	clique	2	0
+82	clique	3	0
+82	clique	4	0
+82	clique	5	0
+82	clique	6	0
+82	clique	7	0
+82	clique		0
+82	clique_rule	1	0
+82	clique_rule	2	0
+82	clique_rule	3	0
+82	clique_rule	4	0
+82	clique_rule	5	0
+82	clique_rule	6	0
+82	clique_rule	7	0
+82	clique_rule		0
+83	all15	1	0
+83	all15	2	0
+83	all15	3	0
+83	all15	4	0
+83	all15	5	0
+83	all15	6	0
+83	all15	7	57
+83	all15		0
+83	clique	1	0
+83	clique	2	0
+83	clique	3	0
+83	clique	4	0
+83	clique	5	0
+83	clique	6	0
+83	clique	7	3
+83	clique		0
+83	clique_rule	1	0
+83	clique_rule	2	0
+83	clique_rule	3	0
+83	clique_rule	4	0
+83	clique_rule	5	0
+83	clique_rule	6	0
+83	clique_rule	7	3
+83	clique_rule		0
+84	all15	1	0
+84	all15	2	0
+84	all15	3	0
+84	all15	4	0
+84	all15	5	0
+84	all15	6	0
+84	all15	7	49
+84	all15		0
+84	clique	1	0
+84	clique	2	0
+84	clique	3	0
+84	clique	4	0
+84	clique	5	0
+84	clique	6	0
+84	clique	7	4
+84	clique		0
+84	clique_rule	1	0
+84	clique_rule	2	0
+84	clique_rule	3	0
+84	clique_rule	4	0
+84	clique_rule	5	0
+84	clique_rule	6	0
+84	clique_rule	7	4
+84	clique_rule		0
+85	all15	1	0
+85	all15	2	0
+85	all15	3	0
+85	all15	4	0
+85	all15	5	0
+85	all15	6	0
+85	all15	7	52
+85	all15		0
+85	clique	1	0
+85	clique	2	0
+85	clique	3	0
+85	clique	4	0
+85	clique	5	0
+85	clique	6	0
+85	clique	7	2
+85	clique		0
+85	clique_rule	1	0
+85	clique_rule	2	0
+85	clique_rule	3	0
+85	clique_rule	4	0
+85	clique_rule	5	0
+85	clique_rule	6	0
+85	clique_rule	7	2
+85	clique_rule		0
+86	all15	1	0
+86	all15	2	0
+86	all15	3	0
+86	all15	4	0
+86	all15	5	0
+86	all15	6	0
+86	all15	7	61
+86	all15		0
+86	clique	1	0
+86	clique	2	0
+86	clique	3	0
+86	clique	4	0
+86	clique	5	0
+86	clique	6	0
+86	clique	7	2
+86	clique		0
+86	clique_rule	1	0
+86	clique_rule	2	0
+86	clique_rule	3	0
+86	clique_rule	4	0
+86	clique_rule	5	0
+86	clique_rule	6	0
+86	clique_rule	7	2
+86	clique_rule		0
+87	all15	1	0
+87	all15	2	0
+87	all15	3	0
+87	all15	4	0
+87	all15	5	0
+87	all15	6	0
+87	all15	7	48
+87	all15		0
+87	clique	1	0
+87	clique	2	0
+87	clique	3	0
+87	clique	4	0
+87	clique	5	0
+87	clique	6	0
+87	clique	7	1
+87	clique		0
+87	clique_rule	1	0
+87	clique_rule	2	0
+87	clique_rule	3	0
+87	clique_rule	4	0
+87	clique_rule	5	0
+87	clique_rule	6	0
+87	clique_rule	7	1
+87	clique_rule		0
+88	all15	1	0
+88	all15	2	0
+88	all15	3	0
+88	all15	4	0
+88	all15	5	0
+88	all15	6	0
+88	all15	7	51
+88	all15		0
+88	clique	1	0
+88	clique	2	0
+88	clique	3	0
+88	clique	4	0
+88	clique	5	0
+88	clique	6	0
+88	clique	7	6
+88	clique		0
+88	clique_rule	1	0
+88	clique_rule	2	0
+88	clique_rule	3	0
+88	clique_rule	4	0
+88	clique_rule	5	0
+88	clique_rule	6	0
+88	clique_rule	7	6
+88	clique_rule		0
+89	all15	1	0
+89	all15	2	0
+89	all15	3	0
+89	all15	4	0
+89	all15	5	0
+89	all15	6	0
+89	all15	7	52
+89	all15		0
+89	clique	1	0
+89	clique	2	0
+89	clique	3	0
+89	clique	4	0
+89	clique	5	0
+89	clique	6	0
+89	clique	7	2
+89	clique		0
+89	clique_rule	1	0
+89	clique_rule	2	0
+89	clique_rule	3	0
+89	clique_rule	4	0
+89	clique_rule	5	0
+89	clique_rule	6	0
+89	clique_rule	7	2
+89	clique_rule		0
+90	all15	1	0
+90	all15	2	0
+90	all15	3	0
+90	all15	4	0
+90	all15	5	0
+90	all15	6	0
+90	all15	7	49
+90	all15		0
+90	clique	1	0
+90	clique	2	0
+90	clique	3	0
+90	clique	4	0
+90	clique	5	0
+90	clique	6	0
+90	clique	7	4
+90	clique		0
+90	clique_rule	1	0
+90	clique_rule	2	0
+90	clique_rule	3	0
+90	clique_rule	4	0
+90	clique_rule	5	0
+90	clique_rule	6	0
+90	clique_rule	7	4
+90	clique_rule		0
+91	all15	1	0
+91	all15	2	0
+91	all15	3	0
+91	all15	4	0
+91	all15	5	0
+91	all15	6	0
+91	all15	7	51
+91	all15		0
+91	clique	1	0
+91	clique	2	0
+91	clique	3	0
+91	clique	4	0
+91	clique	5	0
+91	clique	6	0
+91	clique	7	2
+91	clique		0
+91	clique_rule	1	0
+91	clique_rule	2	0
+91	clique_rule	3	0
+91	clique_rule	4	0
+91	clique_rule	5	0
+91	clique_rule	6	0
+91	clique_rule	7	2
+91	clique_rule		0
+92	all15	1	0
+92	all15	2	0
+92	all15	3	0
+92	all15	4	0
+92	all15	5	0
+92	all15	6	0
+92	all15	7	45
+92	all15		0
+92	clique	1	0
+92	clique	2	0
+92	clique	3	0
+92	clique	4	0
+92	clique	5	0
+92	clique	6	0
+92	clique	7	2
+92	clique		0
+92	clique_rule	1	0
+92	clique_rule	2	0
+92	clique_rule	3	0
+92	clique_rule	4	0
+92	clique_rule	5	0
+92	clique_rule	6	0
+92	clique_rule	7	2
+92	clique_rule		0
+93	all15	1	0
+93	all15	2	0
+93	all15	3	0
+93	all15	4	0
+93	all15	5	0
+93	all15	6	0
+93	all15	7	52
+93	all15		0
+93	clique	1	0
+93	clique	2	0
+93	clique	3	0
+93	clique	4	0
+93	clique	5	0
+93	clique	6	0
+93	clique	7	3
+93	clique		0
+93	clique_rule	1	0
+93	clique_rule	2	0
+93	clique_rule	3	0
+93	clique_rule	4	0
+93	clique_rule	5	0
+93	clique_rule	6	0
+93	clique_rule	7	3
+93	clique_rule		0
+94	all15	1	0
+94	all15	2	0
+94	all15	3	0
+94	all15	4	0
+94	all15	5	0
+94	all15	6	0
+94	all15	7	51
+94	all15		0
+94	clique	1	0
+94	clique	2	0
+94	clique	3	0
+94	clique	4	0
+94	clique	5	0
+94	clique	6	0
+94	clique	7	3
+94	clique		0
+94	clique_rule	1	0
+94	clique_rule	2	0
+94	clique_rule	3	0
+94	clique_rule	4	0
+94	clique_rule	5	0
+94	clique_rule	6	0
+94	clique_rule	7	3
+94	clique_rule		0
+95	all15	1	0
+95	all15	2	0
+95	all15	3	0
+95	all15	4	0
+95	all15	5	0
+95	all15	6	0
+95	all15	7	51
+95	all15		0
+95	clique	1	0
+95	clique	2	0
+95	clique	3	0
+95	clique	4	0
+95	clique	5	0
+95	clique	6	0
+95	clique	7	3
+95	clique		0
+95	clique_rule	1	0
+95	clique_rule	2	0
+95	clique_rule	3	0
+95	clique_rule	4	0
+95	clique_rule	5	0
+95	clique_rule	6	0
+95	clique_rule	7	3
+95	clique_rule		0
+96	all15	1	0
+96	all15	2	0
+96	all15	3	0
+96	all15	4	0
+96	all15	5	0
+96	all15	6	0
+96	all15	7	51
+96	all15		0
+96	clique	1	0
+96	clique	2	0
+96	clique	3	0
+96	clique	4	0
+96	clique	5	0
+96	clique	6	0
+96	clique	7	4
+96	clique		0
+96	clique_rule	1	0
+96	clique_rule	2	0
+96	clique_rule	3	0
+96	clique_rule	4	0
+96	clique_rule	5	0
+96	clique_rule	6	0
+96	clique_rule	7	4
+96	clique_rule		0
+97	all15	1	0
+97	all15	2	0
+97	all15	3	0
+97	all15	4	0
+97	all15	5	0
+97	all15	6	0
+97	all15	7	42
+97	all15		0
+97	clique	1	0
+97	clique	2	0
+97	clique	3	0
+97	clique	4	0
+97	clique	5	0
+97	clique	6	0
+97	clique	7	1
+97	clique		0
+97	clique_rule	1	0
+97	clique_rule	2	0
+97	clique_rule	3	0
+97	clique_rule	4	0
+97	clique_rule	5	0
+97	clique_rule	6	0
+97	clique_rule	7	1
+97	clique_rule		0
+98	all15	1	0
+98	all15	2	0
+98	all15	3	0
+98	all15	4	0
+98	all15	5	0
+98	all15	6	0
+98	all15	7	51
+98	all15		0
+98	clique	1	0
+98	clique	2	0
+98	clique	3	0
+98	clique	4	0
+98	clique	5	0
+98	clique	6	0
+98	clique	7	1
+98	clique		0
+98	clique_rule	1	0
+98	clique_rule	2	0
+98	clique_rule	3	0
+98	clique_rule	4	0
+98	clique_rule	5	0
+98	clique_rule	6	0
+98	clique_rule	7	1
+98	clique_rule		0
+99	all15	1	0
+99	all15	2	0
+99	all15	3	0
+99	all15	4	0
+99	all15	5	0
+99	all15	6	0
+99	all15	7	49
+99	all15		0
+99	clique	1	0
+99	clique	2	0
+99	clique	3	0
+99	clique	4	0
+99	clique	5	0
+99	clique	6	0
+99	clique	7	3
+99	clique		0
+99	clique_rule	1	0
+99	clique_rule	2	0
+99	clique_rule	3	0
+99	clique_rule	4	0
+99	clique_rule	5	0
+99	clique_rule	6	0
+99	clique_rule	7	3
+99	clique_rule		0
+100	all15	1	0
+100	all15	2	0
+100	all15	3	0
+100	all15	4	0
+100	all15	5	0
+100	all15	6	0
+100	all15	7	44
+100	all15		0
+100	clique	1	0
+100	clique	2	0
+100	clique	3	0
+100	clique	4	0
+100	clique	5	0
+100	clique	6	0
+100	clique	7	2
+100	clique		0
+100	clique_rule	1	0
+100	clique_rule	2	0
+100	clique_rule	3	0
+100	clique_rule	4	0
+100	clique_rule	5	0
+100	clique_rule	6	0
+100	clique_rule	7	2
+100	clique_rule		0

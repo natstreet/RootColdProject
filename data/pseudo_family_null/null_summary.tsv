@@ -1,0 +1,4 @@
+statistic	observed	replicates	null_mean	null_min	null_max	null_lo95	null_hi95	P	fold
+all15	264	100	51.21	39	66	40	63	0.0099009900990099	5.2
+clique	137	100	2.45	0	7	0	6	0.0099009900990099	55.9
+clique_rule	130	100	2.35	0	7	0	6	0.0099009900990099	55.3
