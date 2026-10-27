@@ -114,6 +114,11 @@ add("all_six_orthogroups_ge20_genes", sprintf("%d of %d (%.1f%%)", as.integer(cv
 t1 <- fread("tables/TableS1_commonDEG_GO_classic.tsv")
 add("tableS1_terms", nrow(t1), "TableS1_commonDEG_GO_classic.tsv: rows (padj < 0.05)")
 add("tableS1_top_terms", paste(head(t1[order(padj, GO.ID)], 6)[, sprintf("%s (%s, padj %.2g)", Term, GO.ID, padj)], collapse = "; "), "TableS1_commonDEG_GO_classic.tsv: six lowest padj")
+# unrelated-partner null (D097, R071; Fig. S4a legend)
+nu <- fread("data/pseudo_family_null/null_summary.tsv")
+for (i in seq_len(nrow(nu))) add(sprintf("null_unrelated_%s", nu$statistic[i]),
+  sprintf("observed %d; null mean %.2f, range %d-%d, %d replicates; P %.2g; %.1f-fold", nu$observed[i], nu$null_mean[i], nu$null_min[i], nu$null_max[i],
+          nu$replicates[i], nu$P[i], nu$fold[i]), "data/pseudo_family_null/null_summary.tsv (pseudo_family_summary.R)")
 # conifer-only defence (R064, R066; Discussion sentence D094)
 cd <- fread("tables/conifer_only_defence_summary.tsv")
 for (i in seq_len(nrow(cd))) { cf <- cd$conifer[i]

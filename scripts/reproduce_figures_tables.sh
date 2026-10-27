@@ -82,7 +82,7 @@ run sizeaware_null        $R scripts/validation/conservation_sizeaware_null.R
 run core_clusters         $R scripts/validation/make_core_clusters.R
 run string_validation     $R scripts/validation/string_external_validation.R
 run string_by_cluster     $R scripts/validation/string_by_cluster.R
-run FigS4                 $R scripts/figures/make_FigS4.R
+run FigS4                 $R scripts/figures/make_FigS4.R                                  # panel a: data/pseudo_family_null (R071, run on micro)
 run loo_diagnostics       $R scripts/validation/loo_diagnostics.R data/loo_run results/loo_stability results/loo_stability/diagnostics
 run kept_lost             $R scripts/validation/stability_kept_lost.R results/stability
 run why_spruce            $R scripts/validation/stability_why_spruce.R results/stability
