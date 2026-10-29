@@ -6,7 +6,7 @@
 #                clique) | none
 #   stability    stable | sample-sensitive (core orthogroups only; D066, from core_stability_label.R) ; share_passing =
 #                passing / complete cliques under the leave-one-sample-out test
-# Inputs (working tree): results/orthogroup_sizes_all.tsv (all15), results/orthogroup_size_rule.tsv, results/core_stability_label.tsv,
+# Inputs (working tree): results/orthogroup_size_rule.tsv (eligible orthogroups, expressed_genes; D080), results/orthogroup_sizes_all.tsv (all15), results/core_stability_label.tsv,
 #   data/ComPlEx/PairwiseComparisons/comparison-col0-*-table.RData (Col-0 genes tested per orthogroup and their symbols)
 # Outputs (<open dir>): orthogroup_core_status.tsv (every eligible orthogroup), near_core_orthogroups.tsv; and the columns
 #   core_status, stability, share_passing added to orthogroup_annotation.tsv and conserved_core*.tsv when present
@@ -18,8 +18,10 @@ ld <- function(f) { e <- new.env(); load(f, envir = e); as.data.table(get(ls(e)[
 # become NA before writing with na = "" (ledger R046)
 blank_na <- function(t) { for (k in names(t)) if (is.character(t[[k]])) set(t, which(t[[k]] == ""), k, NA_character_); t }
 sz <- fread("results/orthogroup_sizes_all.tsv"); sr <- fread("results/orthogroup_size_rule.tsv"); lab <- fread("results/core_stability_label.tsv")
-x <- merge(sz[eligible == TRUE, .(OrthoGroup, expressed_genes, all15)], sr[, .(OrthoGroup, has_complete_clique, counted_as_conserved)], by = "OrthoGroup", all.x = TRUE)
-x[is.na(has_complete_clique), `:=`(has_complete_clique = FALSE, counted_as_conserved = FALSE)]
+# eligible orthogroups and expressed_genes as the size rule defines them (D080: genes passing the ComPlEx expression filter, at least
+# one per species); all15 from the size-flag table, whose eligible set contains every D080-eligible orthogroup (checked below)
+x <- merge(sr[, .(OrthoGroup, expressed_genes, has_complete_clique, counted_as_conserved)], sz[, .(OrthoGroup, all15)], by = "OrthoGroup", all.x = TRUE)
+if (anyNA(x$all15)) stop("D080-eligible orthogroups missing from orthogroup_sizes_all.tsv")
 x[, core_status := fifelse(counted_as_conserved, "core", fifelse(has_complete_clique, "set aside by size", fifelse(all15, "near-core", "none")))]
 x <- merge(x, lab[, .(OrthoGroup, stability = core_status, share_passing)], by = "OrthoGroup", all.x = TRUE)
 if (x[core_status == "core", .N] != nrow(lab) || x[core_status == "core", anyNA(stability)]) stop("core orthogroups and stability labels do not agree")
