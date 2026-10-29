@@ -2,7 +2,7 @@
 # og_summary.R — per orthogroup, the genotypes with a gene in it and the genotypes with a DEG in it.
 #
 # Inputs:
-#   data/ComPlEx/gene2OG/gene2OG_<Genotype>.rda   gene -> orthogroup, per genotype (this repository)
+#   data/open/gene_orthogroup_map.tsv             gene -> orthogroup (the deposited map; D101), through og_map.R
 #   data/DEGs/DEGs_<genotype>.RData               the DEGs of each genotype (union over timepoints; deposit)
 # Output: data/DEGs/og_summary.RData (object og_summary: OrthoGroup, species_with_genes, species_with_DEGs (lists, in
 #         the genotype order col0, ost0, aspen, birch, spruce, pine), n_species_with_genes, n_species_with_DEGs), or
@@ -17,7 +17,7 @@ ld <- function(f) { e <- new.env(); load(f, envir = e); get(ls(e)[1], envir = e)
 sp <- c("col0", "ost0", "aspen", "birch", "spruce", "pine")
 fn <- c(col0 = "Col0", ost0 = "Ost0", aspen = "aspen", birch = "birch", spruce = "spruce", pine = "pine")
 M <- bind_rows(lapply(sp, function(s) {
-  d <- og_map(s); names(d)[1:2] <- c("OrthoGroup", "gene")                       # OG_MAP: gene2OG (default) or open (og_map.R)
+  d <- og_map(s); names(d)[1:2] <- c("OrthoGroup", "gene")                       # OG_MAP: open (default, D101) or gene2OG (og_map.R)
   data.frame(OrthoGroup = d$OrthoGroup, gene = d$gene, species = s) }))
 degs <- setNames(lapply(sp, function(s) {
   v <- ld(sprintf("data/DEGs/DEGs_%s.RData", s))

@@ -12,12 +12,12 @@ directory before running the scripts.
 
 ## Overview
 Fine-root transcriptomes of four boreal trees and two *Arabidopsis* ecotypes were profiled over a
-ten-day 5 °C (chilling) treatment. Differential expression is largely lineage-specific, but
-comparative co-expression (ComPlEx) recovers a conserved regulatory core of 256 co-expressolog
-orthogroups (116 of which form complete cliques) shared across all 15 pairwise species
-comparisons and spanning more than 300 million years of evolution. Supporting analyses test that this core is significant against a
-permutation null, is coherent in an independent co-expression compendium (STRING), replicates in
-independent data, and shows conserved promoter cis-motifs.
+ten-day 5 °C (chilling) treatment. Differential expression is largely lineage-specific. Comparative
+co-expression (ComPlEx) identifies orthogroups whose co-expression is conserved in all 15 pairwise genotype
+comparisons, and a conserved core in which one gene per genotype forms a complete clique of co-expressologs.
+Supporting analyses compare the core with an unrelated-partner null, test the coherence of its clusters in an
+independent co-expression resource (STRING), and label each core orthogroup by its sensitivity to single samples.
+The numbers quoted in the article are collected, each with its source file, by `scripts/analysis/manuscript_values.R`.
 
 ## Data
 The scripts read their inputs from a local `data/` directory. Most of it is not held in this
@@ -77,8 +77,8 @@ the highest reciprocal rank is at most 100. The method and its R commands are de
 `docs/coexpression_networks.md`. These networks are for exploring a gene's co-expression neighbourhood and are
 separate from the pairwise ComPlEx networks.
 
-`scripts/validation/` -- the tests and counts behind the conserved-core results: the label-permutation and
-family-size-aware nulls, the STRING cluster-coherence test (Fig. S4) and the counts quoted in the Results. Each is
+`scripts/validation/` -- the tests and counts behind the conserved-core results: the unrelated-partner null
+(Fig. S4a), the STRING cluster-coherence test (Fig. S4b), the sample-stability test and the counts quoted in the Results. Each is
 listed with its inputs and outputs in `REPRODUCE.md`.
 
 ## Reproducing the analysis

@@ -22,7 +22,7 @@
 # Inputs (run from a directory with the unpacked figshare deposit `data/`, into which this repo's
 # committed data/ files merge):
 #   data/expression/med_expression/<sp>_med.txt.gz          per-timepoint median expression (repo)
-#   data/ComPlEx/gene2OG/gene2OG_<Sp>.rda                    gene -> orthogroup maps (repo)
+#   data/open/gene_orthogroup_map.tsv                        gene -> orthogroup (deposited map, D101; og_map.R)
 #   data/annotation/bg_<sp>_<code>.rda                       expressed-gene backgrounds (repo)
 #   data/DEGs/DEGs_<sp>.RData                                per-species DEG lists (deposit)
 #   data/DEGs/og_summary.RData                               per-orthogroup species counts (deposit)
@@ -38,7 +38,7 @@ labs <- c(col0="Col-0", ost0="Ost-0", aspen="Aspen", birch="Birch", spruce="Spru
 key  <- c(col0="col0", ost0="ost0", aspen="aspen", birch="birch", spruce="spruce", pine="pine")
 
 # gene -> orthogroup maps (objects OG_Col0, OG_Ost0, OG_aspen, OG_birch, OG_spruce, OG_pine)
-source("scripts/DE/og_map.R")                                                  # OG_MAP: gene2OG (default) or open (R070)
+source("scripts/DE/og_map.R")                                                  # OG_MAP: open (default, D101) or gene2OG (R070)
 OGm <- setNames(lapply(sp, og_map), sp)
 
 # ── panel a: expressed-orthogroup sets per condition + UpSet ──────────────────

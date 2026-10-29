@@ -16,11 +16,11 @@ supplementary tables from the processed data deposited on figshare
 2. Run any producer from the repository root, e.g.:
 
    ```
-   Rscript scripts/GO/make_TableS3.R
+   Rscript scripts/figures/make_Fig2.R
    ```
 
 Outputs are written to the working directory (some producers write to `results/`). The committed `results/` holds
-the producers' outputs from a run on version 5 of the deposit; before each release,
+the producers' outputs from a run on version 6 of the deposit; before each release,
 `scripts/tests/check_committed_outputs.sh` checks them against a fresh run, and the committed `data/` files against
 the deposit. R package requirements: `DESeq2`,
 `matrixStats`, `topGO`, `GO.db`, `ggplot2`, `ggtext`, `corrplot`, `dplyr`, `tidyr`,
@@ -28,8 +28,8 @@ the deposit. R package requirements: `DESeq2`,
 `data.table` and `curl`.
 
 Some small derived inputs are provided in this repository rather than in the figshare deposit:
-the median-expression tables (`expression/med_expression/`), the gene→orthogroup maps
-(`ComPlEx/gene2OG/`), the per-species GO backgrounds (`annotation/bg_*.rda`), the Arabidopsis gene
+the median-expression tables (`expression/med_expression/`), the gene→orthogroup maps of the original analysis
+(`ComPlEx/gene2OG/`; kept for comparison only, D101), the per-species GO backgrounds (`annotation/bg_*.rda`), the Arabidopsis gene
 aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 (`DEGs/og_summary.RData`, from `scripts/DE/og_summary.R`), and the per-timepoint DEG lists (`DEGs/per_timepoint_DEG_lists/`). Unpacking the deposit alongside them gives a complete `data/` tree.
 
@@ -46,21 +46,21 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 | Output | Script | Key inputs (under `data/`) |
 |---|---|---|
 | Genotype colours (every figure that colours by genotype; the deposit explorer) | `scripts/figures/genotype_colours.R` (writes `genotype_colours.json`); `check_genotype_colours.R` fails if a producer defines its own | none |
-| Fig. 1 | `scripts/figures/make_Fig1.R` | `expression/med_expression/`, `ComPlEx/gene2OG/`, `annotation/bg_*`, `DEGs/`; panel values in `results/Figure1_panel_values.tsv` |
+| Fig. 1 | `scripts/figures/make_Fig1.R` | `expression/med_expression/`, `open/gene_orthogroup_map.tsv` (through `scripts/DE/og_map.R`, D101), `annotation/bg_*`, `DEGs/`; panel values in `results/Figure1_panel_values.tsv` |
 | Fig. 2 | `scripts/figures/make_Fig2.R` | `DEGs/per_timepoint_DEG_lists/`, `DEGs/log2FoldChange_*.RData` |
 | Fig. 3 | `scripts/figures/make_Fig3.R` | `ComPlEx/co_expressologs.RData`; panel b from the Table S2 output (`tables/TableS2_cladeGO_classic_p10.tsv`); Venn regions in `results/Figure3_venn_regions.tsv`, panel b values in `results/Figure3b_values.tsv` |
-| Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; the Table S3 output and `Fig4_captions_approved.tsv` (block captions by GO ID), written by `scripts/figures/fig4_captions_from_terms.R` from the approved terms in `scripts/figures/Fig4_terms_approved.tsv` (D008) |
+| Fig. 4 | `scripts/figures/make_Fig4.R` | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered.RDS,clique_HMcluster_list.rda}`, `expression/med_expression/`; `ComPlEx/cliques/manuscript_cluster_map.tsv`, `results/paralogue_agreement.tsv` (`scripts/analysis/paralogue_agreement.R`, D083); the family-level Table S3 output and the block captions written from it by `scripts/figures/fig4_captions_family_level.R` (the driver's default; approved cluster names from `scripts/figures/cluster_labels_approved.tsv`, D093) |
 | Fig. 5 | `scripts/figures/make_Fig5.R` | `results/cluster_profiles/cluster_profiles.tsv` (from `cluster_profiles.R`), `tables/TableS3_cliqueClusterGO_classic.tsv` (the panel labels: Table S3 terms named in `scripts/figures/Fig5_cluster_labels.tsv`), `scripts/figures/genotype_colours.json`; values in `results/Figure5_values.tsv` |
 | Fig. 6 | `scripts/figures/make_Fig6.R` | `annotation/gene_aliases_20140331.txt`, `ComPlEx/cliques/{clique_genes_filterable_COMPLETE.RDS,conserved_genes_COMPLETE_filtered.RDS}`, `expression/`, `DEGs/`; `results/orthogroup_size_flag.tsv` and `results/orthology_class.tsv` (panel labels) |
-| Fig. S1 | `scripts/figures/make_FigS1.R OG0005042` (the worked example) | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R`; `results/orthology_class.tsv`. The worked example is NOP56, OG0004969 (D044) |
+| Fig. S1 | `scripts/figures/make_FigS1.R OG0005042` (the worked example) | `ComPlEx/cliques/conserved_genes_COMPLETE_filtered.RDS`, `DE/de_results.tsv`, `expression/`, `ComPlEx/orthologs-*.RData`, `annotation/{Athal_go_ids.tsv,gene_aliases_20140331.txt}`; `tables/core_conserved_neighbours.tsv.gz` from `scripts/ComPlEx/core_neighbourhoods.R` (15 pairs) and `scripts/analysis/core_module_directions.R`; `results/orthology_class.tsv`. The worked example is OG0005042 (D067); the driver runs it when `WORKED_EXAMPLE=OG0005042` is set |
 | Fig. S2 | `scripts/figures/make_FigS2.R` | `ComPlEx/co_expressologs.RData`, `DEGs/DEGs_*.RData` |
 | Fig. S3 | `scripts/figures/make_FigS3.R` | `ComPlEx/co_expressologs.RData`; per-comparison counts in `results/Figure_S3_values.tsv` |
-| Fig. S4 | `scripts/figures/make_FigS4.R` | outputs of `scripts/validation/conservation_label_permutation.R` (panel a) and `make_core_clusters.R` + `string_external_validation.R` (panel b; **STRING download, see note**) |
+| Fig. S4 | `scripts/figures/make_FigS4.R` | `data/pseudo_family_null/` (panel a: the unrelated-partner null, D097, from `scripts/validation/pseudo_families.R`, `pseudo_family_complex.R` and `pseudo_family_summary.R`; run on an HPC cluster) and `make_core_clusters.R` + `string_external_validation.R` (panel b; **STRING download, see note**) |
 | Fig. S5 | `scripts/figures/make_FigS5.R` | `results/a2_per_level_medians.tsv` from `scripts/companion/a2_tissue_stress_specificity.R <dds dir>`, which refits DESeq2 on the companion conifer experiment's dds objects (van Zalen et al. 2026, https://doi.org/10.64898/2026.08.03.742458; AbioticStressConifers `data/dds/dds_{SCR,SCN,SDR,SDN,PCR,PCN,PDR,PDN}.rda`, deposited with that study; not in this deposit; give their folder as `COMPANION_DDS` to the driver); labels as Fig. 5 |
 | Fig. S6 | `scripts/figures/make_FigS6.R` | `ComPlEx/co_expressologs.RData`, `expression/` |
 | Table S1 (`Table_S1.xlsx`) | `scripts/GO/make_TableS1.R` (with `go_table_utils.R`) | `DEGs/og_summary.RData`, `DEGs/DEGs_col0.RData`, `*/Orthogroups_20240613.tsv`, `annotation/Athal_go_ids.tsv`, `annotation/bg_col0_ATC.rda` |
 | Table S2 (`Table_S2.xlsx`) | `scripts/GO/make_TableS2.R` (with `go_table_utils.R`) | `ComPlEx/co_expressologs.RData`, `annotation/{go_ids,bg_*}`, `DEGs/DEGs_*.RData` |
-| Table S3 (`Table_S3.xlsx`) | `scripts/GO/make_TableS3.R` (with `go_table_utils.R`) | `ComPlEx/cliques/{clique_HMcluster_list.rda,clique_genes_filterable_COMPLETE.RDS}`, `annotation/{go_ids,bg_*}` |
+| Table S3 (`Table_S3.xlsx`) | `scripts/GO/tableS3_arabidopsis.R` (with `go_table_utils.R`; D090: one test per cluster on the Col-0 annotation, gene and family level) | `ComPlEx/cliques/{conserved_genes_COMPLETE_filtered,conserved_genes_COMPLETE_wider}.RDS`, `clique_HMcluster_list.rda`, `manuscript_cluster_map.tsv`, `ComPlEx/Orthogroups_20240613.tsv`, `expression/col0_root_cold_stress_expression.txt`, `annotation/*_go_ids.*`, `results/orthogroup_size_rule.tsv`. The per-genotype tests of earlier versions (`make_TableS3.R`, `tableS3_family_level.R`) are kept by the driver in `tables/per_genotype/` for comparison |
 | DEGs (Fig. 1 / Fig. 2) | `scripts/DE/differential_expression.R` | `dds/dds_{col0_soil,ost0_soil,Pt_new,Bp_new,Pa,Ps}.rda` |
 | GO backgrounds | `scripts/annotation/make_backgrounds.R` | `expression/<sp>_root_cold_stress_expression.txt` |
 | Species networks | `scripts/networks/export_network_inputs.R`, then `scripts/networks/build_coexpression_network.R` per species (method: `docs/coexpression_networks.md`) | `dds/` |
@@ -75,7 +75,7 @@ aliases (`annotation/gene_aliases_20140331.txt`), the per-orthogroup DEG summary
 | ENA runs, sequencing depth and platform per sample (Methods; deposit `samples.tsv`) | `scripts/deposit/sample_ena_runs.R` | `open/samples.tsv`, `quantification/{sample_name_map,lane_map}.tsv` — **deposit v4 or later**; ENA portal API (network); outputs `results/{sample_ena_runs,ena_run_metadata,sequencing_depth}.tsv` |
 | Per-gene DE results (fold change, padj against no change, DEG call) | `scripts/DE/differential_expression.R` | as for DEGs; output `DE/de_results.tsv` |
 | Deposit GO tables (`open/go_enrichment_*.tsv`) | `scripts/deposit/export_go_tables.R` | the Table S1, S2 and S3 workbooks |
-| Deposit manuscript cluster numbers (`open/conserved_core.tsv`, `open/gene_index.tsv`) | `scripts/deposit/manuscript_clusters.R` | `MAP` in `scripts/GO/make_TableS3.R` |
+| Deposit manuscript cluster numbers (`open/conserved_core.tsv`, `open/gene_index.tsv`) | `scripts/deposit/manuscript_clusters.R` | `ComPlEx/cliques/manuscript_cluster_map.tsv` (`scripts/ComPlEx/manuscript_cluster_map.R`; numbering D095) |
 | Deposit DEG calls (`open/differential_expression.tsv` `padj_lfc0`, `is_deg`; `open/gene_index.tsv` cold-response columns) | `scripts/deposit/de_calls.R` | `DE/de_results.tsv`, `DEGs/DEGs_*.RData` |
 | Deposit ENA runs per sample (`open/samples.tsv`) | `scripts/deposit/sample_runs_columns.R` | `results/sample_ena_runs.tsv` |
 | Deposit open tables from the analysis objects (`open/{co_expressologs,conserved_core,pairwise_comparisons,orthogroup_annotation,gene_orthogroup_map,conserved_vs_specific_genes,differential_expression,transcription_factors}.tsv`) | `scripts/deposit/export_open_formats.R` (also shipped in the deposit) | `ComPlEx/`, `DEGs/`, `TranscriptionFactors/`, `orthologs/orthologs.parquet` |
@@ -104,7 +104,7 @@ expression data, and are needed only to rebuild those objects:
 | `DEGs/og_summary.RData` (per orthogroup, the genotypes with a gene and with a DEG) | `scripts/DE/og_summary.R` |
 
 Run them in this order: `ones_and_zeros.R` and `complete_cliques.R`; `size_rule.R`; `core_cliques.R`, then
-`clique_clusters.R`, before `make_TableS3.R`, `make_Fig4.R`, `make_Fig6.R` and `make_core_clusters.R`; `og_summary.R`
+`clique_clusters.R`, before `tableS3_arabidopsis.R`, `make_Fig4.R`, `make_Fig6.R` and `make_core_clusters.R`; `og_summary.R`
 before `make_Fig1.R`, `make_TableS1.R` and `common_orthogroups.R`. Each writes its object to the path above, or to
 the path given as its first argument. `scripts/tests/test_rebuilt_objects.R` runs the four into a temporary folder
 and checks that each result is identical to the copy under `data/`.
@@ -133,7 +133,7 @@ species — every gene with nonzero VST expression across the cold time-course s
 
 ## Sample-stability label and validation (D066)
 
-The conserved core is the 133 orthogroups of the D043 rule. Each carries a sample-stability label from a
+The conserved core is the set of orthogroups counted by the size rule (D043, with the expressed-gene count of D080). Each carries a sample-stability label from a
 leave-one-sample-out test: every sample of every genotype is left out in turn, the genotype's network is rebuilt and
 ComPlEx is re-run for its five comparisons (665 runs plus the 15 unmodified runs, which must reproduce the deposited
 tables). `scripts/validation/loo_task.R` and `loo_run_task.sh` run one task each (an HPC array);
@@ -151,7 +151,9 @@ papers' supplementary tables and checks its size against the paper), `external_v
 its source file. `scripts/reproduce_figures_tables.sh` runs all of these in order; the Fig. S1 worked example is
 OG0005042 (`WORKED_EXAMPLE=OG0005042`).
 
-Figure S4, panel a, comes from `scripts/validation/conservation_label_permutation.R` (deposit only).
+Figure S4, panel a, is the unrelated-partner null (D097): `scripts/validation/pseudo_families.R` draws the
+pseudo-families, `pseudo_family_complex.R` runs the co-expressolog test for each of the 15 comparisons (an HPC cluster),
+and `pseudo_family_summary.R` writes `data/pseudo_family_null/` (committed), which `make_FigS4.R` reads.
 Panel b needs the STRING v12 *A. thaliana* download (`3702.protein.links.detailed.v12.0.txt.gz` and
 `3702.protein.aliases.v12.0.txt.gz` from string-db.org): run `make_core_clusters.R`, then
 `string_external_validation.R`, then `make_FigS4.R` plots both. `string_by_cluster.R` (same inputs)
@@ -161,13 +163,12 @@ breaks the panel b test down by cluster and repeats it without manuscript cluste
 Figure 1 (panel a, the UpSet of expressed-gene orthogroup overlap) is regenerated by
 `make_Fig1.R` from two intermediate inputs provided in this repository, because they are not part
 of the figshare deposit: the per-timepoint **median** expression tables
-(`expression/med_expression/<sp>_med.txt.gz`) and the per-species gene→orthogroup maps
-(`ComPlEx/gene2OG/gene2OG_<Sp>.rda`). A gene counts as expressed in a condition when its median
+(`expression/med_expression/<sp>_med.txt.gz`) and the deposited gene→orthogroup map
+(`open/gene_orthogroup_map.tsv`, through `scripts/DE/og_map.R`; D101). A gene counts as expressed in a condition when its median
 expression exceeds zero (control timepoint, or any cold timepoint); the shared expressed core is
 the intersection across all twelve species×condition sets. Panels b and d (composition of expressed
-genes and of DEGs in the shared orthogroups) reproduce exactly. Panel c (the DEG-category stacked
+genes and of DEGs in the shared orthogroups) follow the same sets. Panel c (the DEG-category stacked
 bars) classifies each DEG by how many species carry a gene, and a DEG, in its orthogroup — mapping
-each DEG through the same gene→orthogroup maps and using the per-orthogroup `og_summary`
-(categories: DEG across all six species / in some / species-specific / singletons) — and reproduces
-the published counts exactly.
+each DEG through the same gene→orthogroup map and using the per-orthogroup `og_summary`
+(categories: DEG across all six species / in some / species-specific / singletons).
 
